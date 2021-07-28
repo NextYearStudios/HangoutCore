@@ -11,7 +11,9 @@ EXAMPLE_CONFIG = { # Changing this will only matter when the bot creates a new c
         "prefixes" : ["!"], #Bot uses this array for prefixes. Add as many as you want, and keep in mind you can include spaces but be careful not to over complicate your prefixes.
         "token" : "", # if you have multiple tokens change this from "token" to ["token","token2"]
         "status" : {
-            "type" : "listening" # Valid Options are listening, playing
+            "type" : "listening", # Valid Options are competing, playing, listening, streaming, watching
+            "name" : "!help", # Activity Name
+            "url" : "" # Twitch or Youtube URL For Streaming
         },
         "name" : "Bot Name", # Bot name
         "version" : "0.0.0", # Bot version
@@ -39,8 +41,8 @@ EXAMPLE_CONFIG = { # Changing this will only matter when the bot creates a new c
     },
     "music" : {
         "max_volume" : 250,
-        "vote_skip" : True, #whether vote skip is enabled or not.
-        "vote_skip_ratio" : 0.5 #minimum ratio needed for vote skip
+        "vote_skip" : True, # whether vote skip is enabled or not.
+        "vote_skip_ratio" : 0.5 # minimum ratio needed for vote skip
     }
 }
 

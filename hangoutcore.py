@@ -25,9 +25,34 @@ class HangoutCoreBot(commands.Bot):
     intents.presences = True
     intents.guilds = True
 
+    activity = discord.Activity()
+
+    if cfg["bot"]["status"]["type"] == "listening": # Set the activity depending on config
+        activity = discord.Activity(
+            type=discord.ActivityType.listening,
+            name=cfg["bot"]["status"]["name"]
+            )
+    elif cfg["bot"]["status"]["type"] == "streaming":
+        activity = discord.Activity(
+            type=discord.ActivityType.streaming,
+            name=cfg["bot"]["status"]["name"],
+            url=cfg["bot"]["status"]["url"]
+            )
+    elif cfg["bot"]["status"]["type"] == "watching":
+        activity = discord.Activity(
+            type=discord.ActivityType.watching,
+            name=cfg["bot"]["status"]["name"]
+            )
+    elif cfg["bot"]["status"]["type"] == "playing":
+        activity = discord.Activity(
+            type=discord.ActivityType.playing,
+            name=cfg["bot"]["status"]["name"],
+            game=cfg["bot"]["status"]["game"]
+            )
+        
     def __init__(self, command_prefix, argv):
         super().__init__(command_prefix=command_prefix,
-            activity = discord.Activity(type=discord.ActivityType.listening, name="!help"),
+            activity = self.activity,
             description=cfg["bot"]["description"],
             intents=self.intents)
 
@@ -77,7 +102,6 @@ class HangoutCoreBot(commands.Bot):
         utils.log("INFO", f"Successfully loaded {len(valid_files)} extension(s).")
         if len(invalid_files) > 0:
             utils.log("WARNING", f"Found {len(invalid_files)} invalid extension(s) in the 'cogs' directory. If you believe this is an error please verify each .py file and make sure it is set up as a cog properly, Otherwise you can ignore this message.")
-
         
             
         
