@@ -72,7 +72,7 @@ class HangoutCoreBot(commands.Bot):
             self.debug_mode = False
 
     async def on_ready(self):
-        self.start_time = datetime.datetime.now()
+        self.start_time = '{0:%d%b%Y %Hh:%Mm}'.format(datetime.datetime.now())
         utils.terminal.initiate(self.start_time, self.debug_mode)
         utils.log("INFO", f"Looking for Bot Modules in the 'cogs' Directory.")
         valid_files = []
@@ -97,7 +97,7 @@ class HangoutCoreBot(commands.Bot):
                 else:
                     invalid_files.append(file)
                     utils.log("INFO", f" └ Found invalid file {file}, Skipping.")
-        utils.terminal.refresh(self.start_time, self.debug_mode)
+        #utils.terminal.refresh(self.start_time, self.debug_mode)
         utils.log("INFO", f"Logged in as {self.user} (ID: {self.user.id})")
         utils.log("INFO", f"Successfully loaded {len(valid_files)} extension(s).")
         if len(invalid_files) > 0:
@@ -111,7 +111,7 @@ def get_prefix(bot, message):
 
         # Check to see if we are outside of a guild. e.g DM's etc.
         if not message.guild or prefixes is None:
-            # Only allow ! to be used in DMs
+            # Only allow ! to be used in DMs or if no prefix is specified.
             return '!'
 
         return commands.when_mentioned_or(*prefixes)(bot, message)
