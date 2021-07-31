@@ -4,6 +4,9 @@ import discord
 import logging
 import os, sys
 import utils
+import ctypes
+import ctypes.util
+
 
 from discord.ext import commands
 
@@ -75,35 +78,44 @@ class HangoutCoreBot(commands.Bot):
         self.start_time = '{0:%d%b%Y %Hh:%Mm}'.format(datetime.datetime.now())
         utils.terminal.initiate(self.start_time, self.debug_mode)
         utils.log("INFO", f"Looking for Bot Modules in the 'cogs' Directory.")
-        valid_files = []
-        disabled_files = []
-        invalid_files = []
-        for file in os.listdir(config.COG_DIRECTORY_PATH):
-            if file.endswith('.py'):
-                utils.log("INFO", f" └ Found {file}")
-                try:
-                    cog = bot.load_extension(f'{config.COG_DIRECTORY_PATH}.{file[:-3]}')
-                except Exception as e:
-                    utils.log("ERROR", f"  └ Failed to load {file}.\n  Exception: {e}")
-                else:
-                    utils.log("INFO", f"  └ successfully loaded {file}.")
-                    valid_files.append(file)
-            elif file.endswith('.disabled'):
-                utils.log("INFO", f" └ Found Disabled file {file}, Skipping.")
-                disabled_files.append(file)
+        cogs = utils.GetCogs()
+        for file in cogs["valid_files"]:
+            utils.log("INFO", f" └ Found {file}")
+            try:
+                cog = bot.load_extension(f'{config.COG_DIRECTORY_PATH}.{file[:-3]}')
+            except Exception as e:
+                utils.ErrorProcessing.CogLoadError(file, e, self.debug_mode)
             else:
-                if file == "__pycache__" or "__init__":
-                    pass
-                else:
-                    invalid_files.append(file)
-                    utils.log("INFO", f" └ Found invalid file {file}, Skipping.")
-        #utils.terminal.refresh(self.start_time, self.debug_mode)
-        utils.log("INFO", f"Logged in as {self.user} (ID: {self.user.id})")
-        utils.log("INFO", f"Successfully loaded {len(valid_files)} extension(s).")
-        if len(invalid_files) > 0:
-            utils.log("WARNING", f"Found {len(invalid_files)} invalid extension(s) in the 'cogs' directory. If you believe this is an error please verify each .py file and make sure it is set up as a cog properly, Otherwise you can ignore this message.")
+                utils.log("INFO", f"  └ successfully loaded {file}.")
+        for file in cogs["disabled_files"]:
+            utils.log("INFO", f" └ Found Disabled file {file}, Skipping.")
+        for file in cogs["invalid_files"]:
+            if file == "__pycache__" or "__init__":
+                pass
+            else:
+                utils.log("INFO", f" └ Found invalid file {file}, Skipping.")
+        utils.terminal.refresh(self.start_time, self.debug_mode)
+        utils.log("INFO", f"Successfully loaded {len(cogs['valid_files'])} extension(s).")
+        utils.log("INFO", f"Logged in as {self.user} (ID: {self.user.id}).")
+        if len(cogs["invalid_files"]) > 0:
+            utils.log("WARNING", f"Found {len(cogs['invalid_files'])} invalid extension(s) in the 'cogs' directory. If you believe this is an error please verify each .py file and make sure it is set up as a cog properly, Otherwise you can ignore this message.")
         
-            
+        opuslib = ctypes.util.find_library('opus')
+        if opuslib is not None:
+            try:
+                utils.log("INFO", f"Loading Opus.")
+                discord.opus.load_opus('opus')
+            except Exception as e:
+                utils.log("ERROR", e)
+            else:
+                if not discord.opus.is_loaded():
+                    utils.log("CRITICAL", "Opus Failed To Load.")
+                else:
+                    utils.log("INFO", "Successfully loaded opus.")
+        else:
+            utils.log("WARNING", "Could not find Opus, You will not be able to play audio without it.")
+                
+    
         
 
 def get_prefix(bot, message):
@@ -118,6 +130,70 @@ def get_prefix(bot, message):
 
 if __name__ == "__main__":
     bot = HangoutCoreBot(command_prefix=get_prefix, argv=sys.argv[1:])
+
+    @commands.is_owner()
+    @bot.command(name="load")
+    async def loadCog(ctx: commands.Context, cog:str):
+        await ctx.message.delete()
+        if not cog.endswith('.py'):
+            cog = cog + '.py'
+        cog = str(cog).lower()
+        if cog in os.listdir(config.COG_DIRECTORY_PATH):
+            if f"{config.COG_DIRECTORY_PATH}.{cog[:-3]}" in bot.extensions:
+                await ctx.send(f"Sorry. That cog has already been loaded.", delete_after=15)
+            else:
+                try:
+                    bot.load_extension(f"{config.COG_DIRECTORY_PATH}.{cog[:-3]}")
+                except Exception as e:
+                    print(e)
+                else:
+                    embed = discord.Embed(
+                            title=f"Successfully Loaded {cog}",
+                            colour=discord.Colour.dark_theme(),
+                            timestamp=datetime.datetime.now()
+                    )
+                    embed.set_footer(
+                        text=f'Automatic Notification | Category: System',
+                        icon_url=f'{bot.user.avatar.url}'
+                    )
+                    await ctx.send(embed=embed,delete_after=15)
+    
+    @commands.is_owner()
+    @bot.command(name="unload")
+    async def unloadCog(ctx: commands.Context, cog:str):
+        await ctx.message.delete()
+        if not cog.endswith('.py'):
+            cog = cog + '.py'
+        cog = str(cog).lower()
+        cogs = utils.GetCogs()
+        if cog in cogs["valid_files"]:
+            if f"{config.COG_DIRECTORY_PATH}.{cog[:-3]}" not in bot.extensions:
+                await ctx.send(f"Sorry. That cog has already been unloaded.", delete_after=15)
+            else:
+                try:
+                    bot.unload_extension(f"{config.COG_DIRECTORY_PATH}.{cog[:-3]}")
+                except Exception as e:
+                    print(e)
+                else:
+                    embed = discord.Embed(
+                            title=f"Successfully Unloaded {cog}",
+                            colour=discord.Colour.dark_theme(),
+                            timestamp=datetime.datetime.now()
+                    )
+                    embed.set_footer(
+                        text=f'Automatic Notification | Category: System',
+                        icon_url=f'{bot.user.avatar.url}'
+                    )
+                    await ctx.send(embed=embed,delete_after=15)
+        else:
+            await ctx.send(f"Sorry, that cog is not valid. Please check your spelling and try again.")
+
+    @bot.command()
+    async def extensions(ctx: commands.Context):
+        await ctx.message.delete()
+        print(bot.extensions)
+        
+
 
 if isinstance(cfg["bot"]["token"], str) and cfg["bot"]["token"] != "":
     bot.run(cfg["bot"]["token"])
