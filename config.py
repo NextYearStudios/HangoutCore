@@ -3,6 +3,7 @@ import json
 import logging
 import os
 
+CONFIG_VERSION = 3.2
 COG_DIRECTORY_PATH = "cogs" #Name of directory where cogs will be stored.
 LOG_DIRECTORY_PATH = "logs" #Name of directory where log files will be stored.
 CONFIG_PATH = "config.json" #Name of config file.
@@ -43,6 +44,9 @@ EXAMPLE_CONFIG = { # Changing this will only matter when the bot creates a new c
         "max_volume" : 250,
         "vote_skip" : True, # whether vote skip is enabled or not.
         "vote_skip_ratio" : 0.5 # minimum ratio needed for vote skip
+    },
+    "info" : {
+        "version" : 2.5
     }
 }
 
@@ -51,6 +55,8 @@ def load_config(path=CONFIG_PATH):
     if os.path.exists(path) and os.path.isfile(path):
         with open(path) as file:
             config = json.load(file)
+        print(f"info: {'info' in config}")
+        print(f"version: {'version' in config}")
         return config
     else:
         with open(path, "w") as config:
