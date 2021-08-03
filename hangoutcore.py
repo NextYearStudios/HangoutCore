@@ -3,7 +3,7 @@
     › Please do not modify any of the following content unless you know what you're doing. Modifying the following code and not updating the rest of the bot code to match can/will cause issues.
     › If you do decide to modify the following code please understand that HangoutCore's Dev team, Discord.py's Dev Team nor Python's Dev team are obligated to help you.
     › By Modifying the following code you acknowledge and agree to the text above.
-    Last Updated: August 2nd, 2021
+    Last Updated: August 3rd, 2021
     Last Updated by: Lino
     Notes:
         None
@@ -65,7 +65,7 @@ class HangoutCoreBot(commands.Bot): # Sub class bot so we can have more customiz
         for file in cogs["valid_files"]:
             terminal.log("INFO", f" └ Found {file}")
             try:
-                cog = bot.load_extension(f'{config.COG_DIRECTORY_PATH}.{file[:-3]}')
+                bot.load_extension(f'{config.COG_DIRECTORY_PATH}.{file[:-3]}')
             except Exception as e:
                 utils.errorprocessing.CogLoadError(file, e, self.debug_mode)
             else:
@@ -77,7 +77,6 @@ class HangoutCoreBot(commands.Bot): # Sub class bot so we can have more customiz
                 pass
             else:
                 terminal.log("INFO", f" └ Found invalid file {file}, Skipping.")
-        #utils.terminal.refresh(self.start_time, self.debug_mode)
         terminal.log("INFO", f"Successfully loaded {len(cogs['valid_files'])} extension(s).")
         terminal.log("INFO", f"Logged in as {self.user} (ID: {self.user.id}).")
         if len(cogs["invalid_files"]) > 0:
@@ -97,6 +96,14 @@ class HangoutCoreBot(commands.Bot): # Sub class bot so we can have more customiz
                     terminal.log("INFO", "Successfully loaded opus.")
         else:
             terminal.log("WARNING", "Could not find Opus, You will not be able to play audio without it.")
+        if len(terminal.log_Q) > 0: # Display any logs that happened while we were botting up
+            for q in terminal.log_Q:
+                terminal.log(q[0], q[1])
+                del q
+
+        terminal.log("WARNING", "Creating a database for every guild.")
+        for guild in bot.guilds:
+            print(guild)
 
 if __name__ == "__main__":
     bot = HangoutCoreBot(command_prefix=utils.bot.GetPrefix, terminal_args=sys.argv[1:])
@@ -161,11 +168,29 @@ async def unloadCog(ctx: commands.Context, cog:str):
 @bot.command()
 async def extensions(ctx: commands.Context):
     await ctx.message.delete()
-    print(bot.extensions)
+    embed = discord.Embed(
+        title=f"Extensions",
+        colour=discord.Colour.dark_theme(),
+        timestamp=datetime.datetime.now()
+    )
+    embed.set_footer(
+        text=f'Automatic Notification | Category: System',
+        icon_url=f'{bot.user.avatar.url}'
+    )
+    if len(bot.extensions) > 0:
+        for cog in bot.extensions:
+            embed.description = bot.description +f'\n{cog}'
+    else:
+        embed.description = 'None'
+    await ctx.send(embed=embed)
         
-
-
 if isinstance(cfg["bot"]["token"], str) and cfg["bot"]["token"] != "":
     bot.run(cfg["bot"]["token"])
-elif isinstance(cfg["bot"]["token"], list) and cfg["bot"]["token"][0] != "":
-    bot.run(cfg["bot"]["token"][0])
+elif isinstance(cfg["bot"]["token"], list) and not all(token == "" for token in cfg["bot"]["token"]):
+    def first_token():
+        for t in cfg["bot"]["token"]:
+            if t != "":
+                return t
+    bot.run(first_token())
+else:
+    terminal.log("CRITICAL", f"No token was provided in '{utils.config.CONFIG_PATH}'")
