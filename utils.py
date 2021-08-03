@@ -3,7 +3,7 @@
     › Please do not modify any of the following content unless you know what you're doing. Modifying the following code and not updating the rest of the bot code to match can/will cause issues.
     › If you do decide to modify the following code please understand that HangoutCore's Dev team, Discord.py's Dev Team nor Python's Dev team are obligated to help you.
     › By Modifying the following code you acknowledge and agree to the text above.
-    Module Last Updated: August 2nd, 2021
+    Module Last Updated: August 3rd, 2021
     Module Last Updated by: Lino
     Notes:
         None
@@ -15,6 +15,7 @@ import json
 import logging
 import os, sys
 import shutil
+import sqlite3
 import traceback
 
 from asyncio import sleep
@@ -23,13 +24,93 @@ from discord.ext import commands
 from os import system, name
 
 #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# ↓ Terminal ↓ : WIP
+#   › Used for clearing/setting up terminal as well as logging.
+#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+class terminal():
+    log_Q = []
+    def __init__(self):
+        pass
+   
+    def print_center(s):
+        print(s.center(shutil.get_terminal_size().columns))
+
+    def print_hr():
+        print('━'.center(shutil.get_terminal_size().columns, '━'))
+
+    def clear():
+        if name =='nt':
+            _ = system('cls')    
+        else: 
+            _ = system('clear')
+
+    def initiate(start_time, debug:bool=False):
+        terminal.clear()
+        if debug:
+            print(Style.BRIGHT + Back.RED,end="\r")
+        else:
+            print(Style.NORMAL + Fore.BLACK + Back.WHITE,end="\r")
+        terminal.print_center(str(cfg["bot"]["name"]))
+        terminal.print_center(str(cfg["bot"]["version"]))
+        terminal.print_center(str(start_time))
+        if debug:
+            terminal.print_center(f'// Debug Mode Enabled \\\ ')
+            terminal.print_center('SYS Version ' + str(sys.version))
+            terminal.print_center('API Version ' + str(sys.api_version))
+            terminal.print_center('Discord Version ' + str(discord.__version__))
+        print(Style.RESET_ALL + Back.RESET,end="\r")
+        terminal.print_hr()
+
+    def refresh(start_time, debug:bool=False):
+        terminal.clear()
+        if debug:
+            print(Style.BRIGHT + Back.RED,end="\r")
+        else:
+            print(Style.NORMAL + Fore.BLACK + Back.WHITE,end="\r")
+        terminal.print_center(str(cfg["bot"]["name"]))
+        terminal.print_center(str(cfg["bot"]["version"]))
+        terminal.print_center(str(start_time))
+        if debug:
+            terminal.print_center(f'// Debug Mode Enabled \\\ ')
+            terminal.print_center('SYS Version ' + str(sys.version))
+            terminal.print_center('API Version ' + str(sys.api_version))
+            terminal.print_center('Discord Version ' + str(discord.__version__))
+        print(Style.RESET_ALL + Back.RESET,end="\r")
+        terminal.print_hr()
+
+    def log(level:str, log):                                                                                                        # More Logging functionality
+        if level == "DEBUG":                                                                                                        #
+            logging.debug(log)                                                                                                      #
+            print(f"[{Fore.BLUE}DEBUG{Fore.RESET}] {log}")                                                                          #
+
+        if level == "INFO":                                                                                                         #
+            logging.info(log)                                                                                                       #
+            print(f"[{Fore.GREEN}INFO{Fore.RESET}] {log}")                                                                          #
+
+        if level == "WARNING":                                                                                                      #
+            logging.warning(log)                                                                                                    #
+            print(f"[{Fore.YELLOW}WARNING{Fore.RESET}] {log}")                                                                      #
+            
+        if level == "ERROR":                                                                                                        #
+            logging.error(log)                                                                                                      #
+            print(f"[{Fore.RED}ERROR{Fore.RESET}] {log}")                                                                           #
+
+        if level == "CRITICAL":                                                                                                     #
+            logging.critical(log)                                                                                                   #
+            print(f"{Style.BRIGHT}{Back.RED}[CRITICAL] {log}{Style.RESET_ALL}{Back.RESET}") 
+
+    def queue(level:str, log):
+        terminal.log_Q.append([level,log])
+#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # ↓ Config ↓ : WIP
 #   › Handles bot config loading, writing as well as the initial creation of config.json.
 #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 class config():
-    CONFIG_PATH='config.json' # Path and name of config file.
-    CONFIG_VERSION = 3.2
+    warned = False
+    CONFIG_PATH = 'config.json' # Path and name of config file.
+    CONFIG_VERSION = 3.3
     COG_DIRECTORY_PATH = "cogs" # Name of directory where cogs will be stored.
     LOG_DIRECTORY_PATH = "logs" # Name of directory where log files will be stored.
     CONFIG_PATH = "config.json" # Name of config file.
@@ -66,13 +147,18 @@ class config():
                 }
             ]
         },
+        "database" : {
+            "name" : "database.sqlite", # db name
+            "user" : "user",
+            "password" : "pass"
+        },
         "music" : {
             "max_volume" : 250, # Max Volume
             "vote_skip" : True, # whether vote skip is enabled or not.
             "vote_skip_ratio" : 0.5 # minimum ratio needed for vote skip
         },
         "_info" : { # config info
-            "version" : 2.5 # config version
+            "version" : CONFIG_VERSION # config version
         }
     }
 
@@ -92,12 +178,17 @@ class config():
                     if cfg['_info']['version'] >= config.CONFIG_VERSION:
                         return cfg
                     else:
-                        pass # version is older than our current version. warn user.
+                        if not config.warned: # Config is outdated
+                            config.warned = True
+                            terminal.queue("WARNING",f"{config.CONFIG_PATH} is outdated. Please update it to match the example config provided in config.py")
                         return cfg
                 else:
-                    pass # Couldn't Find version, file probably outdated or corrupted.
+                    if not config.warned: # Couldn't Find version, file probably outdated or corrupted.
+                        config.warned = True
+                        terminal.queue("WARNING",f"{config.CONFIG_PATH} is either outdated or corrupt. Please delete the old one and run the bot again to create a new one.")
                     return cfg
         else: #file doesn't exist, create new one.
+            terminal.log("CRITICAL", f"Config could not be found. Creating a new one.")
             with open(path, 'w') as file:
                 json.dump(config.EXAMPLE_CONFIG, file, indent=4)
                 
@@ -213,91 +304,11 @@ class errorprocessing():
             designed to minimise clutter and lines not relevant."""
         ErrorTraceback = traceback.format_exception(type(error), error, error.__traceback__)
         if debug_mode:
-            terminal.log("ERROR", "\n" + "".join(ErrorTraceback))
+            terminal.log("ERROR", f"  └ Failed to load {file}\n" + "".join(ErrorTraceback))
         else:
-            FilteredTraceback = None
-            for string in ErrorTraceback:
-                str(string).replace("\n", "")
-            terminal.log("ERROR", f"""  └ Failed to load {file}.
-            {Back.RED}{ErrorTraceback[0]}{Back.RESET}
-            {Back.RED}{ErrorTraceback[5]}{Back.RESET}
-            {Back.RED}{ErrorTraceback[6]}{Back.RESET}""")
-
-#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# ↓ Custom Error Processing ↓ : WIP
-#   › Intended for when you only need specific data from an error.
-#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-class terminal():
-    def __init__(self):
-        pass
-   
-    def print_center(s):
-        print(s.center(shutil.get_terminal_size().columns))
-
-    def print_hr():
-        print('━'.center(shutil.get_terminal_size().columns, '━'))
-
-    def clear():
-        if name =='nt':
-            _ = system('cls')    
-        else: 
-            _ = system('clear')
-
-    def initiate(start_time, debug:bool=False):
-        terminal.clear()
-        if debug:
-            print(Style.BRIGHT + Back.RED,end="\r")
-        else:
-            print(Style.NORMAL + Fore.BLACK + Back.WHITE,end="\r")
-        terminal.print_center(str(cfg["bot"]["name"]))
-        terminal.print_center(str(cfg["bot"]["version"]))
-        terminal.print_center(str(start_time))
-        if debug:
-            terminal.print_center(f'// Debug Mode Enabled \\\ ')
-            terminal.print_center('SYS Version ' + str(sys.version))
-            terminal.print_center('API Version ' + str(sys.api_version))
-            terminal.print_center('Discord Version ' + str(discord.__version__))
-        print(Style.RESET_ALL + Back.RESET,end="\r")
-        terminal.print_hr()
-
-    def refresh(start_time, debug:bool=False):
-        terminal.clear()
-        if debug:
-            print(Style.BRIGHT + Back.RED,end="\r")
-        else:
-            print(Style.NORMAL + Fore.BLACK + Back.WHITE,end="\r")
-        terminal.print_center(str(cfg["bot"]["name"]))
-        terminal.print_center(str(cfg["bot"]["version"]))
-        terminal.print_center(str(start_time))
-        if debug:
-            terminal.print_center(f'// Debug Mode Enabled \\\ ')
-            terminal.print_center('SYS Version ' + str(sys.version))
-            terminal.print_center('API Version ' + str(sys.api_version))
-            terminal.print_center('Discord Version ' + str(discord.__version__))
-        print(Style.RESET_ALL + Back.RESET,end="\r")
-        terminal.print_hr()
-
-    def log(level:str, log):                                                                                                        # More Logging functionality
-        if level == "DEBUG":                                                                                                        #
-            logging.debug(log)                                                                                                      #
-            print(f"[{Fore.BLUE}DEBUG{Fore.RESET}] {log}")                                                                          #
-
-        if level == "INFO":                                                                                                         #
-            logging.info(log)                                                                                                       #
-            print(f"[{Fore.GREEN}INFO{Fore.RESET}] {log}")                                                                          #
-
-        if level == "WARNING":                                                                                                      #
-            logging.warning(log)                                                                                                    #
-            print(f"[{Fore.YELLOW}WARNING{Fore.RESET}] {log}")                                                                      #
             
-        if level == "ERROR":                                                                                                        #
-            logging.error(log)                                                                                                      #
-            print(f"[{Fore.RED}ERROR{Fore.RESET}] {log}")                                                                           #
-
-        if level == "CRITICAL":                                                                                                     #
-            logging.critical(log)                                                                                                   #
-            print(f"[{Style.BRIGHT}{Back.RED}CRITICAL{Style.RESET_ALL}{Back.RESET}] {log}") 
+            terminal.log("ERROR", f"""  └ Failed to load {file}.
+            {Back.RED}{error}{Back.RESET}""")
 
 #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # ↓ Guild Audio State ↓ : WIP
@@ -310,3 +321,15 @@ class guildstate():
         self.playlist = []
         self.skip_votes = set()
         self.volume = 1.0 # volume is config max_volume / 100
+
+#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# ↓ Database Handling ↓ : WIP
+#   › Used to create/modify databases for guilds/users
+#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+class database():
+    def __init__(self):
+        pass
+
+    def GuildRegistered(guild_id):
+        pass
