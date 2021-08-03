@@ -1,110 +1,237 @@
-""" Utility Module designed to be the main library for HangoutCore """
+"""
+    Utility Module for HangoutCore
+    › Please do not modify any of the following content unless you know what you're doing. Modifying the following code and not updating the rest of the bot code to match can/will cause issues.
+    › If you do decide to modify the following code please understand that HangoutCore's Dev team, Discord.py's Dev Team nor Python's Dev team are obligated to help you.
+    › By Modifying the following code you acknowledge and agree to the text above.
+    Module Last Updated: August 2nd, 2021
+    Module Last Updated by: Lino
+    Notes:
+        None
+"""
 
-import logging
-import shutil
+import aiofiles
 import discord
-import os
-import config
-import sys
+import json
+import logging
+import os, sys
+import shutil
 import traceback
 
+from asyncio import sleep
 from colorama import *
+from discord.ext import commands
 from os import system, name
 
-cfg = config.load_config()
-
 #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# ↓ Cog Loading ↓ : WIP
+# ↓ Config ↓ : WIP
+#   › Handles bot config loading, writing as well as the initial creation of config.json.
 #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-def GetCogs():
-    valid_files = []
-    disabled_files = []
-    invalid_files = []
-    for file in os.listdir(config.COG_DIRECTORY_PATH):
-        if file.endswith('.py'):
-            valid_files.append(file)
-        elif file.endswith('.disabled'):
-            disabled_files.append(file)
-        else:
-            if file == "__pycache__" or "__init__":
-                pass
-            else:
-                invalid_files.append(file)
-    package = {
-        "valid_files": valid_files,
-        "invalid_files": invalid_files,
-        "disabled_files": disabled_files
+class config():
+    CONFIG_PATH='config.json' # Path and name of config file.
+    CONFIG_VERSION = 3.2
+    COG_DIRECTORY_PATH = "cogs" # Name of directory where cogs will be stored.
+    LOG_DIRECTORY_PATH = "logs" # Name of directory where log files will be stored.
+    CONFIG_PATH = "config.json" # Name of config file.
+    EXAMPLE_CONFIG = { # Changing this will only matter when the bot creates a new config. Actual config at CONFIG_PATH
+        "bot" : {
+            "prefixes" : ["!"], #Bot uses this array for prefixes. Add as many as you want, and keep in mind you can include spaces but be careful not to over complicate your prefixes.
+            "token" : [""], # If you intend on using any token other than the first in the list, change hangoutcore.py to match.
+            "status" : {
+                "type" : "listening", # Valid Options are competing, playing, listening, streaming, watching
+                "name" : "!help", # Activity Name
+                "url" : "" # Twitch or Youtube URL if type is Streaming
+            },
+            "name" : "Bot Name", # Bot name
+            "version" : "0.0.0", # Bot version
+            "description" : "Bot Description would go here.",
+            "developer_guild_id" : 000000000, # Developer guild id for bot. Used for test commands.
+            "contributers" : [
+                {
+                    "name":"Contributer Name", # Contributer name
+                    "discord_id": 000000000, # Contributer discord id
+                    "owner" : True # Set this to true if they're an owner. otherwise set it to false
+                },
+                {
+                    "name":"Contributer Name",
+                    "discord_id": 000000000,
+                    "owner" : False
+                }
+                ],
+            "apis" : [
+                {
+                    "name" : "Api Name", # API Name for display sake
+                    "token" : "Api Token", # API Token for accessing API Data
+                    "header" : {"Authorization": ""} # API Header for ease of use
+                }
+            ]
+        },
+        "music" : {
+            "max_volume" : 250, # Max Volume
+            "vote_skip" : True, # whether vote skip is enabled or not.
+            "vote_skip_ratio" : 0.5 # minimum ratio needed for vote skip
+        },
+        "_info" : { # config info
+            "version" : 2.5 # config version
+        }
     }
-    return package
+
+    def __init__(self):
+        pass
     
+    def load(path=CONFIG_PATH):
+        """
+        Attempt to load the config from path provided if none provided use CONFIG_PATH,
+        if one does not exist then create a new file at CONFIG_PATH and
+        copy EXAMPLE_CONFIG into it.
+        """
+        if os.path.exists(path) and os.path.isfile(path):
+            with open(path) as file:
+                cfg = json.load(file)
+                if '_info' in cfg:
+                    if cfg['_info']['version'] >= config.CONFIG_VERSION:
+                        return cfg
+                    else:
+                        pass # version is older than our current version. warn user.
+                        return cfg
+                else:
+                    pass # Couldn't Find version, file probably outdated or corrupted.
+                    return cfg
+        else: #file doesn't exist, create new one.
+            with open(path, 'w') as file:
+                json.dump(config.EXAMPLE_CONFIG, file, indent=4)
+                
+            if not os.path.exists(config.COG_DIRECTORY_PATH):
+                os.mkdir(config.COG_DIRECTORY_PATH)
+            if not os.path.exists(config.LOG_DIRECTORY_PATH):
+                os.mkdir(config.LOG_DIRECTORY_PATH)
+            return config.load(path=path)
+
+    def write(self, path=CONFIG_PATH):
+        """
+        Attempt to write to the config from path provided if none provided use CONFIG_PATH,
+        if one does not exist we warn the terminal. We do not create one in the possibility that
+        the user misspelled the path provided.
+        """
+        pass
+
+cfg = config.load()
 
 #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# ↓ Error Processing ↓ : WIP
+# ↓ Bot ↓ : WIP
+#   › Fill with functions as you need, intended to keep other files clear and let utils do the heavy lifting.
 #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-class ErrorProcessing():
+class bot():
+    def __init__(self):
+        pass
+    
+    def GetIntents():
+        intents = discord.Intents.default() # Set Bot Intents
+        intents.members = True  
+        intents.typing = True
+        intents.presences = True
+        intents.guilds = True
+        return intents
+
+    def GetActivity():
+        if cfg["bot"]["status"]["type"] == "listening": # Set the activity depending on config
+            activity = discord.Activity(
+                type=discord.ActivityType.listening,
+                name=cfg["bot"]["status"]["name"]
+                )
+        elif cfg["bot"]["status"]["type"] == "streaming":
+            activity = discord.Activity(
+                type=discord.ActivityType.streaming,
+                name=cfg["bot"]["status"]["name"],
+                url=cfg["bot"]["status"]["url"]
+                )
+        elif cfg["bot"]["status"]["type"] == "watching":
+            activity = discord.Activity(
+                type=discord.ActivityType.watching,
+                name=cfg["bot"]["status"]["name"]
+                )
+        elif cfg["bot"]["status"]["type"] == "playing":
+            activity = discord.Activity(
+                type=discord.ActivityType.playing,
+                name=cfg["bot"]["status"]["name"],
+                game=cfg["bot"]["status"]["game"]
+                )
+        return activity
+
+    def GetPrefix(bot, message):
+        prefixes = cfg["bot"]["prefixes"]
+
+        # Check to see if we are outside of a guild. e.g DM's etc.
+        if not message.guild or prefixes is None:
+            # Only allow ! to be used in DMs or if no prefix is specified.
+            return '!'
+
+        return commands.when_mentioned_or(*prefixes)(bot, message)
+#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# ↓ Local ↓ : WIP
+#   › Handles providing local files such as images, video, cogs, py files, etc.
+#   › Fill with functions as you need, intended to keep other files clear and let utils do the heavy lifting.
+#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+class local():
+    def __init__(self):
+        pass
+
+    def GetCogs():
+        valid_files = []
+        disabled_files = []
+        invalid_files = []
+        for file in os.listdir(config.COG_DIRECTORY_PATH):
+            if file.endswith('.py'):
+                valid_files.append(file)
+            elif file.endswith('.disabled'):
+                disabled_files.append(file)
+            else:
+                if file == "__pycache__" or "__init__":
+                    pass
+                else:
+                    invalid_files.append(file)
+        package = {
+            "valid_files": valid_files,
+            "invalid_files": invalid_files,
+            "disabled_files": disabled_files
+        }
+        return package
+
+#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# ↓ Custom Error Processing ↓ : WIP
+#   › Intended for when you only need specific data from an error.
+#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+class errorprocessing():
+    def __init__(self):
+        pass
 
     def CogLoadError(file, error, debug_mode):
         """ Error Processing tailored to display the specific error when loading a cog, 
             designed to minimise clutter and lines not relevant."""
         ErrorTraceback = traceback.format_exception(type(error), error, error.__traceback__)
         if debug_mode:
-            log("ERROR", "\n" + "".join(ErrorTraceback))
+            terminal.log("ERROR", "\n" + "".join(ErrorTraceback))
         else:
             FilteredTraceback = None
             for string in ErrorTraceback:
                 str(string).replace("\n", "")
-            log("ERROR", f"""  └ Failed to load {file}.
+            terminal.log("ERROR", f"""  └ Failed to load {file}.
             {Back.RED}{ErrorTraceback[0]}{Back.RESET}
             {Back.RED}{ErrorTraceback[5]}{Back.RESET}
             {Back.RED}{ErrorTraceback[6]}{Back.RESET}""")
-            #log("ERROR", f"{Back.RED}    {ErrorTraceback[0]}{Back.RESET}")
-            #log("ERROR", f"{Back.RED}    {ErrorTraceback[5]}{Back.RESET}")
-            #log("ERROR", f"{Back.RED}    {ErrorTraceback[6]}{Back.RESET}")
-            
-            #for i in range(len(ErrorTraceback)):
-            #    log("ERROR", f"{Fore.RED}    {ErrorTraceback[i]}{Fore.RESET}")
 
 #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# ↓ Color ↓ : WIP
+# ↓ Custom Error Processing ↓ : WIP
+#   › Intended for when you only need specific data from an error.
 #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-#def color(style: colorama.Style, fore: colorama.Fore, back: colorama.Back, content):
-#    processedContent = f"{style}{fore}{back}{content}{Style.RESET_ALL}{Fore.RESET}{Back.RESET}"
-#    return processedContent
-
-#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# ↓ Logging ↓
-#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-def log(level:str, log):                                                                                                        # More Logging functionality
-    if level == "DEBUG":                                                                                                        #
-        logging.debug(log)                                                                                                      #
-        print(f"[{Fore.BLUE}DEBUG{Fore.RESET}] {log}")                                                                          #
-
-    if level == "INFO":                                                                                                         #
-        logging.info(log)                                                                                                       #
-        print(f"[{Fore.GREEN}INFO{Fore.RESET}] {log}")                                                                          #
-
-    if level == "WARNING":                                                                                                      #
-        logging.warning(log)                                                                                                    #
-        print(f"[{Fore.YELLOW}WARNING{Fore.RESET}] {log}")                                                                      #
-        
-    if level == "ERROR":                                                                                                        #
-        logging.error(log)                                                                                                      #
-        print(f"[{Fore.RED}ERROR{Fore.RESET}] {log}")                                                                           #
-
-    if level == "CRITICAL":                                                                                                     #
-        logging.critical(log)                                                                                                   #
-        print(f"[{Style.BRIGHT}{Back.RED}CRITICAL{Style.RESET_ALL}{Back.RESET}] {log}")                                         #
-
-#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# ↓ Terminal ↓
-#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-class terminal:
-        
+class terminal():
+    def __init__(self):
+        pass
+   
     def print_center(s):
         print(s.center(shutil.get_terminal_size().columns))
 
@@ -151,15 +278,35 @@ class terminal:
         print(Style.RESET_ALL + Back.RESET,end="\r")
         terminal.print_hr()
 
+    def log(level:str, log):                                                                                                        # More Logging functionality
+        if level == "DEBUG":                                                                                                        #
+            logging.debug(log)                                                                                                      #
+            print(f"[{Fore.BLUE}DEBUG{Fore.RESET}] {log}")                                                                          #
+
+        if level == "INFO":                                                                                                         #
+            logging.info(log)                                                                                                       #
+            print(f"[{Fore.GREEN}INFO{Fore.RESET}] {log}")                                                                          #
+
+        if level == "WARNING":                                                                                                      #
+            logging.warning(log)                                                                                                    #
+            print(f"[{Fore.YELLOW}WARNING{Fore.RESET}] {log}")                                                                      #
+            
+        if level == "ERROR":                                                                                                        #
+            logging.error(log)                                                                                                      #
+            print(f"[{Fore.RED}ERROR{Fore.RESET}] {log}")                                                                           #
+
+        if level == "CRITICAL":                                                                                                     #
+            logging.critical(log)                                                                                                   #
+            print(f"[{Style.BRIGHT}{Back.RED}CRITICAL{Style.RESET_ALL}{Back.RESET}] {log}") 
+
 #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# ↓ FFMPEG and Youtube_DL Stuff ↓
+# ↓ Guild Audio State ↓ : WIP
+#   › Used during music/audio commands
 #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-class GuildState:
-    """Helper class managing per-guild state."""
-
+class guildstate():
     def __init__(self):
-        self.volume = 1.0 # volume is config max_volume / 100
+        self.now_playing = None
         self.playlist = []
         self.skip_votes = set()
-        self.now_playing = None
+        self.volume = 1.0 # volume is config max_volume / 100
