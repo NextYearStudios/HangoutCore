@@ -10,12 +10,12 @@
 """
 
 import aiofiles
+import asqlite
 import discord
 import json
 import logging
 import os, sys
 import shutil
-import sqlite3
 import traceback
 
 from asyncio import sleep
@@ -259,6 +259,74 @@ class bot():
             return '!'
 
         return commands.when_mentioned_or(*prefixes)(bot, message)
+
+    class CustomViews():
+        def __init__(self):
+            pass
+        class autoroleView(discord.ui.View):
+            def __init__(self):
+                super().__init__(timeout=None)
+
+            @discord.ui.button(label='Game Development', style=discord.ButtonStyle.grey, custom_id='persistent_autorole:gameDev')
+            async def green(self, button: discord.ui.Button, interaction: discord.Interaction):
+                role = interaction.guild.get_role(868692760524365875)
+                user = interaction.user
+                if role in user.roles:
+                    confirmation = bot.CustomViews.confirmationView()
+                    await interaction.response.send_message(f"Are you sure you'd like to remove {role.mention} from your roles?",view=confirmation, ephemeral=True)
+                    await confirmation.wait()
+                    if confirmation.value is None:
+                        await interaction.response.send_message(f"Timed out.", ephemeral=True)
+                    elif confirmation.value:
+                        await user.remove_roles(role, reason="User removed via AutoRole.")
+                        await interaction.response.send_message(f"You've successfully been unassigned {role.mention}.", ephemeral=True)
+                    else:
+                        return      
+                else:
+                    await user.add_roles(role, reason="User added via AutoRole.")
+                    await interaction.response.send_message(f"You've successfully been assigned {role.mention}.", ephemeral=True)
+
+            @discord.ui.button(label='Bot Development', style=discord.ButtonStyle.grey, custom_id='persistent_autorole:botDev')
+            async def grey(self, button: discord.ui.Button, interaction: discord.Interaction):
+                role = interaction.guild.get_role(868692545490804746)
+                user = interaction.user
+                if role in user.roles:
+                    confirmation = bot.CustomViews.confirmationView()
+                    await interaction.response.send_message(f"Are you sure you'd like to remove {role.mention} from your roles?",view=confirmation, ephemeral=True)
+                    await confirmation.wait()
+                    if confirmation.value is None:
+                        await interaction.response.send_message(f"Timed out.", ephemeral=True)
+                    elif confirmation.value:
+                        await user.remove_roles(role, reason="User removed via AutoRole.")
+                        await interaction.response.send_message(f"You've successfully been unassigned {role.mention}.", ephemeral=True)
+                    else:
+                        return      
+                else:
+                    await user.add_roles(role, reason="User added via AutoRole.")
+                    await interaction.response.send_message(f"You've successfully been assigned {role.mention}.", ephemeral=True)
+
+        class confirmationView(discord.ui.View):
+            def __init__(self):
+                super().__init__(timeout=3000)
+                self.value = None
+
+            @discord.ui.button(label='Confirm', style=discord.ButtonStyle.green)
+            async def confirm(self, button: discord.ui.Button, interaction: discord.Interaction):
+                self.value = True
+                await interaction.response.send_message(f'Removing..', ephemeral=True)
+                self.stop()
+
+            @discord.ui.button(label='Cancel', style=discord.ButtonStyle.grey)
+            async def cancel(self, button: discord.ui.Button, interaction: discord.Interaction):
+                self.value = False
+                await interaction.response.send_message(f'Cancelled.', ephemeral=True)
+                self.stop()
+    
+    class CustomButtons():
+        def __init__(self):
+            pass
+        
+
 #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # ↓ Local ↓ : WIP
 #   › Handles providing local files such as images, video, cogs, py files, etc.
@@ -331,5 +399,35 @@ class database():
     def __init__(self):
         pass
 
-    def GuildRegistered(guild_id):
-        pass
+    async def RegisterGuild(guild):
+        async with asqlite.connect(cfg['database']['name']) as conn:
+            async with conn.cursor() as cursor:
+                await cursor.execute('''CREATE TABLE IF NOT EXISTS guilds (id integer PRIMARY KEY UNIQUE NOT NULL, name text, 'bot stat channel enabled' bool NOT NULL DEFAULT 1)''')
+                await cursor.execute(f"""SELECT * FROM guilds WHERE id = (?)""",(guild.id))
+                result = await cursor.fetchone()
+                if result is None:
+                    await cursor.execute(f"INSERT INTO guilds VALUES(?, ?, 1)", (guild.id, guild.name))
+                    await conn.commit()
+                else:
+                    pass
+    
+    async def RegisterPersistentView(guild, message, view):
+        async with asqlite.connect(cfg['database']['name']) as conn:
+            async with conn.cursor() as cursor:
+                print(f"Recieved {message.id} for guild {guild.id}.")
+                db_name = str(guild.id) + '_PersistentViews'
+                await cursor.execute(f"CREATE TABLE IF NOT EXISTS [{db_name}] (channel_id, message_id, view)")
+                print(f'got none')
+                print((view))
+                await cursor.execute(f"INSERT INTO [{db_name}] VALUES(?, ?, ?)", (message.channel.id, message.id, view))
+                await conn.commit()
+
+    async def RetrievePersistentView(guild):
+        async with asqlite.connect(cfg['database']['name']) as conn:
+            async with conn.cursor() as cursor:
+                db_name = str(guild.id) + '_PersistentViews'
+                await cursor.execute(f"CREATE TABLE IF NOT EXISTS [{db_name}] (channel_id, message_id, view)")
+                await cursor.execute(f"""SELECT * FROM [{db_name}]""")
+                result = await cursor.fetchall()
+                if result is not None:
+                    return result
