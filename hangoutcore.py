@@ -9,15 +9,16 @@
         None
 """
 import asyncio
+import asqlite
 import ctypes,  ctypes.util
 import datetime
 import discord
 import logging
 import os, sys
-
 import utils
 
 from discord.ext import commands
+from discord.utils import get
 from utils import config, terminal
 
 cfg = config.load() # Get Config before bot starts
@@ -42,6 +43,7 @@ class HangoutCoreBot(commands.Bot): # Sub class bot so we can have more customiz
             intents=self.intents, 
             **options
             )
+        self.loop.create_task(self.startup())
     
         self.start_time = "" # Add the start_time variable so that we may access it for debuging or information display purposes.
         self.debug_mode = False
@@ -56,8 +58,9 @@ class HangoutCoreBot(commands.Bot): # Sub class bot so we can have more customiz
                     self.debug_mode = False
         else:
             self.debug_mode = False
-    
-    async def on_ready(self):
+
+    async def startup(self):
+        await self.wait_until_ready()
         self.start_time = '{0:%d%b%Y %Hh:%Mm}'.format(datetime.datetime.now())
         terminal.initiate(self.start_time, self.debug_mode)
         terminal.log("INFO", f"Looking for Bot Modules in the 'cogs' Directory.")
@@ -103,7 +106,12 @@ class HangoutCoreBot(commands.Bot): # Sub class bot so we can have more customiz
 
         terminal.log("WARNING", "Creating a database for every guild.")
         for guild in bot.guilds:
-            print(guild)
+            await utils.database.RegisterGuild(guild)
+            terminal.log("INFO",f"Registered {guild.name}:{guild.id}")
+
+    async def on_ready(self):
+        self.add_view(utils.bot.CustomViews.autoroleView())
+        pass
 
 if __name__ == "__main__":
     bot = HangoutCoreBot(command_prefix=utils.bot.GetPrefix, terminal_args=sys.argv[1:])
