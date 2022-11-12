@@ -20,7 +20,9 @@ import traceback
 
 from asyncio import sleep
 from colorama import *
+from datetime import datetime
 from discord.ext import commands
+from typing import Optional
 from os import system, name
 
 #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -79,29 +81,21 @@ class terminal():
         print(Style.RESET_ALL + Back.RESET,end="\r")
         terminal.print_hr()
 
-    def log(level:str, log):                                                                                                        # More Logging functionality
-        if level == "DEBUG":                                                                                                        #
-            logging.debug(log)                                                                                                      #
-            print(f"[{Fore.BLUE}DEBUG{Fore.RESET}] {log}")                                                                          #
+    class log():
+        def DEBUG(log):
+            print(f"[{Fore.BLUE}DEBUG{Fore.RESET}] {log}")
 
-        if level == "INFO":                                                                                                         #
-            logging.info(log)                                                                                                       #
-            print(f"[{Fore.GREEN}INFO{Fore.RESET}] {log}")                                                                          #
+        def INFO(log):
+            print(f"[{Fore.GREEN}INFO{Fore.RESET}] {log}")
 
-        if level == "WARNING":                                                                                                      #
-            logging.warning(log)                                                                                                    #
-            print(f"[{Fore.YELLOW}WARNING{Fore.RESET}] {log}")                                                                      #
-            
-        if level == "ERROR":                                                                                                        #
-            logging.error(log)                                                                                                      #
-            print(f"[{Fore.RED}ERROR{Fore.RESET}] {log}")                                                                           #
+        def WARNING(log):
+            print(f"[{Fore.YELLOW}WARNING{Fore.RESET}] {log}")
+        
+        def ERROR(log):
+            print(f"[{Fore.RED}ERROR{Fore.RESET}] {log}")
 
-        if level == "CRITICAL":                                                                                                     #
-            logging.critical(log)                                                                                                   #
-            print(f"{Style.BRIGHT}{Back.RED}[CRITICAL] {log}{Style.RESET_ALL}{Back.RESET}") 
-
-    def queue(level:str, log):
-        terminal.log_Q.append([level,log])
+        def CRITICAL(log):
+            print(f"{Style.BRIGHT}{Back.RED}[CRITICAL] {log}{Style.RESET_ALL}{Back.RESET}")
 #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # ↓ Config ↓ : WIP
 #   › Handles bot config loading, writing as well as the initial creation of config.json.
@@ -188,7 +182,7 @@ class config():
                         terminal.queue("WARNING",f"{config.CONFIG_PATH} is either outdated or corrupt. Please delete the old one and run the bot again to create a new one.")
                     return cfg
         else: #file doesn't exist, create new one.
-            terminal.log("CRITICAL", f"Config could not be found. Creating a new one.")
+            terminal.log.CRITICAL(f"Config could not be found. Creating a new one.")
             with open(path, 'w') as file:
                 json.dump(config.EXAMPLE_CONFIG, file, indent=4)
                 
@@ -219,7 +213,8 @@ class bot():
     
     def GetIntents():
         intents = discord.Intents.default() # Set Bot Intents
-        intents.members = True  
+        intents.members = True
+        intents.message_content = True  
         intents.typing = True
         intents.presences = True
         intents.guilds = True
@@ -358,6 +353,70 @@ class local():
         }
         return package
 
+    async def GetTicketTranscript(ticketid:str):
+        transcriptDirectory = (f"transcripts\\")
+        if os.path.exists(f"{transcriptDirectory}{ticketid}.md"):
+            with open(f"{transcriptDirectory}{ticketid}.md", 'rb') as transcriptFile:
+                return transcriptFile
+
+    def GetTicketTranscriptPath(ticketid:str):
+        transcriptDirectory = (f"transcripts\\")
+        if os.path.exists(f"{transcriptDirectory}{ticketid}.md"):
+            return os.path.abspath(f"{transcriptDirectory}{ticketid}.md")
+
+    async def CreateTicketTranscript(ticketid:str, discordChannel: discord.channel, ticketAuthor: discord.User):
+        transcriptDirectory = (f"transcripts\\")
+        if not os.path.exists(f"{transcriptDirectory}{ticketid}.md"):
+            ticketTranscript:discord.File
+            async with aiofiles.open(f"{transcriptDirectory}{ticketid}.md", 'a', encoding="utf-8") as transcriptFile:
+                await transcriptFile.write(f"# Official Transcript for Ticket ID: {ticketid}:\n")
+                await transcriptFile.write(f"---\n")
+                await transcriptFile.write(f"## **BEGIN TRANSCRIPT** \n\n")
+                async for message in discordChannel.history(limit = None, oldest_first = True):
+                    created = datetime.strftime(message.created_at, "%m/%d/%Y at %H:%M:%S")
+                    if message.edited_at:
+                        edited = datetime.strftime(message.edited_at, "%m/%d/%Y at %H:%M:%S")
+                        await transcriptFile.write(f"**{message.author} on {created}**: > {message.clean_content} (Edited at {edited})\n")
+                        if len(message.embeds) > 0:
+                            for embed in message.embeds:
+                                await transcriptFile.write(f"- Embed: {str(embed)}\n")
+                        if len(message.attachments) > 0:
+                            for attachment in message.attachments:
+                                await transcriptFile.write(f"- File Type: {attachment.content_type} [{attachment.filename}]({attachment.url})\n")
+                    else:
+                        await transcriptFile.write(f"**{message.author} on {created}**: > {message.clean_content}\n")
+                        if len(message.embeds) > 0:
+                            for embed in message.embeds:
+                                embed_text = ""
+                                embed_text = embed_text + f"Title: *{embed.title}*\n"
+                                embed_text = embed_text + f"Description: *{embed.description}*\n"
+                                for field in embed.fields:
+                                    embed_text = embed_text + f"Field Name: *{field.name}*\n"
+                                    embed_text = embed_text + f"Field Value: *{field.value}*\n"
+                                embed_text = embed_text + f"Footer: *{embed.footer.text}*\n"
+                                await transcriptFile.write(f"- Embed: \n{embed_text}\n")
+                        if len(message.attachments) > 0:
+                            await transcriptFile.write(f"*Message Attachments*\n")
+                            for attachment in message.attachments:
+                                await transcriptFile.write(f"- File: \nType: {attachment.content_type}\nURL: [{attachment.filename}]({attachment.url})\n")
+                await transcriptFile.write(f"\n## **END TRANSCRIPT** \n")
+                await transcriptFile.write(f"---\n")
+                generated = datetime.now().strftime("%m/%d/%Y at %H:%M:%S")
+                await transcriptFile.write(f"*Generated at {generated} by {ticketAuthor.name}#{ticketAuthor.discriminator} AKA {ticketAuthor.display_name}*\n*Date Formatting: MM/DD/YY*\n*Time Zone: UTC*")
+                ticketTranscript = discord.File(fp=local.GetTicketTranscriptPath(ticketid=ticketid),filename=f"{discordChannel.name}.md")
+                #os.close(transcriptFile)
+                #ticketTranscript.close()
+                await transcriptFile.close()
+                return ticketTranscript
+
+    def DeleteTicketTranscript(ticketid:str):
+        transcriptDirectory = (f"transcripts\\")
+        if os.path.exists(f"{transcriptDirectory}{ticketid}.md"):
+            try:
+                os.remove(f"{transcriptDirectory}{ticketid}.md")
+            except Exception as e:
+                terminal.log.ERROR(f"{e}")
+
 #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # ↓ Custom Error Processing ↓ : WIP
 #   › Intended for when you only need specific data from an error.
@@ -372,11 +431,34 @@ class errorprocessing():
             designed to minimise clutter and lines not relevant."""
         ErrorTraceback = traceback.format_exception(type(error), error, error.__traceback__)
         if debug_mode:
-            terminal.log("ERROR", f"  └ Failed to load {file}\n" + "".join(ErrorTraceback))
+            terminal.log.ERROR(f"  └ Failed to load {file}\n" + "".join(ErrorTraceback))
         else:
             
-            terminal.log("ERROR", f"""  └ Failed to load {file}.
+            terminal.log.ERROR(f"""  └ Failed to load {file}.
             {Back.RED}{error}{Back.RESET}""")
+
+    class CommandError():
+
+        def InsufficientPerms(NotifyGuild: bool, command: commands.Command, member: discord.Member):
+            ErrorMessage = f"""{member.name} attempted to execute command: {command.name} however they do not have sufficient permissions."""
+            terminal.log.ERROR(ErrorMessage)
+            return ErrorMessage
+    
+    async def NotifyGuildStaff(guild: discord.Guild, color=discord.Color.from_rgb(47, 49, 54), title: str="Notification Title", message: str="Notification Message"):
+        NotificationChannel = await database.RetrieveGuildNotificationChannel(guild=guild)
+        if NotificationChannel is not None:
+            GuildNotificationEmbed = discord.Embed(
+                title=f"{title}",
+                description=f"{message}",
+                timestamp=datetime.now(),
+                color=color
+            )
+            GuildNotificationEmbed.set_footer(text=f"Staff Notification")
+            await NotificationChannel.send(embed=GuildNotificationEmbed)
+            return None
+        else:
+            terminal.log.CRITICAL(f"{guild.name} does not have a Notification Channel set up. They will not be able to recieve Notifications.")
+            return f"This Guild does not have a notification channel registered in our database. Please utilize the **/setup** command and try again"
 
 #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # ↓ Guild Audio State ↓ : WIP
@@ -399,35 +481,107 @@ class database():
     def __init__(self):
         pass
 
-    async def RegisterGuild(guild):
+    async def RegisterGuild(guild: discord.Guild):
         async with asqlite.connect(cfg['database']['name']) as conn:
             async with conn.cursor() as cursor:
-                await cursor.execute('''CREATE TABLE IF NOT EXISTS guilds (id integer PRIMARY KEY UNIQUE NOT NULL, name text, 'bot stat channel enabled' bool NOT NULL DEFAULT 1)''')
-                await cursor.execute(f"""SELECT * FROM guilds WHERE id = (?)""",(guild.id))
+                await cursor.execute('''\
+                    CREATE TABLE IF NOT EXISTS guilds 
+                    (id integer PRIMARY KEY UNIQUE NOT NULL, name text, guild_notification_channel_id integer, stickymessage_ids text, stickymessage_moderator_id integer, autorole_enabled text NOT NULL DEFAULT 'False', autorole_moderator_id integer, autorole_role_ids text, selfrole_enabled text NOT NULL DEFAULT 'False', selfrole_moderator_id integer, selfrole_role_ids text, guildstats_enabled text NOT NULL DEFAULT 'False', guildstats_channel_id integer, guildstats_options text, voicelobby_enabled text NOT NULL DEFAULT 'False', voicelobby_channel_id integer, guildsuggestions_enabled text NOT NULL DEFAULT 'False', guildsuggestions_channel_id integer, ticketsystem_enabled text NOT NULL DEFAULT 'False', ticketsystem_moderator_id integer, ticketsystem_channel_id integer)''')
+                await cursor.execute(f"""\
+                    SELECT * FROM guilds 
+                    WHERE id = (?)
+                    """,(guild.id))
                 result = await cursor.fetchone()
                 if result is None:
-                    await cursor.execute(f"INSERT INTO guilds VALUES(?, ?, 1)", (guild.id, guild.name))
+                    await cursor.execute(f"""\
+                        INSERT INTO guilds
+                        (id, name, autorole_enabled, selfrole_enabled, guildstats_enabled, voicelobby_enabled, guildsuggestions_enabled, ticketsystem_enabled)
+                        VALUES( ?, ?, 'False', 'False', 'False', 'False', 'False', 'False')
+                        """, (guild.id, guild.name))
                     await conn.commit()
                 else:
-                    pass
-    
-    async def RegisterPersistentView(guild, message, view):
-        async with asqlite.connect(cfg['database']['name']) as conn:
-            async with conn.cursor() as cursor:
-                print(f"Recieved {message.id} for guild {guild.id}.")
-                db_name = str(guild.id) + '_PersistentViews'
-                await cursor.execute(f"CREATE TABLE IF NOT EXISTS [{db_name}] (channel_id, message_id, view)")
-                print(f'got none')
-                print((view))
-                await cursor.execute(f"INSERT INTO [{db_name}] VALUES(?, ?, ?)", (message.channel.id, message.id, view))
-                await conn.commit()
+                    await cursor.execute(f"""\
+                        UPDATE guilds SET name = ?
+                        WHERE id = ?"""
+                        , (guild.name, guild.id))
 
-    async def RetrievePersistentView(guild):
+    async def RegisterGuildNotificationChannel(guild: discord.Guild, channel: discord.TextChannel):
         async with asqlite.connect(cfg['database']['name']) as conn:
             async with conn.cursor() as cursor:
-                db_name = str(guild.id) + '_PersistentViews'
-                await cursor.execute(f"CREATE TABLE IF NOT EXISTS [{db_name}] (channel_id, message_id, view)")
-                await cursor.execute(f"""SELECT * FROM [{db_name}]""")
+                if channel is not None:
+                    await cursor.execute(f"""\
+                        UPDATE guilds SET guild_notification_channel_id = ?
+                        WHERE id = ?
+                        """, (channel.id, guild.id))
+                
+                await conn.commit()
+    
+    async def RetrieveGuildNotificationChannel(guild: discord.Guild):
+        async with asqlite.connect(cfg['database']['name']) as conn:
+            async with conn.cursor() as cursor:
+                await cursor.execute(f"""SELECT guild_notification_channel_id FROM guilds WHERE id = ?""", (guild.id))
                 result = await cursor.fetchall()
                 if result is not None:
-                    return result
+                    if result[0][0] is not None:
+                        NotificationChannel = discord.utils.get(guild.channels, id=result[0][0])
+                        return NotificationChannel
+                    else:
+                        return None
+
+    async def RegisterAutoRoleSystem(guild: discord.Guild, enabled: bool = None, moderator_role: discord.Role = None, role_ids: list[int] = None):
+        async with asqlite.connect(cfg['database']['name']) as conn:
+            async with conn.cursor() as cursor:
+                if enabled is not None:
+                    await cursor.execute(f"""\
+                        UPDATE guilds SET autorole_enabled = ?
+                        WHERE id = ?
+                        """, (enabled, guild.id))
+                if moderator_role is not None:
+                    await cursor.execute(f"""\
+                        UPDATE guilds SET autorole_moderator_id = ?
+                        WHERE id = ?
+                        """, (moderator_role.id, guild.id))
+                if role_ids is not None:
+                    await cursor.execute(f"""\
+                        UPDATE guilds SET autorole_role_ids = ?
+                        WHERE id = ?
+                        """, (role_ids, guild.id))
+                await conn.commit()
+
+    async def RetrieveAutoRoleSystem(guild: discord.Guild):
+        async with asqlite.connect(cfg['database']['name']) as conn:
+            async with conn.cursor() as cursor:
+                await cursor.execute(f"""SELECT autorole_enabled, autorole_moderator_id, autorole_role_ids FROM guilds WHERE id = ?""", (guild.id))
+                result = await cursor.fetchall()
+                if result is not None:
+                    return result[0]
+
+    async def RegisterTicketSystem(guild: discord.Guild, enabled: bool = None, category_id: discord.CategoryChannel = None, moderator_role: discord.Role = None):
+        async with asqlite.connect(cfg['database']['name']) as conn:
+            async with conn.cursor() as cursor:
+                if enabled is not None:
+                    await cursor.execute(f"""\
+                        UPDATE guilds SET ticketsystem_enabled = ?
+                        WHERE id = ?
+                        """, (enabled, guild.id))
+                
+                if category_id is not None:
+                    await cursor.execute(f"""\
+                        UPDATE guilds SET ticketsystem_channel_id = ?
+                        WHERE id = ?
+                        """, (category_id.id, guild.id))
+                
+                if moderator_role is not None:
+                    await cursor.execute(f"""\
+                        UPDATE guilds SET ticketsystem_moderator_id = ?
+                        WHERE id = ?
+                        """, (moderator_role.id, guild.id))
+                await conn.commit()
+
+    async def RetrieveTicketSystem(guild: discord.Guild):
+        async with asqlite.connect(cfg['database']['name']) as conn:
+            async with conn.cursor() as cursor:
+                await cursor.execute(f"""SELECT ticketsystem_enabled, ticketsystem_channel_id, ticketsystem_moderator_id FROM guilds WHERE id = ?""", (guild.id))
+                result = await cursor.fetchall()
+                if result is not None:
+                    return result[0]
