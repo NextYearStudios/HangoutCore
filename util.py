@@ -434,8 +434,8 @@ class bot():
                     print(Style.BRIGHT + Back.RED,end="\r")
                 else:
                     print(Style.NORMAL + Fore.BLACK + Back.WHITE,end="\r")
-                #bot_terminal.print_center(str(cfg["bot"]["name"]))
-                #bot_terminal.print_center(str(cfg["bot"]["version"]))
+                bot.terminal.print_center(str(cfg["bot"]["name"]))
+                bot.terminal.print_center(str(cfg["bot"]["version"]))
                 bot.terminal.print_center(str(start_time))
                 if debug:
                     bot.terminal.print_center(f'// Debug Mode Enabled \\\ ')
