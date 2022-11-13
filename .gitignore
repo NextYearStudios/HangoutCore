@@ -134,6 +134,7 @@ dmypy.json
 **config.json
 **database.sqlite
 *.disabled
+*.properties
 
 logs/
 transcripts/
