@@ -119,7 +119,7 @@ class HangoutCoreBot(commands.Bot): # Sub class bot so we can have more customiz
             self.tree.copy_global_to(guild=guild)
             # followed by syncing to the testing guild.
             await self.tree.sync(guild=guild)
-        
+        await self.tree.sync()
 
         # This would also be a good place to connect to our database and
         # load anything that should be in memory prior to handling events.
