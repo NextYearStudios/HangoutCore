@@ -26,128 +26,11 @@ from jproperties import Properties
 from typing import Optional
 from os import system, name
 
-cfg = None
 
 class bot():
     def __init__(self):
         pass
     
-    def GetIntents():
-        intents = discord.Intents.default() # Set Bot Intents
-        intents.members = True
-        intents.message_content = True  
-        intents.typing = True
-        intents.presences = True
-        intents.guilds = True
-        return intents
-
-    def GetActivity():
-        if cfg is not None:
-            if cfg["bot"]["status"]["type"] == "listening": # Set the activity depending on config
-                activity = discord.Activity(
-                    type=discord.ActivityType.listening,
-                    name=cfg["bot"]["status"]["name"]
-                    )
-            elif cfg["bot"]["status"]["type"] == "streaming":
-                activity = discord.Activity(
-                    type=discord.ActivityType.streaming,
-                    name=cfg["bot"]["status"]["name"],
-                    url=cfg["bot"]["status"]["url"]
-                    )
-            elif cfg["bot"]["status"]["type"] == "watching":
-                activity = discord.Activity(
-                    type=discord.ActivityType.watching,
-                    name=cfg["bot"]["status"]["name"]
-                    )
-            elif cfg["bot"]["status"]["type"] == "playing":
-                activity = discord.Activity(
-                    type=discord.ActivityType.playing,
-                    name=cfg["bot"]["status"]["name"],
-                    game=cfg["bot"]["status"]["game"]
-                    )
-        else:
-            activity = discord.Activity(
-                type=discord.ActivityType.listening,
-                name="!help"
-                )
-        return activity
-
-    def GetPrefix(bot, message):
-        prefixes = cfg["bot"]["prefixes"]
-
-        # Check to see if we are outside of a guild. e.g DM's etc.
-        if not message.guild or prefixes is None:
-            # Only allow ! to be used in DMs or if no prefix is specified.
-            return '!'
-
-        return commands.when_mentioned_or(*prefixes)(bot, message)
-
-    class CustomViews():
-        def __init__(self):
-            pass
-        class autoroleView(discord.ui.View):
-            def __init__(self):
-                super().__init__(timeout=None)
-
-            @discord.ui.button(label='Game Development', style=discord.ButtonStyle.grey, custom_id='persistent_autorole:gameDev')
-            async def green(self, button: discord.ui.Button, interaction: discord.Interaction):
-                role = interaction.guild.get_role(868692760524365875)
-                user = interaction.user
-                if role in user.roles:
-                    confirmation = bot.CustomViews.confirmationView()
-                    await interaction.response.send_message(f"Are you sure you'd like to remove {role.mention} from your roles?",view=confirmation, ephemeral=True)
-                    await confirmation.wait()
-                    if confirmation.value is None:
-                        await interaction.response.send_message(f"Timed out.", ephemeral=True)
-                    elif confirmation.value:
-                        await user.remove_roles(role, reason="User removed via AutoRole.")
-                        await interaction.response.send_message(f"You've successfully been unassigned {role.mention}.", ephemeral=True)
-                    else:
-                        return      
-                else:
-                    await user.add_roles(role, reason="User added via AutoRole.")
-                    await interaction.response.send_message(f"You've successfully been assigned {role.mention}.", ephemeral=True)
-
-            @discord.ui.button(label='Bot Development', style=discord.ButtonStyle.grey, custom_id='persistent_autorole:botDev')
-            async def grey(self, button: discord.ui.Button, interaction: discord.Interaction):
-                role = interaction.guild.get_role(868692545490804746)
-                user = interaction.user
-                if role in user.roles:
-                    confirmation = bot.CustomViews.confirmationView()
-                    await interaction.response.send_message(f"Are you sure you'd like to remove {role.mention} from your roles?",view=confirmation, ephemeral=True)
-                    await confirmation.wait()
-                    if confirmation.value is None:
-                        await interaction.response.send_message(f"Timed out.", ephemeral=True)
-                    elif confirmation.value:
-                        await user.remove_roles(role, reason="User removed via AutoRole.")
-                        await interaction.response.send_message(f"You've successfully been unassigned {role.mention}.", ephemeral=True)
-                    else:
-                        return      
-                else:
-                    await user.add_roles(role, reason="User added via AutoRole.")
-                    await interaction.response.send_message(f"You've successfully been assigned {role.mention}.", ephemeral=True)
-
-        class confirmationView(discord.ui.View):
-            def __init__(self):
-                super().__init__(timeout=3000)
-                self.value = None
-
-            @discord.ui.button(label='Confirm', style=discord.ButtonStyle.green)
-            async def confirm(self, button: discord.ui.Button, interaction: discord.Interaction):
-                self.value = True
-                await interaction.response.send_message(f'Removing..', ephemeral=True)
-                self.stop()
-
-            @discord.ui.button(label='Cancel', style=discord.ButtonStyle.grey)
-            async def cancel(self, button: discord.ui.Button, interaction: discord.Interaction):
-                self.value = False
-                await interaction.response.send_message(f'Cancelled.', ephemeral=True)
-                self.stop()
-    
-    class CustomButtons():
-        def __init__(self):
-            pass
-
 #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # ↓ Config ↓ : WIP
 #   › Used for handling bot configuration file.
@@ -382,6 +265,129 @@ class bot():
                         return False
             else:
                 return False
+    
+#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# ↓ Bot ↓ : WIP
+#   › Fill with functions as you need, intended to keep other files clear and let utils do the heavy lifting.
+#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+    def GetIntents():
+        intents = discord.Intents.default() # Set Bot Intents
+        intents.members = True
+        intents.message_content = True  
+        intents.typing = True
+        intents.presences = True
+        intents.guilds = True
+        return intents
+
+    def GetActivity():
+        cfg = bot.config.load()
+        if cfg is not None:
+            if cfg["bot"]["status"]["type"] == "listening": # Set the activity depending on config
+                activity = discord.Activity(
+                    type=discord.ActivityType.listening,
+                    name=cfg["bot"]["status"]["name"]
+                    )
+            elif cfg["bot"]["status"]["type"] == "streaming":
+                activity = discord.Activity(
+                    type=discord.ActivityType.streaming,
+                    name=cfg["bot"]["status"]["name"],
+                    url=cfg["bot"]["status"]["url"]
+                    )
+            elif cfg["bot"]["status"]["type"] == "watching":
+                activity = discord.Activity(
+                    type=discord.ActivityType.watching,
+                    name=cfg["bot"]["status"]["name"]
+                    )
+            elif cfg["bot"]["status"]["type"] == "playing":
+                activity = discord.Activity(
+                    type=discord.ActivityType.playing,
+                    name=cfg["bot"]["status"]["name"],
+                    game=cfg["bot"]["status"]["game"]
+                    )
+        else:
+            activity = discord.Activity(
+                type=discord.ActivityType.listening,
+                name="!help"
+                )
+        return activity
+
+    def GetPrefix(discordBot, message):
+        cfg = bot.config.load()
+        prefixes = cfg["bot"]["prefixes"]
+
+        # Check to see if we are outside of a guild. e.g DM's etc.
+        if not message.guild or prefixes is None:
+            # Only allow ! to be used in DMs or if no prefix is specified.
+            return '!'
+
+        return commands.when_mentioned_or(*prefixes)(bot, message)
+
+    class CustomViews():
+        def __init__(self):
+            pass
+        class autoroleView(discord.ui.View):
+            def __init__(self):
+                super().__init__(timeout=None)
+
+            @discord.ui.button(label='Game Development', style=discord.ButtonStyle.grey, custom_id='persistent_autorole:gameDev')
+            async def green(self, button: discord.ui.Button, interaction: discord.Interaction):
+                role = interaction.guild.get_role(868692760524365875)
+                user = interaction.user
+                if role in user.roles:
+                    confirmation = bot.CustomViews.confirmationView()
+                    await interaction.response.send_message(f"Are you sure you'd like to remove {role.mention} from your roles?",view=confirmation, ephemeral=True)
+                    await confirmation.wait()
+                    if confirmation.value is None:
+                        await interaction.response.send_message(f"Timed out.", ephemeral=True)
+                    elif confirmation.value:
+                        await user.remove_roles(role, reason="User removed via AutoRole.")
+                        await interaction.response.send_message(f"You've successfully been unassigned {role.mention}.", ephemeral=True)
+                    else:
+                        return      
+                else:
+                    await user.add_roles(role, reason="User added via AutoRole.")
+                    await interaction.response.send_message(f"You've successfully been assigned {role.mention}.", ephemeral=True)
+
+            @discord.ui.button(label='Bot Development', style=discord.ButtonStyle.grey, custom_id='persistent_autorole:botDev')
+            async def grey(self, button: discord.ui.Button, interaction: discord.Interaction):
+                role = interaction.guild.get_role(868692545490804746)
+                user = interaction.user
+                if role in user.roles:
+                    confirmation = bot.CustomViews.confirmationView()
+                    await interaction.response.send_message(f"Are you sure you'd like to remove {role.mention} from your roles?",view=confirmation, ephemeral=True)
+                    await confirmation.wait()
+                    if confirmation.value is None:
+                        await interaction.response.send_message(f"Timed out.", ephemeral=True)
+                    elif confirmation.value:
+                        await user.remove_roles(role, reason="User removed via AutoRole.")
+                        await interaction.response.send_message(f"You've successfully been unassigned {role.mention}.", ephemeral=True)
+                    else:
+                        return      
+                else:
+                    await user.add_roles(role, reason="User added via AutoRole.")
+                    await interaction.response.send_message(f"You've successfully been assigned {role.mention}.", ephemeral=True)
+
+        class confirmationView(discord.ui.View):
+            def __init__(self):
+                super().__init__(timeout=3000)
+                self.value = None
+
+            @discord.ui.button(label='Confirm', style=discord.ButtonStyle.green)
+            async def confirm(self, button: discord.ui.Button, interaction: discord.Interaction):
+                self.value = True
+                await interaction.response.send_message(f'Removing..', ephemeral=True)
+                self.stop()
+
+            @discord.ui.button(label='Cancel', style=discord.ButtonStyle.grey)
+            async def cancel(self, button: discord.ui.Button, interaction: discord.Interaction):
+                self.value = False
+                await interaction.response.send_message(f'Cancelled.', ephemeral=True)
+                self.stop()
+    
+    class CustomButtons():
+        def __init__(self):
+            pass
 
 #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # ↓ Terminal ↓ : WIP
@@ -412,6 +418,7 @@ class bot():
             """
             Clear's and prepares terminal for bot output.
             """
+            cfg = bot.config.load()
             if bot_setup:
                 bot.terminal.clear()
                 if debug:
@@ -732,5 +739,3 @@ class bot():
         #             result = await cursor.fetchall()
         #             if result is not None:
         #                 return result[0]
-
-cfg = bot.config.load() # Set config once script is loaded.
