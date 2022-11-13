@@ -137,7 +137,6 @@ class HangoutCoreBot(commands.Bot): # Sub class bot so we can have more customiz
 
 async def main():
     init_time = '{0:%d%b%Y %Hh:%Mm}'.format(datetime.now()) # This time is used for bot reference
-    init_logtime = '{0:%d%b%Y_%Hh:%Mm}'.format(datetime.now()) # This time is used in logging
     if not util.bot.config.exists(): # If the config does not exist
         util.bot.config.setup(init_time) # Begin Config Setup process like taking in bot token, name, etc.
 
@@ -146,7 +145,7 @@ async def main():
     logger.setLevel(logging.NOTSET)
 
     handler = logging.handlers.RotatingFileHandler(
-        filename=f'{util.bot.config.LOG_DIRECTORY_PATH}/log_{init_logtime}.log',
+        filename=f'{util.bot.config.LOG_DIRECTORY_PATH}/log_{init_logtime.replace(" ","_")}.log',
         encoding='utf-8',
         maxBytes=32 * 1024 * 1024,  # 32 MiB
         backupCount=5,  # Rotate through 5 files
