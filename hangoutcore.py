@@ -22,17 +22,15 @@ from datetime import datetime
 from discord import app_commands, ui, utils
 from discord.ext import commands
 from discord.utils import get
+from questionnaire import Questionnaire
 from typing import List, Optional
 from util import bot
 
-cfg = util.bot.config.load()
-
 class HangoutCoreBot(commands.Bot): # Sub class bot so we can have more customizability
-    date = '{0:%d%b%Y_%Hh-%Mm}'.format(datetime.now())
     BotSynced = False
     ViewsAdded = False
-    intents = bot.GetIntents()
-    activity = bot.GetActivity()
+    intents = util.bot.GetIntents()
+    activity = util.bot.GetActivity()
     def __init__(
         self,
         *args,
@@ -42,19 +40,20 @@ class HangoutCoreBot(commands.Bot): # Sub class bot so we can have more customiz
         web_client: ClientSession,
         testing_guild_id: Optional[int] = None,
         **kwargs):
-        super().__init__(command_prefix, activity= self.activity, description=cfg["bot"]["description"], intents=self.intents, **kwargs)
+        super().__init__(command_prefix, activity=self.activity, description=util.bot.cfg["bot"]["description"], intents=self.intents, **kwargs)
         self.web_client = web_client
         self.testing_guild_id = testing_guild_id
         self.initial_extensions = initial_extensions
     
         self.start_time = "" # Add the start_time variable so that we may access it for debuging or information display purposes.
         self.debug_mode = False
-        self.ticket_mod = 760151284098793519
+        
         if len(terminal_args) > 0:
             if terminal_args[0] == "-h":
                 print("\nhangoutcore.py -debug <True/False>\n")
                 sys.exit(2)
             elif terminal_args[0] == "-d" or terminal_args == "-debug":
+                
                 if terminal_args[1] == "True":
                     self.debug_mode = True
                 else:
@@ -68,41 +67,8 @@ class HangoutCoreBot(commands.Bot): # Sub class bot so we can have more customiz
         self.start_time = '{0:%d%b%Y %Hh:%Mm}'.format(datetime.now())
         bot.terminal.initiate(self.start_time, self.debug_mode)
         bot.terminal.log.INFO (f"Looking for Bot Modules in the 'cogs' Directory.")
-
-        for file in self.initial_extensions["valid_files"]:
-            bot.terminal.log.INFO(f" └ Found {file}")
-            try:
-                await self.load_extension(f'{bot.config.COG_DIRECTORY_PATH}.{file[:-3]}')
-            except Exception as e:
-                bot.errorprocessing.CogLoadError(file, e, self.debug_mode)
-            else:
-                bot.terminal.log.INFO(f"  └ successfully loaded {file}.")
-        for file in self.initial_extensions["disabled_files"]:
-            bot.terminal.log.INFO(f" └ Found Disabled file {file}, Skipping.")
-        for file in self.initial_extensions["invalid_files"]:
-            if file == "__pycache__" or "__init__":
-                pass
-            else:
-                bot.terminal.log.INFO(f" └ Found invalid file {file}, Skipping.")
-        bot.terminal.log.INFO(f"Successfully loaded {len(self.initial_extensions['valid_files'])} extension(s).")
-        bot.terminal.log.INFO(f"Logged in as {self.user} (ID: {self.user.id}).")
-        if len(self.initial_extensions["invalid_files"]) > 0:
-            bot.terminal.log.WARNING(f"Found {len(self.initial_extensions['invalid_files'])} invalid extension(s) in the 'cogs' directory. If you believe this is an error please verify each .py file and make sure it is set up as a cog properly, Otherwise you can ignore this message.")
-        
-        opuslib = ctypes.util.find_library('opus')
-        if opuslib is not None:
-            try:
-                bot.terminal.log.INFO(f"Loading Opus.")
-                discord.opus.load_opus('opus')
-            except Exception as e:
-                bot.terminal.log.ERROR(e)
-            else:
-                if not discord.opus.is_loaded():
-                    bot.terminal.log.CRITICAL("Opus Failed To Load. It's corn! A big lump with knobs. It's got the juice!")
-                else:
-                    bot.terminal.log.INFO("Successfully loaded opus.")
-        else:
-            bot.terminal.log.WARNING("Could not find Opus, You will not be able to play audio without it.")
+        await bot.local.load_extensions(self, self.debug_mode) # Scan cog directory and enable cogs.
+        bot.audio.verify_opus() # Looks for opus and loads it if found.
         
         #if len(terminal.log_Q) > 0: # Display any logs that happened while we were botting up
         #    for q in terminal.log_Q:
@@ -123,6 +89,11 @@ class HangoutCoreBot(commands.Bot): # Sub class bot so we can have more customiz
 
         # This would also be a good place to connect to our database and
         # load anything that should be in memory prior to handling events.
+
+        bot.terminal.log.INFO(f"Logged in as {self.user} (ID: {self.user.id}).")
+        
+        for guild in self.guilds:
+            print(guild.name)
 
     async def on_ready(self):
         #self.add_view(utils.bot.CustomViews.autoroleView())
@@ -156,30 +127,19 @@ async def main():
     logger.addHandler(handler)
     discord.utils.setup_logging(handler=handler, root=False)# level=logging.NOTSET,
 
-    # Alternatively, you could use:
-    # discord.utils.setup_logging(handler=handler, root=False)
-
-    # One of the reasons to take over more of the process though
-    # is to ensure use with other libraries or tools which also require their own cleanup.
-
-    # Here we have a web client and a database pool, both of which do cleanup at exit.
-    # We also have our bot, which depends on both of these.
-
-    
-
     async with ClientSession() as our_client:
-        # 2. We become responsible for starting the bot.
-
+        util.bot.cfg = util.bot.config.load()
         cogs = util.bot.local.GetCogs()
-        async with HangoutCoreBot(command_prefix=util.bot.GetPrefix, web_client=our_client,testing_guild_id=cfg["bot"]["developer_guild_id"], initial_extensions=cogs,terminal_args=sys.argv[1:]) as bot:
-            if isinstance(cfg["bot"]["token"], str) and cfg["bot"]["token"] != "":
-                await bot.start(cfg["bot"]["token"])
-            elif isinstance(cfg["bot"]["token"], list) and not all(token == "" for token in cfg["bot"]["token"]):
-                def first_token():
-                    for t in cfg["bot"]["token"]:
-                        if t != "":
-                            return t
-                await bot.start(first_token())
+        async with HangoutCoreBot(command_prefix=util.bot.GetPrefix, web_client=our_client,terminal_args=sys.argv[1:]) as bot:
+            util.bot.cfg["bot"]["token"]
+            if isinstance(util.bot.cfg["bot"]["token"], str) and util.bot.cfg["bot"]["token"] != "":
+                await bot.start(util.bot.cfg["bot"]["token"])
+            elif isinstance(util.bot.cfg["bot"]["token"], list) and not all(token == "" for token in util.bot.cfg["bot"]["token"]):
+                tokens = [token for token in util.bot.cfg["bot"]["token"]]
+                q = Questionnaire()
+                q.one(f"token",*tokens, prompt="Which token would you like to use?")
+                q.run()
+                await bot.start(q.answers.get('token'))
             else:
                 util.bot.terminal.log.CRITICAL(f"No token was provided in '{bot.config.CONFIG_PATH}'")
 
