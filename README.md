@@ -21,7 +21,7 @@
     2. [Create a Virtual Environment](https://docs.python.org/3/library/venv.html#creating-virtual-environments) via ```python -m venv --upgrade-deps /path/to/venv```
     - [Linux] Activate your Virtual Environment via ```source venv/bin/activate```
     - [Windows] Activate your Virtual Environment via ```.\venv\Scripts\activate```
-    5. Install the required modules via ```pip install -r requirements.txt```
+    4. Install the required modules via ```pip install -r requirements.txt```
 1. ### *HangoutCore Bot Setup:*
     1. Start HangoutCore via ```python hangoutcore.py```
     2. The initial prompt will ask you to start the setup process
@@ -48,14 +48,53 @@
     <img src="https://i.imgur.com/qkkS2Oj.png" width="500">
 
     1. ##### Prefixes
-        Allows for single/multiple prefixes to be used with the bot
+        Allows for single/multiple prefixes to be used with the bot.
+        *Being phased out as discord moves to slash commands*
+        ```json 
+        "prefixes": [
+            "prefix1",
+            "prefix2",
+            "prefix3"
+        ]
+        ```
     2. ##### Token
+        Allows for single/multiple tokens to be used with the bot.
+        Starting the bot with multiple tokens in the config will cause a prompt to allow the user to choose which bot to start allowing for quick swap between multiple bots.
+        ```json 
+        "token": [
+            "token1",
+            "token2",
+            "token3"
+        ]
+        ```
     3. ##### Status
+        Set what [activity](https://discordpy.readthedocs.io/en/stable/api.html?highlight=activity#discord.Activity) the bot will display once logged on.
+        [Activity Types](https://discordpy.readthedocs.io/en/stable/api.html?highlight=activity#discord.ActivityType)
+        Activity Name: String displayed on bot profile.
+        Activity URL: URL Displayed to be used with Streaming Activity Type
+        ```json 
+        "status": [
+            "type": "listening",
+            "name": "!help",
+            "url": ""
+        ]
+        ```
     4. ##### Name
+        This variable is used to display the bot name on the terminal, and also serves as a unified access point for displaying the bot name in commands such as the help command or for displaying it on embeds.
     5. ##### Version
+        This variable is used to display the bot version on the terminal, and also serves as a unified access point for displaying the bot version in commands where it might be useful such as a support command for staff.
     6. ##### Description
+        This variable is used for displaying the bot description in various commands such as the help command or any support commands where it might be needed.
     7. ##### Developer Guild ID
+        This variable is used for testing slash commands, or local commands that are not ready for public use in your dev/private guild.
     8. ##### Contributers
+        ```json 
+        "status": [
+            "type": "listening",
+            "name": "!help",
+            "url": ""
+        ]
+        ```
     9. ##### Apis
     10. ##### Database
     11. ##### Music
