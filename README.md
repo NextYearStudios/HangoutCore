@@ -4,7 +4,7 @@
 ##### *Join the discord below for quicker support.*
 [![Discord](https://img.shields.io/discord/514091020535857155?color=5865F2&label=Discord&logo=Discord&logoColor=fff)](https://discord.gg/xpwQvdeCN2)
 ## Installation
-###### It is assumed you already have Python, and VirtualEnv installed prior to this installation. If you do not have both installed please do so before continuing.
+###### Please note it is assumed you already have Python, and VirtualEnv installed prior to this installation. If you do not have both installed please do so before continuing.
 1. ### *Clone Repository Via Terminal:*
     1. CD into your desired directory via ```cd /path/to/directory```
     1. Clone this repository via ```git clone git@github.com:NextYearStudios/HangoutCore.git```
@@ -19,8 +19,8 @@
 1. ### *Environment Setup:*
     1. CD into your desired directory via ```cd /path/to/directory```
     2. [Create a Virtual Environment](https://docs.python.org/3/library/venv.html#creating-virtual-environments) via ```python -m venv --upgrade-deps /path/to/venv```
-    3. [Linux] Activate your Virtual Environment via ```source venv/bin/activate```
-    4. [Windows] Activate your Virtual Environment via ```.\venv\Scripts\activate```
+    - [Linux] Activate your Virtual Environment via ```source venv/bin/activate```
+    - [Windows] Activate your Virtual Environment via ```.\venv\Scripts\activate```
     5. Install the required modules via ```pip install -r requirements.txt```
 1. ### *HangoutCore Bot Setup:*
     1. Start HangoutCore via ```python hangoutcore.py```
@@ -48,8 +48,18 @@
     <img src="https://i.imgur.com/qkkS2Oj.png" width="500">
 
     1. ##### Prefixes
+        Allows for single/multiple prefixes to be used with the bot
     2. ##### Token
     3. ##### Status
     4. ##### Name
     5. ##### Version
     6. ##### Description
+    7. ##### Developer Guild ID
+    8. ##### Contributers
+    9. ##### Apis
+    10. ##### Database
+    11. ##### Music
+    12. ##### Info
+    
+    
+    
