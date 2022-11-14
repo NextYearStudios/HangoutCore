@@ -46,3 +46,10 @@
     4. The bot will now attempt to login with the provided token
 1. ### *Adjusting The HangoutCore Bot Config:*
     <img src="https://i.imgur.com/qkkS2Oj.png" width="500">
+
+    1. ##### Prefixes
+    2. ##### Token
+    3. ##### Status
+    4. ##### Name
+    5. ##### Version
+    6. ##### Description
