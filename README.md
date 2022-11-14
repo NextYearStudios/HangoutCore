@@ -10,10 +10,18 @@
     1. Clone this repository via ```git clone https://github.com/NextYearStudios/HangoutCore```
 **This will create a directory named HangoutCore with the repository inside it**
 1. ### *Clone Repository Via Github Website:*
-    1. Click Code Button to open the menu used to download the repository.
-    [Imgur](https://imgur.com/JaA9ld0)
-    <img src="https://imgur.com/JaA9ld0"/>
+    1. Click the 'Code' button towards the top right of the website.
+    <img src="https://i.imgur.com/JaA9ld0.png" width="500">
+    
     2. Click Download ZIP
     3. Drag the downloaded file named 'HangoutCore-main.zip' to the directory where you'd like your bot to run.
-    4. Extract the compressed ZIP file
-    
+    4. Extract the compressed ZIP file to your directory.
+1. ### *Environment Setup:*
+    1. CD into your desired directory via ```cd /path/to/directory```
+    2. [Create a Virtual Environment](https://docs.python.org/3/library/venv.html#creating-virtual-environments) via ```python -m venv --upgrade-deps /path/to/venv```
+    3. [Linux] Activate your Virtual Environment via ```source venv/bin/activate```
+    4. [Windows] Activate your Virtual Environment via ```.\venv\Scripts\activate```
+    5. Install the required modules via ```pip install -r requirements.txt```
+1. ### *HangoutCore Bot Setup:*
+    1. Start HangoutCore via ```python hangoutcore.py```
+    2. 
