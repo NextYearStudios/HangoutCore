@@ -12,6 +12,7 @@
 1. ### *Clone Repository Via Github Website:*
     1. Click Code Button to open the menu used to download the repository.
     [Imgur](https://imgur.com/JaA9ld0)
+    <img src="https://imgur.com/JaA9ld0"/>
     2. Click Download ZIP
     3. Drag the downloaded file named 'HangoutCore-main.zip' to the directory where you'd like your bot to run.
     4. Extract the compressed ZIP file
