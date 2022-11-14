@@ -11,6 +11,7 @@
 
 import aiofiles
 import click
+import ctypes
 import discord
 import json
 import os, sys
@@ -29,7 +30,7 @@ from os import system, name
 
 class bot():
     def __init__(self):
-        pass
+        self.cfg = bot.config.load()
     
 #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # ↓ Config ↓ : WIP
@@ -507,6 +508,33 @@ class bot():
             }
             return package
 
+        async def load_extensions(discordBot:discord.Client, debug_mode:bool=False):
+            """
+            Scans for files in the cog directory specified in the config. Loads the file if it ends in '.py', and registers files ending in '.disabled' as disabled cogs.
+            """
+            cogs = bot.local.GetCogs()
+
+            for cog in cogs["valid_files"]:
+                bot.terminal.log.INFO(f" └ Found {cog}")
+                try:
+                    await discordBot.load_extension(f'{bot.config.COG_DIRECTORY_PATH}.{cog[:-3]}')
+                except Exception as e:
+                    bot.errorprocessing.CogLoadError(cog, e, debug_mode)
+                else:
+                    bot.terminal.log.INFO(f"  └ successfully loaded {cog}.")
+            for cog in cogs["disabled_files"]:
+                bot.terminal.log.INFO(f" └ Found Disabled file {cog}, Skipping.")
+            for cog in cogs["invalid_files"]:
+                if cog == "__pycache__" or "__init__":
+                    pass
+                else:
+                    bot.terminal.log.INFO(f" └ Found invalid file {cog}, Skipping.")
+            bot.terminal.log.INFO(f"Successfully loaded {len(cogs['valid_files'])} extension(s).")
+            if len(cogs["invalid_files"]) > 0:
+                bot.terminal.log.WARNING(f"Found {len(cogs['invalid_files'])} invalid extension(s) in the 'cogs' directory. If you believe this is an error please verify each .py file and make sure it is set up as a cog properly, Otherwise you can ignore this message.")
+            
+
+
         async def GetTicketTranscript(ticketid:str):
             transcriptDirectory = (f"transcripts\\")
             if os.path.exists(f"{transcriptDirectory}{ticketid}.md"):
@@ -613,18 +641,6 @@ class bot():
             else:
                 bot.terminal.log.CRITICAL(f"{guild.name} does not have a Notification Channel set up. They will not be able to recieve Notifications.")
                 return f"This Guild does not have a notification channel registered in our database. Please utilize the **/setup** command and try again"
-
-#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# ↓ Guild Audio State ↓ : WIP
-#   › Used during music/audio commands
-#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-    class guildstate():
-        def __init__(self):
-            self.now_playing = None
-            self.playlist = []
-            self.skip_votes = set()
-            self.volume = 1.0 # volume is config max_volume / 100
 
 #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # ↓ Database Handling ↓ : WIP
@@ -739,3 +755,37 @@ class bot():
         #             result = await cursor.fetchall()
         #             if result is not None:
         #                 return result[0]
+
+#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# ↓ Audio Handling ↓ : WIP
+#   › Used for playing music and keeping the audio function clutter out of the main script.
+#   › Author: Lino
+#   › Date: 13 Nov, 2022
+#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+    class audio():
+        class guildstate():
+            def __init__(self):
+                self.now_playing = None
+                self.playlist = []
+                self.skip_votes = set()
+                self.volume = int(bot.cfg["music"]["max_volume"])/100
+                
+        def verify_opus():
+            """
+                Looks for opus throughout the system, Attempts to load if found.
+            """
+            opuslib = ctypes.util.find_library('opus')
+            if opuslib is not None:
+                try:
+                    bot.terminal.log.INFO(f"Loading Opus.")
+                    discord.opus.load_opus('opus')
+                except Exception as e:
+                    bot.terminal.log.ERROR(e)
+                else:
+                    if not discord.opus.is_loaded():
+                        bot.terminal.log.CRITICAL("Opus Failed To Load.")
+                    else:
+                        bot.terminal.log.INFO("Successfully loaded opus.")
+            else:
+                bot.terminal.log.WARNING("Could not find Opus, You will not be able to play audio without it.")
