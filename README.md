@@ -1,7 +1,8 @@
 # HangoutCore Bot Framework
-##### Version: 2.85 | using [![Discord.py](https://img.shields.io/pypi/v/Discord.py?label=Discord.py)](https://pypi.org/project/discord.py/) | License [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+##### HangoutCore Version: 2.85 | using [![Discord.py](https://img.shields.io/pypi/v/Discord.py?label=Discord.py)](https://pypi.org/project/discord.py/) | License [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 ***
 ##### *Join the discord below for quicker support.*
+###### Assign yourself the Bot Developer Role in the #pick-your-roles channel in order to access the #bot-support channel.
 [![Discord](https://img.shields.io/discord/514091020535857155?color=5865F2&label=Discord&logo=Discord&logoColor=fff)](https://discord.gg/xpwQvdeCN2)
 ## Installation
 ###### Please note it is assumed you already have Python, and VirtualEnv installed prior to this installation. If you do not have both installed please do so before continuing.
@@ -44,9 +45,75 @@
     <img src="https://i.imgur.com/sDkQA0R.png" width="500">
     
     4. The bot will now attempt to login with the provided token
+1. ### *Starting HangoutCore*
+    - Starting HangoutCore with one token specified in your config will not require any other input before starting.
+    - Starting HangoutCore normally with more than one token specified will cause HangoutCore to prompt you in the terminal to specify which token you'd like to use.
+    - Starting HangoutCore Via ```python hangoutcore.py -t 1``` or ```python hangoutcore.py -token 1``` 
+    will use the number specifed to choose which token to start with ultimately skipping the prompt for token choice.
+    
+        If setting up HangoutCore to be run automatically or with no human interaction with the terminal please make sure to:
+        1. Specify which token to use if multiple tokens are present in your config
+        2. Start HangoutCore in silent mode using '-S True' or '-Silent True'
 1. ### *Adjusting The HangoutCore Bot Config:*
-    <img src="https://i.imgur.com/qkkS2Oj.png" width="500">
-
+    ```json 
+        {
+        "bot": {
+            "prefixes": [
+                "!"
+            ],
+            "token": [
+                "Token1",
+                "Token2"
+            ],
+            "status": {
+                "type": "listening",
+                "name": "!help",
+                "url": ""
+            },
+            "name": "HangoutCore",
+            "version": "0.0.0",
+            "description": "Bot Description",
+            "developer_guild_id": 0,
+            "contributers": [
+                {
+                    "name": "Contributer Name",
+                    "discord_id": 0,
+                    "owner": true
+                },
+                {
+                    "name": "Contributer Name",
+                    "discord_id": 0,
+                    "owner": false
+                }
+            ],
+            "apis": [
+                {
+                    "name": "Api Name",
+                    "token": "Api Token",
+                    "header": {
+                        "Authorization": ""
+                    }
+                }
+            ]
+        },
+        "database": {
+            "type": "mysql",
+            "host": "localhost",
+            "name": "database.sqlite",
+            "user": "user",
+            "password": "pass"
+        },
+        "music": {
+            "max_volume": 250,
+            "vote_skip": true,
+            "vote_skip_ratio": 0.5
+        },
+        "_info": {
+            "version": 5.6,
+            "update_reason": "Initial Creation"
+        }
+    }
+    ```
     1. ##### Prefixes
         Allows for single/multiple prefixes to be used with the bot.
         *Being phased out as discord moves to slash commands*
@@ -88,17 +155,82 @@
     7. ##### Developer Guild ID
         This variable is used for testing slash commands, or local commands that are not ready for public use in your dev/private guild.
     8. ##### Contributers
+        This variable is used for verifying bot staff members to avoid false claims potentially causing unnecessary problems.
+        Name: Contributer name that should be displayed, such as username or first name
+        Discord ID: This is used to compare against any discord member falsely claiming to be a staff member
+        Owner: Specify wether the contributer is essentially an admin through this variable, Users with this set to true will be able to access dangerous commands such as stop,restart, These users will also override guild permissions and also manipulate guild data through database commands.
         ```json 
-        "status": [
-            "type": "listening",
-            "name": "!help",
-            "url": ""
+        "contributers": [
+            {
+                "name": "John Doe",
+                "discord_id": 1234567890,
+                "owner": true
+            },
+            {
+                "name": "Jane Doe",
+                "discord_id": 1234567890,
+                "owner": false
+            },
         ]
         ```
     9. ##### Apis
+        This variable serves as an access point for commands to locate API info. 
+        ```json 
+        "apis": [
+            {
+                "name": "API Name",
+                "token": API Token,
+                "header": {
+                    "Authorization": ""
+                }
+            },
+            {
+                "name": "API Name",
+                "token": API Token,
+                "header": {
+                    "Authorization": ""
+                }
+            },
+        ]
+        ```
     10. ##### Database
+        This serves as an access point for commands and scripts to easily access database info. utils.py primarily uses this variable for providing ease of access to database content such as guild specific info, permissions.
+        ```json 
+        "database": [
+            {
+                "type": "mysql",
+                "host": "database_ip",
+                "name": "database_name",
+                "user": "database_user",
+                "password": "database_password"
+            }
+        ]
+        ```
     11. ##### Music
+        Max Volume: Divided by 100. Used by audio commands when playing music.
+        Vote Skip: Specifies wether vote skip is enabled for music commands.
+        Vote Skip Ratio: The ratio required for vote skip to pass. 
+        *Being moved out of config in favor of database stored data*
+        ```json 
+        "music": [
+            {
+                "max_volume": "250",
+                "vote_skip": true,
+                "vote_skip_ratio": 0.5
+            }
+        ]
+        ```
     12. ##### Info
+        Version: Config Version, used to identify config variations.
+        Update Reason: This is essentially a comment variable used by the bot to describe when/why your config might've been updated. such as "update to contributer list" or "update to bot name"
+        ```json 
+        "_info": [
+            {
+                "version": 5.6,
+                "update_reason": "Reason For Config Data Manipulation"
+            }
+        ]
+        ```
     
     
     
