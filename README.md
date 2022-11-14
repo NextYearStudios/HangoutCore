@@ -5,8 +5,8 @@
 [![Discord](https://img.shields.io/discord/514091020535857155?color=5865F2&label=Discord&logo=Discord&logoColor=fff)](https://discord.gg/xpwQvdeCN2)
 ## Installation
 ###### It is assumed you already have Python, and VirtualEnv installed prior to this installation. If you do not have both installed please do so before continuing.
-- # Clone Repository Via Terminal:
-- CD into your desired directory via ```cd /path/to/directory```
-- Clone this repository via ```git clone https://github.com/NextYearStudios/HangoutCore```
-    **This will create a directory named HangoutCore with the repository inside it**
+    - ### Clone Repository Via Terminal:
+        - CD into your desired directory via ```cd /path/to/directory```
+        - Clone this repository via ```git clone https://github.com/NextYearStudios/HangoutCore```
+            **This will create a directory named HangoutCore with the repository inside it**
     
