@@ -36,14 +36,12 @@ class HangoutCoreBot(commands.Bot): # Sub class bot so we can have more customiz
         *args,
         command_prefix, 
         terminal_args,
-        initial_extensions: List[str],
         web_client: ClientSession,
         testing_guild_id: Optional[int] = None,
         **kwargs):
         super().__init__(command_prefix, activity=self.activity, description=util.bot.cfg["bot"]["description"], intents=self.intents, **kwargs)
         self.web_client = web_client
         self.testing_guild_id = testing_guild_id
-        self.initial_extensions = initial_extensions
     
         self.start_time = "" # Add the start_time variable so that we may access it for debuging or information display purposes.
         self.debug_mode = False
@@ -79,13 +77,14 @@ class HangoutCoreBot(commands.Bot): # Sub class bot so we can have more customiz
         # we can do things that require a bot prior to starting to process events from the websocket.
         # In this case, we are using this to ensure that once we are connected, we sync for the testing guild.
         # You should not do this for every guild or for global sync, those should only be synced when changes happen.
-        if self.testing_guild_id:
+
+        if self.testing_guild_id: # if a guild was passed in under testing_guild_id then we only sync with that guild.
             guild = discord.Object(self.testing_guild_id)
             # We'll copy in the global commands to test with:
             self.tree.copy_global_to(guild=guild)
             # followed by syncing to the testing guild.
             await self.tree.sync(guild=guild)
-        await self.tree.sync()
+        await self.tree.sync() # otherwise we sync globally
 
         # This would also be a good place to connect to our database and
         # load anything that should be in memory prior to handling events.
@@ -116,7 +115,7 @@ async def main():
     logger.setLevel(logging.NOTSET)
 
     handler = logging.handlers.RotatingFileHandler(
-        filename=f'{util.bot.config.LOG_DIRECTORY_PATH}/log_{init_logtime.replace(" ","_")}.log',
+        filename=f'{util.bot.config.LOG_DIRECTORY_PATH}/log_{init_time.replace(" ","_")}.log',
         encoding='utf-8',
         maxBytes=32 * 1024 * 1024,  # 32 MiB
         backupCount=5,  # Rotate through 5 files
