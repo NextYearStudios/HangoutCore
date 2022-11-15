@@ -67,16 +67,6 @@ class HangoutCoreBot(commands.Bot): # Sub class bot so we can have more customiz
         bot.terminal.log.INFO (f"Looking for Bot Modules in the 'cogs' Directory.")
         await bot.local.load_extensions(self, self.debug_mode) # Scan cog directory and enable cogs.
         bot.audio.verify_opus() # Looks for opus and loads it if found.
-        
-        #if len(terminal.log_Q) > 0: # Display any logs that happened while we were botting up
-        #    for q in terminal.log_Q:
-        #        terminal.log(q[0], q[1])
-        #        del q
-
-        # In overriding setup hook,
-        # we can do things that require a bot prior to starting to process events from the websocket.
-        # In this case, we are using this to ensure that once we are connected, we sync for the testing guild.
-        # You should not do this for every guild or for global sync, those should only be synced when changes happen.
 
         if self.testing_guild_id: # if a guild was passed in under testing_guild_id then we only sync with that guild.
             guild = discord.Object(self.testing_guild_id)
@@ -86,13 +76,8 @@ class HangoutCoreBot(commands.Bot): # Sub class bot so we can have more customiz
             await self.tree.sync(guild=guild)
         await self.tree.sync() # otherwise we sync globally
 
-        # This would also be a good place to connect to our database and
-        # load anything that should be in memory prior to handling events.
-
         bot.terminal.log.INFO(f"Logged in as {self.user} (ID: {self.user.id}).")
         
-        for guild in self.guilds:
-            print(guild.name)
 
     async def on_ready(self):
         #self.add_view(utils.bot.CustomViews.autoroleView())
@@ -104,6 +89,15 @@ class HangoutCoreBot(commands.Bot): # Sub class bot so we can have more customiz
         for guild in self.guilds:
             #await bot.database.RegisterGuild(guild)
             bot.terminal.log.INFO(f"Registered {guild.name}:{guild.id}")
+
+        
+        bot.terminal.log.INFO(util.bot.cfg["database"]["type"])
+        bot.terminal.log.INFO(util.bot.cfg["database"]["host"])
+        bot.terminal.log.INFO(util.bot.cfg["database"]["name"])
+        bot.terminal.log.INFO(util.bot.cfg["database"]["user"])
+        bot.terminal.log.INFO(util.bot.cfg["database"]["password"])
+        # DConn = util.bot.database.connect()
+        # bot.terminal.log.INFO(DConn)
 
 async def main():
     init_time = '{0:%d%b%Y %Hh:%Mm}'.format(datetime.now()) # This time is used for bot reference
