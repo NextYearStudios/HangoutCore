@@ -1,5 +1,5 @@
 # HangoutCore Bot Framework
-##### HangoutCore Version: 2.85 | using [![Discord.py](https://img.shields.io/pypi/v/Discord.py?label=Discord.py)](https://pypi.org/project/discord.py/) | License [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+##### HangoutCore Version: 2.86 | using [![Discord.py](https://img.shields.io/pypi/v/Discord.py?label=Discord.py)](https://pypi.org/project/discord.py/) | License [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 ***
 ##### *Join the discord below for quicker support.*
 ###### Assign yourself the Bot Developer Role in the #pick-your-roles channel in order to access the #bot-support channel.
@@ -65,6 +65,13 @@
                 "Token1",
                 "Token2"
             ],
+            "intents" : {
+                "members" : True,
+                "message_content" : True,
+                "typing" : True,
+                "presences" : True,
+                "guilds" : True
+            },
             "status": {
                 "type": "listening",
                 "name": "!help",
@@ -96,12 +103,13 @@
                 }
             ]
         },
-        "database": {
+        "database" : {
             "type": "mysql",
             "host": "localhost",
-            "name": "database.sqlite",
-            "user": "user",
-            "password": "pass"
+            "port": 3306,
+            "name" : "database",
+            "user" : "user",
+            "password" : "pass"
         },
         "music": {
             "max_volume": 250,
@@ -134,7 +142,18 @@
             "token3"
         ]
         ```
-    3. ##### Status
+    3. ##### Intents
+        Set your bot intents in the config, allowing for quick and easy swap between multiple bots with different intents.
+        ```json 
+        "intents" : {
+            "members" : True,
+            "message_content" : True,
+            "typing" : True,
+            "presences" : True,
+            "guilds" : True
+        }
+        ```
+    4. ##### Status
         Set what [activity](https://discordpy.readthedocs.io/en/stable/api.html?highlight=activity#discord.Activity) the bot will display once logged on.
         [Activity Types](https://discordpy.readthedocs.io/en/stable/api.html?highlight=activity#discord.ActivityType)
         Activity Name: String displayed on bot profile.
@@ -146,15 +165,15 @@
             "url": ""
         ]
         ```
-    4. ##### Name
+    5. ##### Name
         This variable is used to display the bot name on the terminal, and also serves as a unified access point for displaying the bot name in commands such as the help command or for displaying it on embeds.
-    5. ##### Version
+    6. ##### Version
         This variable is used to display the bot version on the terminal, and also serves as a unified access point for displaying the bot version in commands where it might be useful such as a support command for staff.
-    6. ##### Description
+    7. ##### Description
         This variable is used for displaying the bot description in various commands such as the help command or any support commands where it might be needed.
-    7. ##### Developer Guild ID
+    8. ##### Developer Guild ID
         This variable is used for testing slash commands, or local commands that are not ready for public use in your dev/private guild.
-    8. ##### Contributers
+    9. ##### Contributers
         This variable is used for verifying bot staff members to avoid false claims potentially causing unnecessary problems.
         Name: Contributer name that should be displayed, such as username or first name
         Discord ID: This is used to compare against any discord member falsely claiming to be a staff member
@@ -173,7 +192,7 @@
             },
         ]
         ```
-    9. ##### Apis
+    10. ##### Apis
         This variable serves as an access point for commands to locate API info. 
         ```json 
         "apis": [
@@ -193,20 +212,20 @@
             },
         ]
         ```
-    10. ##### Database
+    11. ##### Database
         This serves as an access point for commands and scripts to easily access database info. utils.py primarily uses this variable for providing ease of access to database content such as guild specific info, permissions.
         ```json 
-        "database": [
-            {
-                "type": "mysql",
-                "host": "database_ip",
-                "name": "database_name",
-                "user": "database_user",
-                "password": "database_password"
-            }
+        "database" : {
+            "type": "mysql",
+            "host": "localhost",
+            "port": 3306,
+            "name" : "database",
+            "user" : "user",
+            "password" : "pass"
+        }
         ]
         ```
-    11. ##### Music
+    12. ##### Music
         Max Volume: Divided by 100. Used by audio commands when playing music.
         Vote Skip: Specifies wether vote skip is enabled for music commands.
         Vote Skip Ratio: The ratio required for vote skip to pass. 
@@ -220,7 +239,7 @@
             }
         ]
         ```
-    12. ##### Info
+    13. ##### Info
         Version: Config Version, used to identify config variations.
         Update Reason: This is essentially a comment variable used by the bot to describe when/why your config might've been updated. such as "update to contributer list" or "update to bot name"
         ```json 
