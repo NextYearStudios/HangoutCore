@@ -137,5 +137,6 @@ dmypy.json
 *.properties
 
 logs/
+utils/
 transcripts/
 cogs/
