@@ -147,12 +147,12 @@
         Starting the bot with multiple tokens in the config will cause a prompt to allow the user to choose which bot to start allowing for quick swap between multiple bots.
         ```json 
         "intents" : {
-                "members" : True,
-                "message_content" : True,
-                "typing" : True,
-                "presences" : True,
-                "guilds" : True
-            }
+            "members" : True,
+            "message_content" : True,
+            "typing" : True,
+            "presences" : True,
+            "guilds" : True
+        }
         ```
     4. ##### Status
         Set what [activity](https://discordpy.readthedocs.io/en/stable/api.html?highlight=activity#discord.Activity) the bot will display once logged on.
