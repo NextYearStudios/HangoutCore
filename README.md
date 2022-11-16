@@ -143,8 +143,7 @@
         ]
         ```
     3. ##### Intents
-        Allows for single/multiple tokens to be used with the bot.
-        Starting the bot with multiple tokens in the config will cause a prompt to allow the user to choose which bot to start allowing for quick swap between multiple bots.
+        Set your bot intents in the config, allowing for quick and easy swap between multiple bots with different intents.
         ```json 
         "intents" : {
             "members" : True,
