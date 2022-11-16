@@ -100,7 +100,6 @@ class HangoutCoreBot(commands.Bot): # Sub class bot so we can have more customiz
 class SystemCog(commands.Cog): # We'll register system commands here just in case they need to be toggled seperately from the bot.
     def __init__(self, bot: commands.Bot):
         self.client = bot
-        description=f"Collection of bot system commands. Not intended for public use."
 
     @app_commands.CommandTree.command
     async def system(self, interaction: discord.Interaction):
