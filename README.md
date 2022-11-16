@@ -65,6 +65,13 @@
                 "Token1",
                 "Token2"
             ],
+            "intents" : {
+                "members" : True,
+                "message_content" : True,
+                "typing" : True,
+                "presences" : True,
+                "guilds" : True
+            },
             "status": {
                 "type": "listening",
                 "name": "!help",
@@ -96,12 +103,13 @@
                 }
             ]
         },
-        "database": {
+        "database" : {
             "type": "mysql",
             "host": "localhost",
-            "name": "database.sqlite",
-            "user": "user",
-            "password": "pass"
+            "port": 3306,
+            "name" : "database", # db name
+            "user" : "user",
+            "password" : "pass"
         },
         "music": {
             "max_volume": 250,
