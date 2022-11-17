@@ -1,5 +1,5 @@
 # HangoutCore Bot Framework
-##### HangoutCore Version: 2.87 | using [![Discord.py](https://img.shields.io/pypi/v/Discord.py?label=Discord.py)](https://pypi.org/project/discord.py/) | License [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+##### HangoutCore Version: 2.88 | using [![Discord.py](https://img.shields.io/pypi/v/Discord.py?label=Discord.py)](https://pypi.org/project/discord.py/) | License [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 ***
 ##### *Join the discord below for quicker support.*
 ###### Assign yourself the Bot Developer Role in the #pick-your-roles channel in order to access the #bot-support channel.
