@@ -45,8 +45,6 @@ class HangoutCoreBot(commands.Bot): # Sub class bot so we can have more customiz
         
         # BotSynced = False
         # ViewsAdded = False
-<<<<<<< HEAD
-=======
         # intents = bot.GetIntents()
         # activity = bot.GetActivity()
 
@@ -62,7 +60,6 @@ class HangoutCoreBot(commands.Bot): # Sub class bot so we can have more customiz
                     self.debug_mode = False
         else:
             self.debug_mode = False
->>>>>>> HangoutCore/dev
 
     async def setup_hook(self) -> None:
 
@@ -271,8 +268,4 @@ if __name__ == "__main__":
         print("") # Clear line just incase user closes while inputting
         terminal.log.CRITICAL(f"Please refrain from using CTRL+C to shutdown bot.")
         terminal.log.CRITICAL(f"Shutting Down...")
-<<<<<<< HEAD
         sys.exit(0)
-=======
-        sys.exit(0)
->>>>>>> HangoutCore/dev
