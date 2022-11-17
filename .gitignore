@@ -136,7 +136,7 @@ dmypy.json
 *.disabled
 *.properties
 
-logs/
-utils/
-transcripts/
-cogs/
+**logs/
+**utils/
+**transcripts/
+**cogs/
