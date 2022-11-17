@@ -212,30 +212,79 @@ class config():
         }
     }
 
-    def exists():
-        if os.path.exists("hangoutcore.properties") and os.path.isfile("hangoutcore.properties"):
-            with open("hangoutcore.properties", "r+b") as hangoutcore_config: # Access stored variables to locate config file
+    def exists(configName:str=None):
+        if configName is None:
+            if os.path.exists("hangoutcore.properties") and os.path.isfile("hangoutcore.properties"):
+                with open("hangoutcore.properties", "r+b") as hangoutcore_config: # Access stored variables to locate config file
+                    p = Properties()
+                    p.load(hangoutcore_config, "utf-8")
+                    botConfig = p.get("botConfig").data
+                    botConfigDirectory = p.get("botConfigDirectory").data
+                    config.CONFIG_PATH = botConfig
+                    config.CONFIG_DIRECTORY_PATH = botConfigDirectory
+                    config.COG_DIRECTORY_PATH = p.get("botCogDirectory").data
+                    config.LOG_DIRECTORY_PATH = p.get("botLogDirectory").data
+                    if os.path.exists(f"{botConfigDirectory}/{botConfig}") and os.path.isfile(f"{botConfigDirectory}/{botConfig}"):
+                        return True
+                    else:
+                        return False
+            else:
+                return False
+        else:
+            filePath = configName
+            if not filePath.endswith('.json'):
+                filePath = filePath + '.json'
+            if os.path.exists(f"{config.CONFIG_DIRECTORY_PATH}/{filePath}") and os.path.isfile(f"{config.CONFIG_DIRECTORY_PATH}/{filePath}"):
+                return True
+            else:
+                return False
+
+    def init(configName:str=None):
+        if configName is None:
+            with open(f"hangoutcore.properties", "r+b") as hangoutcore_config:
                 p = Properties()
                 p.load(hangoutcore_config, "utf-8")
-                botConfig = p.get("botConfig").data
-                botConfigDirectory = p.get("botConfigDirectory").data
-                config.CONFIG_PATH = botConfig
-                config.CONFIG_DIRECTORY_PATH = botConfigDirectory
-                config.COG_DIRECTORY_PATH = p.get("botCogDirectory").data
-                config.LOG_DIRECTORY_PATH = p.get("botLogDirectory").data
-                if os.path.exists(f"{botConfigDirectory}/{botConfig}") and os.path.isfile(f"{botConfigDirectory}/{botConfig}"):
-                    return True
-                else:
-                    return False
+                config.CONFIG_PATH = p["botConfig"].data
+                config.CONFIG_DIRECTORY_PATH = p["botConfigDirectory"].data
+                config.COG_DIRECTORY_PATH = p["botCogDirectory"].data
+                config.LOG_DIRECTORY_PATH = p["botLogDirectory"].data
         else:
-            return False
+            if config.exists(configName):
+                with open(f"hangoutcore.properties", "r+b") as hangoutcore_config:
+                    p = Properties()
+                    p.load(hangoutcore_config, "utf-8")
+                    if configName.endswith('.json'):
+                        config.CONFIG_PATH = configName
+                        p["botConfig"] = configName
+                    else:
+                        config.CONFIG_PATH = configName + '.json'
+                        p["botConfig"] = configName + '.json'
+                    config.CONFIG_DIRECTORY_PATH = p["botConfigDirectory"].data
+                    config.COG_DIRECTORY_PATH = p["botCogDirectory"].data
+                    config.LOG_DIRECTORY_PATH = p["botLogDirectory"].data
 
-    def load(configPath=CONFIG_PATH):
+                    with open(f"hangoutcore.properties", "wb") as hangoutcore_config:
+                        p.store(hangoutcore_config, encoding="utf-8") # Store provided information in a properties file.
+            else:
+                with open(f"hangoutcore.properties", "r+b") as hangoutcore_config:
+                    p = Properties()
+                    p.load(hangoutcore_config, "utf-8")
+                    config.CONFIG_PATH = p["botConfig"].data
+                    config.CONFIG_DIRECTORY_PATH = p["botConfigDirectory"].data
+                    config.COG_DIRECTORY_PATH = p["botCogDirectory"].data
+                    config.LOG_DIRECTORY_PATH = p["botLogDirectory"].data
+                terminal.log.ERROR(f"config: {configName} could not be found. loading config: {p['botConfig'].data} instead.")
+
+    def load(configName:str=None):
         """
         Attempt to load the config from path provided if none provided uses the config name provided during initiation.
         """
-        if config.exists():
-            with open(f"{config.CONFIG_DIRECTORY_PATH}/{configPath}") as configFile:
+        fileName = config.CONFIG_PATH
+        fileDirectory = config.CONFIG_DIRECTORY_PATH
+        if configName is not None:
+            fileName = configName
+        if config.exists(fileName):
+            with open(f"{fileDirectory}/{fileName}") as configFile:
                 cfg = json.load(configFile)
                 if '_info' in cfg:
                     if cfg['_info']['version'] >= config.CONFIG_VERSION:
@@ -243,7 +292,7 @@ class config():
                     else:
                         if not config.warned: # Config is outdated
                             config.warned = True
-                            terminal.queue("WARNING",f"{config.CONFIG_PATH} is outdated. Please update it to match the example config provided in config.py")
+                            terminal.queue("WARNING",f"{fileName} is outdated. Please update it to match the example config provided in config.py")
                             if click.confirm(f"Attention: Your config version {cfg['_info']['version']} is outdated. Would you like to update to {config.CONFIG_VERSION}", default=True):
                                 new_cfg = config.EXAMPLE_CONFIG
                                 new_cfg['_info']['update_reason'] = f"Update To Config Version {config.CONFIG_VERSION}"
@@ -253,21 +302,22 @@ class config():
                                     new_cfg['database'][key] = cfg['database'][key]
                                 for key in cfg['music'].keys():
                                     new_cfg['music'][key] = cfg['music'][key]
-                                with open(f"{config.CONFIG_DIRECTORY_PATH}/{configPath}", "w") as botConfig:
+                                with open(f"{fileDirectory}/{fileName}", "w") as botConfig:
                                     json.dump(new_cfg, botConfig, indent=4)
                             else:
                                 return cfg
                 else:
                     if not config.warned: # Couldn't Find version, file probably outdated or corrupted.
                         config.warned = True
-                        terminal.queue("WARNING",f"{config.CONFIG_PATH} is either outdated or corrupt. Please delete the old one and run the bot again to create a new one.")
+                        terminal.queue("WARNING",f"{fileName} is either outdated or corrupt. Please delete the old one and run the bot again to create a new one.")
                     return cfg
 
-    def setup(init_time:str):
+    def setup(init_time:str, manual:bool=False):
         """
         This function runs through the process of setting up our bot config with the necessary details. such as bot Name, Token, Authorized Users, Etc.
         """
-        print("Oh No! I could not find a config file.")
+        if not manual:
+            print("Oh No! I could not find a config file.")
         if click.confirm("Do you wish to begin the setup process?", default=True):
             terminal.initiate(init_time,False,True) # Clear and prepare terminal for setup process
 
@@ -334,6 +384,7 @@ class config():
 
                 with open(f"hangoutcore.properties", "wb") as hangoutcore_config:
                     p.store(hangoutcore_config, encoding="utf-8") # Store provided information in a properties file.
+
                 config.CONFIG_PATH = botConfigName
                 config.CONFIG_DIRECTORY_PATH = botConfigDirectory
                 config.COG_DIRECTORY_PATH = botCogDirectory
@@ -371,14 +422,14 @@ class config():
             terminal.log.ERROR("HangoutCore Setup Canceled.")
             terminal.EXIT("Exiting...")
 
-    def write(configPath=CONFIG_PATH, value:str=None, key1:str=None, key2=None, key3=None, key4=None):
+    def write(value:str=None, key1:str=None, key2=None, key3=None, key4=None):
         """
-        Attempt to write to the config from path provided if none provided use CONFIG_PATH,
+        Attempt to write to the config from path provided in hangoutcore.properties,
         if one does not exist we warn the terminal. We do not create one in the possibility that
         the user misspelled the path provided.
         ***USE CAUTION UPDATING CONFIG WITH THIS, YOU CAN MODIFY CONFIG VALUES TO UNSAFE VALUES THAT WE DO NOT FILTER THROUGH***
         """
-        with open(f"{config.CONFIG_DIRECTORY_PATH}/{configPath}", "r") as botConfig:
+        with open(f"{config.CONFIG_DIRECTORY_PATH}/{config.CONFIG_PATH}", "r") as botConfig:
             configData = json.load(botConfig)
 
         if key4 is not None:
@@ -390,7 +441,7 @@ class config():
         elif key1 is not None:
             configData[key1] = value
             
-        with open(f"{config.CONFIG_DIRECTORY_PATH}/{configPath}", "w") as botConfig:
+        with open(f"{config.CONFIG_DIRECTORY_PATH}/{config.CONFIG_PATH}", "w") as botConfig:
             json.dump(configData, botConfig, indent=4)
 
 #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

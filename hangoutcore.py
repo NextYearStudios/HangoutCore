@@ -184,21 +184,29 @@ class SystemCog(commands.Cog): # We'll register system commands here just in cas
 async def main():
     if '-h' in sys.argv[1:] or '-help' in sys.argv[1:]:
         print(f"""
+[-c, -config : string] Load the specified config, Also sets as default. If the specified config cannot be found, return to previous config as a precaution.
+
 [-d, -debug : True/False] Enable debug mode for more information to be displayed in the terminal. Changes log mode to DEBUG.
 
-[-t, -token : integer] Specify which token to use if you're using multiple. Allows user to skip token choice prompt.
+[-n, -new] Manually put HangoutCore in a setup state in order to create a new configuration. Sets the new config as default.
 
 [-s, -silent : True/False] Enable/Disable to have information sent to log only, or terminal and log. Useful for running as a service since there's no access to terminal.
+
+[-t, -token : integer] Specify which token to use if you're using multiple. Allows user to skip token choice prompt.
 
         """)
     else:
         init_time = '{0:%d%b%Y %Hh:%Mm}'.format(datetime.now()) # This time is used for bot reference
-        if not config.exists(): # If the config does not exist
-<<<<<<< HEAD
-            config.setup(init_time) # Begin Config Setup process like taking in bot token, name, etc.
-=======
-            config.setup() # Begin Config Setup process like taking in bot token, name, etc.
->>>>>>> HangoutCore/dev
+        if '-c' in sys.argv[1:]:
+            config.init(sys.argv[1:][sys.argv[1:].index('-c') + 1])
+        elif '-config' in sys.argv[1:]:
+            config.init(sys.argv[1:][sys.argv[1:].index('-config') + 1])
+
+        if not config.exists() or '-n' in sys.argv[1:] or '-new' in sys.argv[1:]: # If the config does not exist
+            config.setup(init_time, True) # Begin Config Setup process like taking in bot token, name, etc.
+            config.init()
+        else:
+            config.init()
 
         logger = logging.getLogger('discord')
         logger.setLevel(logging.INFO)
@@ -248,7 +256,7 @@ async def main():
                         else:
                             tokens = [token for token in cfg["bot"]["token"]]
                             q = Questionnaire()
-                            q.one(f"token",*tokens, prompt="Which token would you like to use?")
+                            q.one(f"token",*tokens, prompt=f"Current config loaded: {config.COG_DIRECTORY_PATH}/{config.CONFIG_PATH}.\nWhich token would you like to use?")
                             q.run()
                             await HangoutCore.add_cog(SystemCog(HangoutCore))
                             await HangoutCore.start(q.answers.get('token'))
