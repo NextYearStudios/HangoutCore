@@ -260,5 +260,7 @@
         ]
         ```
     
-    
-    
+## Contributers
+##### A special thank you to the following for contributing to this project.
+- [Alec J](https://github.com/alec-jensen)
+- [Lino H](https://github.com/Its-Lino)
