@@ -1,5 +1,5 @@
 # HangoutCore Bot Framework
-##### HangoutCore Version: 2.87 | using [![Discord.py](https://img.shields.io/pypi/v/Discord.py?label=Discord.py)](https://pypi.org/project/discord.py/) | License [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+##### HangoutCore Version: 2.88 | using [![Discord.py](https://img.shields.io/pypi/v/Discord.py?label=Discord.py)](https://pypi.org/project/discord.py/) | License [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 ***
 ##### *Join the discord below for quicker support.*
 ###### Assign yourself the Bot Developer Role in the #pick-your-roles channel in order to access the #bot-support channel.
@@ -14,6 +14,15 @@
 - Add Guild registration function in util.database. to begin supporting database saved data.
 - Add Ticket Cog for new devs to be able to build off of.
 - Create static page to display more detailed information on HangoutCore Project Status
+- Add per bot(config) directory specification. (each bot should be alowed to have it's own cog, log directory to avoid mixing bots)
+## Features
+- Config Support: Quickly swap bot information such as Description, Tokens, Intents, Prefixes, etc.
+- Config File Setup Process: HangoutCore streamlines config file creation by walking the user through a short setup process, allowing the user to quickly and efficiently create multiple config files for quick bot swapping.
+- Automated config Swapping: By simply running ```py hangoutcore -config ConfigName``` HangoutCore will automatically swap over to the desired config and store the selection for future use.
+Once you run the command above you can simply run the bot like normal until you're ready to swap once again.
+- Automated Token Swapping: Multiple tokens in your config file? HangoutCore will automatically prompt the user to ensure the right token is chosen every time. Want to skip the prompt? Simply run ```py hangoutcore -token [INTEGER]``` to choose from the list of tokens.
+- Detailed Terminal Output: With a simple glance you're able to tell if your bot is running as it should. With colored terminal classes you can very easily tell apart Errors from normal output.
+
 ## Installation
 ###### Please note it is assumed you already have Python, and VirtualEnv installed prior to this installation. If you do not have both installed please do so before continuing.
 1. ### *Clone Repository Via Terminal:*
@@ -34,7 +43,7 @@
     - [Windows] Activate your Virtual Environment via ```.\venv\Scripts\activate```
     4. Install the required modules via ```pip install -r requirements.txt```
 1. ### *HangoutCore Bot Setup:*
-    1. Start HangoutCore via ```python hangoutcore.py```
+    1. Start HangoutCore via ```python hangoutcore```
     2. The initial prompt will ask you to start the setup process
     <img src="https://i.imgur.com/8pbRoX8.png" width="500">
 
