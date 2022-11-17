@@ -102,75 +102,6 @@ class bot():
                 return '!'
             return commands.when_mentioned_or(prefixes[0])(bot, message)
 
-    class CustomViews():
-        def __init__(self):
-            pass
-        class autoroleView(discord.ui.View):
-            def __init__(self):
-                super().__init__(timeout=None)
-
-            @discord.ui.button(label='Game Development', style=discord.ButtonStyle.grey, custom_id='persistent_autorole:gameDev')
-            async def green(self, button: discord.ui.Button, interaction: discord.Interaction):
-                role = interaction.guild.get_role(868692760524365875)
-                user = interaction.user
-                if role in user.roles:
-                    confirmation = bot.CustomViews.confirmationView()
-                    await interaction.response.send_message(f"Are you sure you'd like to remove {role.mention} from your roles?",view=confirmation, ephemeral=True)
-                    await confirmation.wait()
-                    if confirmation.value is None:
-                        await interaction.response.send_message(f"Timed out.", ephemeral=True)
-                    elif confirmation.value:
-                        await user.remove_roles(role, reason="User removed via AutoRole.")
-                        await interaction.response.send_message(f"You've successfully been unassigned {role.mention}.", ephemeral=True)
-                    else:
-                        return      
-                else:
-                    await user.add_roles(role, reason="User added via AutoRole.")
-                    await interaction.response.send_message(f"You've successfully been assigned {role.mention}.", ephemeral=True)
-
-            @discord.ui.button(label='Bot Development', style=discord.ButtonStyle.grey, custom_id='persistent_autorole:botDev')
-            async def grey(self, button: discord.ui.Button, interaction: discord.Interaction):
-                role = interaction.guild.get_role(868692545490804746)
-                user = interaction.user
-                if role in user.roles:
-                    confirmation = bot.CustomViews.confirmationView()
-                    await interaction.response.send_message(f"Are you sure you'd like to remove {role.mention} from your roles?",view=confirmation, ephemeral=True)
-                    await confirmation.wait()
-                    if confirmation.value is None:
-                        await interaction.response.send_message(f"Timed out.", ephemeral=True)
-                    elif confirmation.value:
-                        await user.remove_roles(role, reason="User removed via AutoRole.")
-                        await interaction.response.send_message(f"You've successfully been unassigned {role.mention}.", ephemeral=True)
-                    else:
-                        return      
-                else:
-                    await user.add_roles(role, reason="User added via AutoRole.")
-                    await interaction.response.send_message(f"You've successfully been assigned {role.mention}.", ephemeral=True)
-
-        class Confirm(discord.ui.View):
-            def __init__(self):
-                super().__init__()
-                self.value = None
-
-            # When the confirm button is pressed, set the inner value to `True` and
-            # stop the View from listening to more input.
-            # We also send the user an ephemeral message that we're confirming their choice.
-            @discord.ui.button(label='Confirm', style=discord.ButtonStyle.green)
-            async def confirm(self, interaction: discord.Interaction, button: discord.ui.Button):
-                await interaction.response.send_message('Confirming', ephemeral=True)
-                self.value = True
-                self.stop()
-
-            # This one is similar to the confirmation button except sets the inner value to `False`
-            @discord.ui.button(label='Cancel', style=discord.ButtonStyle.grey)
-            async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
-                await interaction.response.send_message('Cancelling', ephemeral=True)
-                self.value = False
-                self.stop()
-
-    class CustomButtons():
-        def __init__(self):
-            pass
     
     
 #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -738,3 +669,78 @@ class terminal():
             else:
                 terminal.log.CRITICAL(f"{guild.name} does not have a Notification Channel set up. They will not be able to recieve Notifications.")
                 return f"This Guild does not have a notification channel registered in our database. Please utilize the **/setup** command and try again"
+
+#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# ↓ Terminal ↓ : WIP
+#   › Used to optimize terminal handling
+#   › Author: Lino
+#   › Date: 15 Nov, 2022
+#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+class CustomViews():
+    # class autoroleView(discord.ui.View):
+    #     def __init__(self):
+    #         super().__init__(timeout=None)
+
+    #     @discord.ui.button(label='Game Development', style=discord.ButtonStyle.grey, custom_id='persistent_autorole:gameDev')
+    #     async def green(self, button: discord.ui.Button, interaction: discord.Interaction):
+    #         role = interaction.guild.get_role(868692760524365875)
+    #         user = interaction.user
+    #         if role in user.roles:
+    #             confirmation = bot.CustomViews.confirmationView()
+    #             await interaction.response.send_message(f"Are you sure you'd like to remove {role.mention} from your roles?",view=confirmation, ephemeral=True)
+    #             await confirmation.wait()
+    #             if confirmation.value is None:
+    #                 await interaction.response.send_message(f"Timed out.", ephemeral=True)
+    #             elif confirmation.value:
+    #                 await user.remove_roles(role, reason="User removed via AutoRole.")
+    #                 await interaction.response.send_message(f"You've successfully been unassigned {role.mention}.", ephemeral=True)
+    #             else:
+    #                 return      
+    #         else:
+    #             await user.add_roles(role, reason="User added via AutoRole.")
+    #             await interaction.response.send_message(f"You've successfully been assigned {role.mention}.", ephemeral=True)  # Remnants of old personal bot
+
+        # @discord.ui.button(label='Bot Development', style=discord.ButtonStyle.grey, custom_id='persistent_autorole:botDev')
+        # async def grey(self, button: discord.ui.Button, interaction: discord.Interaction):
+        #     role = interaction.guild.get_role(868692545490804746)
+        #     user = interaction.user
+        #     if role in user.roles:
+        #         confirmation = bot.CustomViews.confirmationView()
+        #         await interaction.response.send_message(f"Are you sure you'd like to remove {role.mention} from your roles?",view=confirmation, ephemeral=True)
+        #         await confirmation.wait()
+        #         if confirmation.value is None:
+        #             await interaction.response.send_message(f"Timed out.", ephemeral=True)
+        #         elif confirmation.value:
+        #             await user.remove_roles(role, reason="User removed via AutoRole.")
+        #             await interaction.response.send_message(f"You've successfully been unassigned {role.mention}.", ephemeral=True)
+        #         else:
+        #             return      
+        #     else:
+        #         await user.add_roles(role, reason="User added via AutoRole.")
+        #         await interaction.response.send_message(f"You've successfully been assigned {role.mention}.", ephemeral=True)
+
+    class Confirm(discord.ui.View):
+        def __init__(self):
+            super().__init__()
+            self.value = None
+
+        # When the confirm button is pressed, set the inner value to `True` and
+        # stop the View from listening to more input.
+        # We also send the user an ephemeral message that we're confirming their choice.
+        @discord.ui.button(label='Confirm', style=discord.ButtonStyle.green)
+        async def confirm(self, interaction: discord.Interaction, button: discord.ui.Button):
+            await interaction.response.send_message('Confirming', ephemeral=True)
+            self.value = True
+            self.stop()
+
+        # This one is similar to the confirmation button except sets the inner value to `False`
+        @discord.ui.button(label='Cancel', style=discord.ButtonStyle.grey)
+        async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
+            await interaction.response.send_message('Cancelling', ephemeral=True)
+            self.value = False
+            self.stop()
+
+    class CustomButtons():
+        def __init__(self):
+            pass
