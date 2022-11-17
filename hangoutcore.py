@@ -45,21 +45,6 @@ class HangoutCoreBot(commands.Bot): # Sub class bot so we can have more customiz
         
         # BotSynced = False
         # ViewsAdded = False
-        # intents = bot.GetIntents()
-        # activity = bot.GetActivity()
-
-        if len(terminal_args) > 0:
-            if terminal_args[0] == "-h":
-                print("\nhangoutcore.py -debug <True/False>\n")
-                sys.exit(2)
-            elif terminal_args[0] == "-d" or terminal_args == "-debug":
-                
-                if terminal_args[1] == "True":
-                    self.debug_mode = True
-                else:
-                    self.debug_mode = False
-        else:
-            self.debug_mode = False
 
     async def setup_hook(self) -> None:
 
@@ -191,7 +176,7 @@ async def main():
     else:
         init_time = '{0:%d%b%Y %Hh:%Mm}'.format(datetime.now()) # This time is used for bot reference
         if not config.exists(): # If the config does not exist
-            config.setup() # Begin Config Setup process like taking in bot token, name, etc.
+            config.setup(init_time) # Begin Config Setup process like taking in bot token, name, etc.
 
         logger = logging.getLogger('discord')
         logger.setLevel(logging.INFO)
