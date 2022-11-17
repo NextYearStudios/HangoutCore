@@ -4,6 +4,14 @@
 ##### *Join the discord below for quicker support.*
 ###### Assign yourself the Bot Developer Role in the #pick-your-roles channel in order to access the #bot-support channel.
 [![Discord](https://img.shields.io/discord/514091020535857155?color=5865F2&label=Discord&logo=Discord&logoColor=fff)](https://discord.gg/xpwQvdeCN2)
+## TODO
+- Add support for various database types in util.database.
+- Add support for specifying which config to load from like our current implementation for tokens.
+- Further Optimize base script while prioritizing eazy readability for new developers.
+- Create Example Cog for new developers to be able to build off of.
+- Create webhook example.
+- Add Guild registration function in util.database. to begin supporting database saved data.
+- Add Ticket Cog for new devs to be able to build off of.
 ## Installation
 ###### Please note it is assumed you already have Python, and VirtualEnv installed prior to this installation. If you do not have both installed please do so before continuing.
 1. ### *Clone Repository Via Terminal:*
