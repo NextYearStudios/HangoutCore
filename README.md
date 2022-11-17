@@ -1,9 +1,14 @@
 # HangoutCore Bot Framework
+<<<<<<< HEAD
 ##### HangoutCore Version: 2.87 | using [![Discord.py](https://img.shields.io/pypi/v/Discord.py?label=Discord.py)](https://pypi.org/project/discord.py/) | License [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+=======
+##### HangoutCore Version: 2.86 | using [![Discord.py](https://img.shields.io/pypi/v/Discord.py?label=Discord.py)](https://pypi.org/project/discord.py/) | License [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+>>>>>>> HangoutCore/dev
 ***
 ##### *Join the discord below for quicker support.*
 ###### Assign yourself the Bot Developer Role in the #pick-your-roles channel in order to access the #bot-support channel.
 [![Discord](https://img.shields.io/discord/514091020535857155?color=5865F2&label=Discord&logo=Discord&logoColor=fff)](https://discord.gg/xpwQvdeCN2)
+<<<<<<< HEAD
 ## TODO
 - use slash commands
 - Add support for various database types in util.database.
@@ -14,6 +19,8 @@
 - Add Guild registration function in util.database. to begin supporting database saved data.
 - Add Ticket Cog for new devs to be able to build off of.
 - Create static page to display more detailed information on HangoutCore Project Status
+=======
+>>>>>>> HangoutCore/dev
 ## Installation
 ###### Please note it is assumed you already have Python, and VirtualEnv installed prior to this installation. If you do not have both installed please do so before continuing.
 1. ### *Clone Repository Via Terminal:*
@@ -261,7 +268,12 @@
         ]
         ```
     
+<<<<<<< HEAD
 ## Contributers
 ##### A special thank you to the following for contributing to this project.
 - [Alec J](https://github.com/alec-jensen)
 - [Lino H](https://github.com/Its-Lino)
+=======
+    
+    
+>>>>>>> HangoutCore/dev
