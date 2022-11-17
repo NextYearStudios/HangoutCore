@@ -13,6 +13,7 @@
 - Create webhook example.
 - Add Guild registration function in util.database. to begin supporting database saved data.
 - Add Ticket Cog for new devs to be able to build off of.
+- Create static page to display more detailed information on HangoutCore Project Status
 ## Installation
 ###### Please note it is assumed you already have Python, and VirtualEnv installed prior to this installation. If you do not have both installed please do so before continuing.
 1. ### *Clone Repository Via Terminal:*
