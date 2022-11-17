@@ -5,6 +5,7 @@
 ###### Assign yourself the Bot Developer Role in the #pick-your-roles channel in order to access the #bot-support channel.
 [![Discord](https://img.shields.io/discord/514091020535857155?color=5865F2&label=Discord&logo=Discord&logoColor=fff)](https://discord.gg/xpwQvdeCN2)
 ## TODO
+- use slash commands
 - Add support for various database types in util.database.
 - Add support for specifying which config to load from like our current implementation for tokens.
 - Further Optimize base script while prioritizing eazy readability for new developers.
