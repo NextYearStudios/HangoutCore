@@ -8,6 +8,3 @@
     Notes:
         None
 """
-
-def setup():
-    print("Done!")
