@@ -10,7 +10,7 @@
 """
 
 import asyncio
-import ctypes,  ctypes.util
+import ctypes, ctypes.util
 import discord
 import logging
 import logging.handlers
@@ -25,24 +25,26 @@ from discord.utils import get
 from questionnaire import Questionnaire
 from typing import List, Optional
 # Local modules
-from util import bot,config,database,local,terminal
+from util import Bot, config, database, local, Terminal
+import util
 
-class HangoutCoreBot(commands.Bot): # Sub class bot so we can have more customizability
+
+class HangoutCoreBot(commands.Bot):  # Sub class bot so we can have more customizability
     def __init__(
-        self,
-        *args,
-        terminal_args,
-        testing_guild_id: Optional[int] = None,
-        web_client: ClientSession,
-        **kwargs):
+            self,
+            *args,
+            terminal_args,
+            testing_guild_id: Optional[int] = None,
+            web_client: ClientSession,
+            **kwargs):
         super().__init__(*args, **kwargs)
 
         self.web_client = web_client
         self.testing_guild_id = testing_guild_id
-    
-        self.start_time = "" # Add the start_time variable so that we may access it for debuging or information display purposes.
+
+        self.start_time = ""  # Add the start_time variable so that we may access it for debuging or information display purposes.
         self.debug_mode = False
-        
+
         # BotSynced = False
         # ViewsAdded = False
 
@@ -50,40 +52,37 @@ class HangoutCoreBot(commands.Bot): # Sub class bot so we can have more customiz
 
         # here, we are loading extensions prior to sync to ensure we are syncing interactions defined in those extensions.
         self.start_time = '{0:%d%b%Y %Hh:%Mm}'.format(datetime.now())
-        terminal.initiate(self.start_time, self.debug_mode)
-        terminal.log.INFO(f"Checking for preloaded bot modules...")
+        Terminal().initiate(self.start_time, self.debug_mode)
+        Terminal().Log().INFO(f"Checking for preloaded bot modules...")
         for cog in self.cogs.keys():
-            terminal.log.INFO(f"Found {cog}")
+            Terminal().Log().INFO(f"Found {cog}")
 
-        terminal.log.INFO (f"Looking for bot modules in '/{config.COG_DIRECTORY_PATH}'...")
-        await local.load_extensions(self, self.debug_mode) # Scan cog directory and enable cogs.
+        Terminal().Log().INFO(f"Looking for bot modules in '/{config.COG_DIRECTORY_PATH}'...")
+        await local().load_extensions(self, self.debug_mode)  # Scan cog directory and enable cogs.
 
-        bot.audio.verify_opus() # Looks for opus and loads it if found.
+        Bot().audio().verify_opus()  # Looks for opus and loads it if found.
 
-        if self.testing_guild_id: # if a guild was passed in under testing_guild_id then we only sync with that guild.
-            guild = discord.Object(self.testing_guild_id)
-            # We'll copy in the global commands to test with:
-            self.tree.copy_global_to(guild=guild)
-            # followed by syncing to the testing guild.
-            await self.tree.sync(guild=guild)
-        #await self.tree.sync() # otherwise we sync globally
+        await self.tree.sync()  # sync globally 
 
-        terminal.log.INFO(f"Logged in as {self.user} (ID: {self.user.id}).")
-        
+        Terminal().Log().INFO(f"Logged in as {self.user} (ID: {self.user.id}).")
 
     async def on_ready(self):
-        #self.add_view(utils.bot.CustomViews.autoroleView())
+        # self.add_view(utils.bot.CustomViews.autoroleView())
         await self.wait_until_ready()
+        terminal = Terminal()
         terminal.print_hr()
         terminal.print_center("Bot Is Online")
         terminal.print_hr()
-        terminal.log.WARNING("Updating Guild Database")
+        terminal.Log().WARNING("Updating Guild Database")
         for guild in self.guilds:
-            #await bot.database.RegisterGuild(guild)
-            terminal.log.INFO(f"Registered {guild.name}:{guild.id}")
+            # await bot.database.RegisterGuild(guild)
+            Terminal().Log().INFO(f"Registered {guild.name}:{guild.id}")
 
-class SystemCog(commands.Cog): # We'll register system commands here just in case they need to be toggled seperately from the bot.
+
+class SystemCog(
+    commands.Cog):  # We'll register system commands here just in case they need to be toggled seperately from the bot.
     def __init__(self, bot: commands.Bot):
+        self.bot = bot
         self.client = bot
 
     @app_commands.CommandTree.command
@@ -106,9 +105,9 @@ class SystemCog(commands.Cog): # We'll register system commands here just in cas
                     print(e)
                 else:
                     embed = discord.Embed(
-                            title=f"Successfully Loaded {cog}",
-                            colour=discord.Colour.dark_theme(),
-                            timestamp=datetime.now()
+                        title=f"Successfully Loaded {cog}",
+                        colour=discord.Colour.dark_theme(),
+                        timestamp=datetime.now()
                     )
                     embed.set_footer(
                         text=f'Automatic Notification | Category: System',
@@ -120,7 +119,7 @@ class SystemCog(commands.Cog): # We'll register system commands here just in cas
     @app_commands.command(name="unload", description=f"Unload a bot cog.")
     async def unloadCog(self, interaction: discord.Interaction, cog: str):
         cog = str(cog).lower()
-        cogs = local.GetCogs()
+        cogs = local().GetCogs()
         if not cog.endswith('.py'):
             cog = cog + '.py'
 
@@ -134,9 +133,9 @@ class SystemCog(commands.Cog): # We'll register system commands here just in cas
                     print(e)
                 else:
                     embed = discord.Embed(
-                            title=f"Successfully Unloaded {cog}",
-                            colour=discord.Colour.dark_theme(),
-                            timestamp=datetime.now()
+                        title=f"Successfully Unloaded {cog}",
+                        colour=discord.Colour.dark_theme(),
+                        timestamp=datetime.now()
                     )
                     embed.set_footer(
                         text=f'Automatic Notification | Category: System',
@@ -144,7 +143,8 @@ class SystemCog(commands.Cog): # We'll register system commands here just in cas
                     )
                     await interaction.response.send_message(embed=embed, ephemeral=True)
         else:
-            await interaction.response.send_message(f"Sorry, that cog is not valid. Please check your spelling and try again.", ephemeral=True)
+            await interaction.response.send_message(
+                f"Sorry, that cog is not valid. Please check your spelling and try again.", ephemeral=True)
 
     @app_commands.command(description=f"Retrieve bot extensions.")
     async def extensions(self, interaction: discord.Interaction):
@@ -172,20 +172,20 @@ async def main():
 
 [-n, -new] Manually put HangoutCore in a setup state in order to create a new configuration. Sets the new config as default.
 
-[-s, -silent : True/False] Enable/Disable to have information sent to log only, or terminal and log. Useful for running as a service since there's no access to terminal.
+[-s, -silent : True/False] Enable/Disable to have information sent to log only, or terminal and log(). Useful for running as a service since there's no access to terminal.
 
 [-t, -token : integer] Specify which token to use if you're using multiple. Allows user to skip token choice prompt.
 
         """)
     else:
-        init_time = '{0:%d%b%Y %Hh:%Mm}'.format(datetime.now()) # This time is used for bot reference
+        init_time = '{0:%d%b%Y %Hh:%Mm}'.format(datetime.now())  # This time is used for bot reference
         if '-c' in sys.argv[1:]:
             config.init(sys.argv[1:][sys.argv[1:].index('-c') + 1])
         elif '-config' in sys.argv[1:]:
             config.init(sys.argv[1:][sys.argv[1:].index('-config') + 1])
 
-        if not config.exists() or '-n' in sys.argv[1:] or '-new' in sys.argv[1:]: # If the config does not exist
-            config.setup(init_time, True) # Begin Config Setup process like taking in bot token, name, etc.
+        if not config.exists() or '-n' in sys.argv[1:] or '-new' in sys.argv[1:]:  # If the config does not exist
+            config.setup(init_time, True)  # Begin Config Setup process like taking in bot token, name, etc.
             config.init()
         else:
             config.init()
@@ -194,7 +194,7 @@ async def main():
         logger.setLevel(logging.INFO)
 
         handler = logging.handlers.RotatingFileHandler(
-            filename=f'{config.LOG_DIRECTORY_PATH}/log_{init_time.replace(" ","_")}.log',
+            filename=f'{config.LOG_DIRECTORY_PATH}/log_{init_time.replace(" ", "_")}.log',
             encoding='utf-8',
             maxBytes=32 * 1024 * 1024,  # 32 MiB
             backupCount=5,  # Rotate through 5 files
@@ -208,49 +208,54 @@ async def main():
         # Alternatively, you could use:
         # discord.utils.setup_logging(handler=handler, root=False)
 
-
         async with ClientSession() as our_client:
             cfg = config.load()
+            bot = util.Bot()
             activity = bot.GetActivity()
             intents = bot.GetIntents()
-            #cogs = local.GetCogs()
+            # cogs = local().GetCogs()
             if cfg is not None:
-                    
+
                 async with HangoutCoreBot(
-                    # activity = activity,
-                    commands.when_mentioned,
-                    intents = intents,
-                    # description = cfg["bot"]["description"],
-                    testing_guild_id=514091020535857155,
-                    terminal_args = terminalArgs,
-                    web_client = our_client) as HangoutCore:
+                        # activity = activity,
+                        commands.when_mentioned,
+                        intents=intents,
+                        # description = cfg["bot"]["description"],
+                        testing_guild_id=785902346894311484,
+                        terminal_args=terminalArgs,
+                        web_client=our_client) as HangoutCore:
                     if isinstance(cfg["bot"]["token"], str) and cfg["bot"]["token"] != "":
                         await HangoutCore.add_cog(SystemCog(HangoutCore))
                         await HangoutCore.start(cfg["bot"]["token"])
 
-                    elif isinstance(cfg["bot"]["token"], list) and not all(token == "" for token in cfg["bot"]["token"]):
+                    elif isinstance(cfg["bot"]["token"], list) and not all(
+                            token == "" for token in cfg["bot"]["token"]):
                         if '-t' in terminalArgs:
                             await HangoutCore.add_cog(SystemCog(HangoutCore))
-                            await HangoutCore.start(cfg['bot']['token'][int(terminalArgs[terminalArgs.index('-t') + 1])])
+                            await HangoutCore.start(
+                                cfg['bot']['token'][int(terminalArgs[terminalArgs.index('-t') + 1])])
                         elif '-token' in terminalArgs:
                             await HangoutCore.add_cog(SystemCog(HangoutCore))
-                            await HangoutCore.start(cfg['bot']['token'][int(terminalArgs[terminalArgs.index('-token') + 1])])
+                            await HangoutCore.start(
+                                cfg['bot']['token'][int(terminalArgs[terminalArgs.index('-token') + 1])])
                         else:
                             tokens = [token for token in cfg["bot"]["token"]]
                             q = Questionnaire()
-                            q.one(f"token",*tokens, prompt=f"Current config loaded: {config.COG_DIRECTORY_PATH}/{config.CONFIG_PATH}.\nWhich token would you like to use?")
+                            q.one(f"token", *tokens,
+                                  prompt=f"Current config loaded: {config.COG_DIRECTORY_PATH}/{config.CONFIG_PATH}.\nWhich token would you like to use?")
                             q.run()
                             await HangoutCore.add_cog(SystemCog(HangoutCore))
                             await HangoutCore.start(q.answers.get('token'))
 
                     else:
-                        terminal.log.CRITICAL(f"No token was provided in '{config.CONFIG_PATH}'")
+                        Terminal().Log().CRITICAL(f"No token was provided in '{config.CONFIG_PATH}'")
+
 
 if __name__ == "__main__":
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        print("") # Clear line just incase user closes while inputting
-        terminal.log.CRITICAL(f"Please refrain from using CTRL+C to shutdown bot.")
-        terminal.log.CRITICAL(f"Shutting Down...")
+        print("")  # Clear line just incase user closes while inputting
+        Terminal().Log().CRITICAL(f"Please refrain from using CTRL+C to shutdown bot.")
+        Terminal().Log().CRITICAL(f"Shutting Down...")
         sys.exit(0)

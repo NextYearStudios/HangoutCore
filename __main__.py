@@ -13,13 +13,13 @@ import asyncio
 import hangoutcore
 import sys
 # Local modules
-from util import terminal
+from util import Terminal
 
 if __name__ == "__main__":
     try:
         asyncio.run(hangoutcore.main())
     except KeyboardInterrupt:
         print("") # Clear line just incase user closes while inputting
-        terminal.log.CRITICAL(f"Please refrain from using CTRL+C to shutdown bot.")
-        terminal.log.CRITICAL(f"Shutting Down...")
+        Terminal.Log.CRITICAL(f"Please refrain from using CTRL+C to shutdown bot.")
+        Terminal.Log.CRITICAL(f"Shutting Down...")
         sys.exit(0)
