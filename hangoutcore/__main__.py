@@ -8,3 +8,8 @@
     Notes:
         None
 """
+from hangoutcore import util
+
+
+async def main():
+    util.terminal.log.INFO(f"Starting HangoutCore.")

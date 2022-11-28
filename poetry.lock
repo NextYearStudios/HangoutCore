@@ -396,9 +396,9 @@ toml = ["tomli"]
 
 [[package]]
 name = "setuptools"
-version = "65.6.0"
+version = "65.6.1"
 description = "Easily download, build, install, upgrade, and uninstall Python packages"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 
@@ -465,7 +465,7 @@ testing = ["coverage (>=6.2)", "coverage-enable-subprocess (>=1)", "flaky (>=3.7
 name = "windows-curses"
 version = "2.3.1"
 description = "Support for the standard curses module on Windows"
-category = "main"
+category = "dev"
 optional = true
 python-versions = "*"
 
@@ -481,13 +481,10 @@ python-versions = ">=3.7"
 idna = ">=2.0"
 multidict = ">=4.0"
 
-[extras]
-dev-tools = ["windows-curses"]
-
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "6b58d537d83c7a4f6f46e5b6f7717b5d615839c4b4e8016deec41d1a016136e3"
+content-hash = "32b77eff721f6f43c995f9ba0c060e05a10204b66878c5706d8f6496c51930a5"
 
 [metadata.files]
 aiofiles = [
@@ -989,8 +986,8 @@ scriv = [
     {file = "scriv-0.17.0.tar.gz", hash = "sha256:8f23883ef83dfc50f09f76aef08ff3073f2752c7255db15d24cd8bfecc32379c"},
 ]
 setuptools = [
-    {file = "setuptools-65.6.0-py3-none-any.whl", hash = "sha256:6211d2f5eddad8757bd0484923ca7c0a6302ebc4ab32ea5e94357176e0ca0840"},
-    {file = "setuptools-65.6.0.tar.gz", hash = "sha256:d1eebf881c6114e51df1664bc2c9133d022f78d12d5f4f665b9191f084e2862d"},
+    {file = "setuptools-65.6.1-py3-none-any.whl", hash = "sha256:9b1b1b4129877c74b0f77de72b64a1084a57ccb106e7252f5fb70f192b3d9055"},
+    {file = "setuptools-65.6.1.tar.gz", hash = "sha256:1da770a0ee69681e4d2a8196d0b30c16f25d1c8b3d3e755baaedc90f8db04963"},
 ]
 six = [
     {file = "six-1.16.0-py2.py3-none-any.whl", hash = "sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254"},
