@@ -2,7 +2,7 @@
 name: Command Request
 about: Guideline for requesting Commands.
 title: "[Command]"
-labels: Command Request
+labels: Bug, Command Request
 assignees: ''
 
 ---
