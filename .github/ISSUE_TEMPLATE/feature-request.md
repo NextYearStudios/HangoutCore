@@ -1,5 +1,5 @@
 ---
-name: Custom issue template
+name: Feature Request
 about: Guideline for requesting HangoutCore Features.
 title: "[Feature]"
 labels: Feature Request
