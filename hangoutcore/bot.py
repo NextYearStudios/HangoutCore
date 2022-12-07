@@ -16,6 +16,7 @@ import discord
 
 from datetime import datetime
 from discord import commands
+from typing import List, Optional
 
 class HangoutCoreBot(commands.Bot):  # Sub class bot so we can have more customizability
     def __init__(
@@ -34,6 +35,7 @@ class HangoutCoreBot(commands.Bot):  # Sub class bot so we can have more customi
         self.start_time = ""  # Add the start_time variable so that we may access it for debugging or information display purposes.
         self.debug_mode = debug_mode
 
+        self.BotSynced = False
         # BotSynced = False
         # ViewsAdded = False
 
@@ -51,7 +53,10 @@ class HangoutCoreBot(commands.Bot):  # Sub class bot so we can have more customi
 
         Bot().audio().verify_opus()  # Looks for opus and loads it if found.
 
-        await self.tree.sync()  # sync globally 
+        if not self.BotSynced:
+            await self.tree.sync()
+            self.BotSynced = True
+        
 
         Terminal().Log().INFO(f"Logged in as {self.user} (ID: {self.user.id}).")
 
