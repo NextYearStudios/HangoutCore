@@ -152,7 +152,7 @@ class Bot():
 
 class config():
     warned = False
-    CONFIG_VERSION = 5.7
+    CONFIG_VERSION = 5.8
     CONFIG_PATH = 'config.json'  # Path and name of config file.
     CONFIG_DIRECTORY_PATH = "configs"  # Name of directory where cogs will be stored.
     COG_DIRECTORY_PATH = "cogs"  # Name of directory where cogs will be stored.
@@ -197,6 +197,35 @@ class config():
                     "token": "Api Token",  # API Token for accessing API Data
                     "header": {"Authorization": ""}  # API Header for ease of use
                 }
+            ],
+            "messages": [
+                # The following section is for specifying various messages the bot will use. 
+                # Instead of having to specify each one in various areas of code it's centralized here so that duplicate situations can easily use the necessary message without having to specify it in multiple areas.
+                # messages with '_user_' in the name are often public messages that get displayed in the channel the command was called in.
+                # messages with '_user_dm_' in the name are private messages that get sent straight to a user's dm. Such as moderation notices, etc. 
+                # messages with '_bot_' in the name are bot specific such as not having necessary roles, etc. This message get's publicly displayed.
+                # messages with neither of the above are private and go to staff logs. Provide information here that you believe is important for guild staff members to know.
+                # Valid references
+                # {user.name} # Target user's name
+                # {user.mention} # Target user's mention
+                # {author.name} # Command author's name
+                # {author.mention} # Command author's mention
+                # {bot.name} # Bot name specified in config file
+                # {bot.mention} # Bot mention (Keep in mind guilds may nickname your bot, This will display whatever they have set.)
+                # {channel} # Channel mention
+                # {command} # Command used
+                # {argument_name} # This can vary depending on the code that uses it. eg; {reason}, {color_chosen}, etc.
+                # {error} # Error encountered
+                "error_user_insufficientpermissions": "You do not have the necessary permissions to use that. This event has been logged and a staff member has been notified.",
+                "error_bot_insufficientpermissions": "I do not have the necessary permissions to perform {command}, Please insure I have the necessary permissions assigned to my role.",
+                "error_insufficientpermissions": "{user.mention} attempted to use {command} in channel {channel}.",
+                "error_user_warn": "{user.mention} has been warned for the following reason: {reason}.",
+                "error_user_dm_warn": "You have been warned for the following reason: {reason}.",
+                "error_warn": "{user.mention} has been warned by {author.mention} for the following reason: {reason}.",
+                "error_user_channelnotjoinable": "I could not join your channel. Please make sure there is space and verify I have the necessary permissions.",
+                "error_user_notinchannel": "You're not currently in a voice channel. Please join a valid voice channel and try again.",
+                "error_user_alreadyconnected": "I'm already connected to a voice channel.",
+                "error_user_channelnotfound": "I could not find the channel specified, please check the spelling and try again.",
             ]
         },
         "database": {
@@ -208,6 +237,8 @@ class config():
             "password": "pass"
         },
         "music": {
+            "vc_timeout": True,
+            "vc_timeout_duration": 600,
             "max_volume": 250,  # Max Volume
             "vote_skip": True,  # whether vote skip is enabled or not.
             "vote_skip_ratio": 0.5  # minimum ratio needed for vote skip
