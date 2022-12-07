@@ -34,6 +34,7 @@ from jproperties import Properties
 from typing import Optional
 from os import system, name
 
+init(strip=not sys.stdout.isatty()) # Strip color if stdout is redirected.
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # ↓ Bot ↓ : WIP
