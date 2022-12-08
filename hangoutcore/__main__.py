@@ -126,7 +126,9 @@ async def main():
         config.setup()
     config.init() # Load our hangoutcore.properties file and setup config variables.
     config.load() # Load our bot config here
-
+    
+    Terminal().initiate(config)
+    
 def init():
     try:
         asyncio.run(main())

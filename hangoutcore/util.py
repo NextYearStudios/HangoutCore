@@ -805,44 +805,54 @@ class Terminal():
         else:
             _ = system('clear')
 
-    def initiate(self, start_time: str, debug: bool = False, bot_setup: bool = False):
+    def initiate(self):# start_time: str, debug: bool = False, bot_setup: bool = False
         """
         Clear's and prepares terminal for bot output.
         """
-        cfg = Config().load()
-        if cfg is not None:
-            if bot_setup:
-                Terminal().clear()
-                if debug:
-                    print(Style.BRIGHT + Back.RED, end="\r")
-                else:
-                    print(Style.NORMAL + Fore.BLACK + Back.WHITE, end="\r")
-                Terminal().print_center("Bot Setup")
-                Terminal().print_center("")
-                Terminal().print_center(str(start_time))
-                if debug:
-                    Terminal().print_center(f'// Debug Mode Enabled \\\ ')
-                    Terminal().print_center('SYS Version ' + str(sys.version))
-                    Terminal().print_center('API Version ' + str(sys.api_version))
-                    Terminal().print_center('Discord Version ' + str(discord.__version__))
-                print(Style.RESET_ALL + Back.RESET, end="\r")
-                Terminal().print_hr()
-            elif not bot_setup:
-                Terminal().clear()
-                if debug:
-                    print(Style.BRIGHT + Back.RED, end="\r")
-                else:
-                    print(Style.NORMAL + Fore.BLACK + Back.WHITE, end="\r")
-                Terminal().print_center(str(cfg["bot"]["name"]))
-                Terminal().print_center(str(cfg["bot"]["version"]))
-                Terminal().print_center(str(start_time))
-                if debug:
-                    Terminal().print_center(f'// Debug Mode Enabled \\\ ')
-                    Terminal().print_center('SYS Version ' + str(sys.version))
-                    Terminal().print_center('API Version ' + str(sys.api_version))
-                    Terminal().print_center('Discord Version ' + str(discord.__version__))
-                print(Style.RESET_ALL + Back.RESET, end="\r")
-                Terminal().print_hr()
+        # work on a way to share config instance with util classes.
+        # potentially by setting a variable?
+        
+        # cfg = Config().load()
+        # if cfg is not None:
+        #     if bot_setup:
+        #         Terminal().clear()
+        #         if debug:
+        #             print(Style.BRIGHT + Back.RED, end="\r")
+        #         else:
+        #             print(Style.NORMAL + Fore.BLACK + Back.WHITE, end="\r")
+        #         Terminal().print_center("Bot Setup")
+        #         Terminal().print_center("")
+        #         Terminal().print_center(str(start_time))
+        #         if debug:
+        #             Terminal().print_center(f'// Debug Mode Enabled \\\ ')
+        #             Terminal().print_center('SYS Version ' + str(sys.version))
+        #             Terminal().print_center('API Version ' + str(sys.api_version))
+        #             Terminal().print_center('Discord Version ' + str(discord.__version__))
+        #         print(Style.RESET_ALL + Back.RESET, end="\r")
+        #         Terminal().print_hr()
+        #         Terminal().print_center("██╗░░██╗░█████╗░███╗░░██╗░██████╗░░█████╗░██╗░░░██╗████████╗░█████╗░░█████╗░██████╗░███████╗")
+        #         Terminal().print_center("██║░░██║██╔══██╗████╗░██║██╔════╝░██╔══██╗██║░░░██║╚══██╔══╝██╔══██╗██╔══██╗██╔══██╗██╔════╝")
+        #         Terminal().print_center("███████║███████║██╔██╗██║██║░░██╗░██║░░██║██║░░░██║░░░██║░░░██║░░╚═╝██║░░██║██████╔╝█████╗░░")
+        #         Terminal().print_center("██╔══██║██╔══██║██║╚████║██║░░╚██╗██║░░██║██║░░░██║░░░██║░░░██║░░██╗██║░░██║██╔══██╗██╔══╝░░")
+        #         Terminal().print_center("██║░░██║██║░░██║██║░╚███║╚██████╔╝╚█████╔╝╚██████╔╝░░░██║░░░╚█████╔╝╚█████╔╝██║░░██║███████╗")
+        #         Terminal().print_center("╚═╝░░╚═╝╚═╝░░╚═╝╚═╝░░╚══╝░╚═════╝░░╚════╝░░╚═════╝░░░░╚═╝░░░░╚════╝░░╚════╝░╚═╝░░╚═╝╚══════╝")
+        #         Terminal().print_center("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+        #     elif not bot_setup:
+        #         Terminal().clear()
+        #         if debug:
+        #             print(Style.BRIGHT + Back.RED, end="\r")
+        #         else:
+        #             print(Style.NORMAL + Fore.BLACK + Back.WHITE, end="\r")
+        #         Terminal().print_center(str(cfg["bot"]["name"]))
+        #         Terminal().print_center(str(cfg["bot"]["version"]))
+        #         Terminal().print_center(str(start_time))
+        #         if debug:
+        #             Terminal().print_center(f'// Debug Mode Enabled \\\ ')
+        #             Terminal().print_center('SYS Version ' + str(sys.version))
+        #             Terminal().print_center('API Version ' + str(sys.api_version))
+        #             Terminal().print_center('Discord Version ' + str(discord.__version__))
+        #         print(Style.RESET_ALL + Back.RESET, end="\r")
+        #         Terminal().print_hr()
 
     class Log():
         def DEBUG(self, log: str):
