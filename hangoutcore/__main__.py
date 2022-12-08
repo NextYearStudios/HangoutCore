@@ -16,14 +16,16 @@ import asyncio
 import click
 import sys
 
+from datetime import datetime
 from hangoutcore.util import *
 from hangoutcore.bot import HangoutCoreBot
 
 async def main():
-    argv = sys.argv[1:]
+    argv = list(set(sys.argv[1:])) # Setting a list to a set and then back to a list will remove any duplicates as a precaution.
     debug = False
     config = None
     token = -1
+    freshInstall = False
 
     if '-h' in sys.argv or '--help' in argv:
         print(f"""
@@ -44,7 +46,18 @@ async def main():
         """) # Formatting looks ugly I know. Looks pretty good in the terminal though...
         sys.exit(0)
 
-    if len(argv) >= 2:
+    if len(argv) >= 1:
+        if '-d' in argv:
+            argvPos = argv.index('-d')
+            debug = argv[argvPos + 1]
+            argv.pop(argvPos + 1)
+            argv.pop(argvPos)
+        elif '--debug' in argv:
+            argvPos = argv.index('--debug')
+            debug = argv[argvPos + 1]
+            argv.pop(argvPos + 1)
+            argv.pop(argvPos)
+
         if '-c' in argv:
             argvPos = argv.index('-c')
             config = argv[argvPos + 1]
@@ -55,6 +68,23 @@ async def main():
             config = argv[argvPos + 1]
             argv.pop(argvPos + 1)
             argv.pop(argvPos)
+
+        if '-t' in argv:
+            argvPos = argv.index('-t')
+            token = argv[argvPos + 1]
+            argv.pop(argvPos + 1)
+            argv.pop(argvPos)
+        elif '--token' in argv:
+            argvPos = argv.index('--token')
+            token = argv[argvPos + 1]
+            argv.pop(argvPos + 1)
+            argv.pop(argvPos)
+
+        if '-n' in argv:
+            argvPos = argv.index('-n')
+            freshInstall = True
+            argv.pop(argvPos)
+
         
         # Final check to make sure there's no invalid arguments that we missed.
         if len(argv) > 0:
@@ -87,16 +117,22 @@ async def main():
         return outputString
 
     obToken = obfuscateString(exampleToken, 4, '*')
-    
-    print(obToken)
-    
 
+    init_time = '{0:%d%b%Y %Hh:%Mm}'.format(datetime.now())
+    config = Config()
+    if freshInstall:
+        config.setup(manual=True)
+    elif not config.appConfigExists():
+        config.setup()
+    config.init() # Load our hangoutcore.properties file and setup config variables.
+    config.load() # Load our bot config here
 
 def init():
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
         Terminal().Log().CRITICAL(f"Please refrain from using CTRL+C to shutdown bot.")
+        # Here we'd make sure database exited/saved gracefully as well as any other essential process that may suffer from stopping abruptly.
         Terminal().Log().CRITICAL(f"Shutting Down...")
         sys.exit(0)
     # except:

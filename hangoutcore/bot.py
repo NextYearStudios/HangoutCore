@@ -14,8 +14,10 @@
 
 import discord
 
+from hangoutcore.util import Config, Terminal
+from aiohttp import ClientSession
 from datetime import datetime
-from discord import commands
+from discord.ext import commands
 from typing import List, Optional
 
 class HangoutCoreBot(commands.Bot):  # Sub class bot so we can have more customizability

@@ -45,7 +45,7 @@ from os import system, name
 class Bot():
     def GetIntents(self):
         """Retrieves specified bot intents from config file. If the config file is not able to be loaded this sets intents to false just in case."""
-        cfg = config.load()
+        cfg = Config().load()
         if cfg is not None:
             intents = discord.Intents.default()  # Set Bot Intents
             intents.members = cfg['bot']['intents']['members']
@@ -55,7 +55,7 @@ class Bot():
             intents.guilds = cfg['bot']['intents']['guilds']
             return intents
         else:
-            Terminal().Log().WARNING(f"Could not retrieve intents from config. Setting intents to false as a precaution.")
+            Terminal().Log().WARNING(f"Could not retrieve intents from Config(). Setting intents to false as a precaution.")
             intents = discord.Intents.default()  # Set Bot Intents
             intents.members = False
             intents.message_content = False
@@ -66,7 +66,7 @@ class Bot():
 
     def GetActivity(self):
         """Retrieves Bot Activity specified in config file. If an activity cannot be loaded from the config then we set it to 'listening to !help'"""
-        cfg = config.load()
+        cfg = Config().load()
         if cfg is not None:
             if cfg["bot"]["status"]["type"] == "listening":  # Set the activity depending on config
                 activity = discord.Activity(
@@ -99,7 +99,7 @@ class Bot():
 
     def GetPrefix(discordBot, message: discord.message):
         """Returns the prefixes specified in the config file. If none can be loaded from config then we set prefix as '!'"""
-        cfg = config.load()
+        cfg = Config().load()
         if cfg is not None:
             prefixes = cfg["bot"]["prefixes"]
 
@@ -120,7 +120,7 @@ class Bot():
                 self.now_playing = None
                 self.playlist = []
                 self.skip_votes = set()
-                self.volume = int(config.load()["music"]["max_volume"]) / 100
+                self.volume = int(Config().load()["music"]["max_volume"]) / 100
 
         def verify_opus(self):
             """
@@ -150,222 +150,322 @@ class Bot():
 #   › Date: 15 Nov, 2022
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-class config():
-    warned = False
-    CONFIG_VERSION = 5.8
-    CONFIG_PATH = 'config.json'  # Path and name of config file.
-    CONFIG_DIRECTORY_PATH = "configs"  # Name of directory where cogs will be stored.
-    COG_DIRECTORY_PATH = "cogs"  # Name of directory where cogs will be stored.
-    LOG_DIRECTORY_PATH = "logs"  # Name of directory where log files will be stored.
-    EXAMPLE_CONFIG = {  # Changing this will only matter when the bot creates a new config. Actual config at CONFIG_PATH
-        "bot": {
-            "prefixes": ["!"],
-            # Bot uses this array for prefixes. Add as many as you want, and keep in mind you can include spaces but be careful not to over complicate your prefixes.
-            "token": [""],
-            # If you intend on using any token other than the first in the list, change hangoutcore.py to match.
-            "intents": {
-                "members": True,
-                "message_content": True,
-                "typing": True,
-                "presences": True,
-                "guilds": True
-            },
-            "status": {
-                "type": "listening",  # Valid Options are competing, playing, listening, streaming, watching
-                "name": "!help",  # Activity Name
-                "url": ""  # Twitch or Youtube URL if type is Streaming
-            },
-            "name": "Bot Name",  # Bot name
-            "version": "0.0.0",  # Bot version
-            "description": "Bot Description would go here.",
-            "developer_guild_id": 000000000,  # Developer guild id for  Used for test commands.
-            "contributers": [
-                {
-                    "name": "Contributer Name",  # Contributer name
-                    "discord_id": 000000000,  # Contributer discord id
-                    "owner": True  # Set this to true if they're an owner. otherwise set it to false
+class Config():
+
+    def __init__(self):
+        self.WARNED = False
+        self.CONFIG = None
+        self.CONFIG_VERSION = 5.8
+        self.CONFIG_PATH = 'configold.json'  # Path and name of config file.
+        self.CONFIG_DIRECTORY_PATH = "configs"  # Name of directory where cogs will be stored.
+        self.COG_DIRECTORY_PATH = "cogs"  # Name of directory where cogs will be stored.
+        self.LOG_DIRECTORY_PATH = "logs"  # Name of directory where log files will be stored.
+        self.EXAMPLE_CONFIG = {  # Changing this will only matter when the bot creates a new Config(). Actual config at CONFIG_PATH
+            "bot": {
+                "prefixes": ["!"],
+                # Bot uses this array for prefixes. Add as many as you want, and keep in mind you can include spaces but be careful not to over complicate your prefixes.
+                "token": [""],
+                # If you intend on using any token other than the first in the list, change hangoutcore.py to match.
+                "intents": {
+                    "members": True,
+                    "message_content": True,
+                    "typing": True,
+                    "presences": True,
+                    "guilds": True
                 },
-                {
-                    "name": "Contributer Name",
-                    "discord_id": 000000000,
-                    "owner": False
+                "status": {
+                    "type": "listening",  # Valid Options are competing, playing, listening, streaming, watching
+                    "name": "!help",  # Activity Name
+                    "url": ""  # Twitch or Youtube URL if type is Streaming
+                },
+                "name": "Bot Name",  # Bot name
+                "version": "0.0.0",  # Bot version
+                "description": "Bot Description would go here.",
+                "developer_guild_id": 000000000,  # Developer guild id for  Used for test commands.
+                "contributers": [
+                    {
+                        "name": "Contributer Name",  # Contributer name
+                        "discord_id": 000000000,  # Contributer discord id
+                        "owner": True  # Set this to true if they're an owner. otherwise set it to false
+                    },
+                    {
+                        "name": "Contributer Name",
+                        "discord_id": 000000000,
+                        "owner": False
+                    }
+                ],
+                "apis": [
+                    {
+                        "name": "Api Name",  # API Name for display sake
+                        "token": "Api Token",  # API Token for accessing API Data
+                        "header": {"Authorization": ""}  # API Header for ease of use
+                    }
+                ],
+                "messages": {
+                    # The following section is for specifying various messages the bot will use. 
+                    # Instead of having to specify each one in various areas of code it's centralized here so that duplicate situations can easily use the necessary message without having to specify it in multiple areas.
+                    # messages with '_user_' in the name are often public messages that get displayed in the channel the command was called in.
+                    # messages with '_user_dm_' in the name are private messages that get sent straight to a user's dm. Such as moderation notices, etc. 
+                    # messages with '_bot_' in the name are bot specific such as not having necessary roles, etc. This message get's publicly displayed.
+                    # messages with neither of the above are private and go to staff logs. Provide information here that you believe is important for guild staff members to know.
+                    # Valid references
+                    # {user.name} # Target user's name
+                    # {user.mention} # Target user's mention
+                    # {author.name} # Command author's name
+                    # {author.mention} # Command author's mention
+                    # {bot.name} # Bot name specified in config file
+                    # {bot.mention} # Bot mention (Keep in mind guilds may nickname your bot, This will display whatever they have set.)
+                    # {channel} # Channel mention
+                    # {command} # Command used
+                    # {argument_name} # This can vary depending on the code that uses it. eg; {reason}, {color_chosen}, etc.
+                    # {error} # Error encountered
+                    "error_user_insufficientpermissions": "You do not have the necessary permissions to use that. This event has been logged and a staff member has been notified.",
+                    "error_bot_insufficientpermissions": "I do not have the necessary permissions to perform {command}, Please insure I have the necessary permissions assigned to my role.",
+                    "error_insufficientpermissions": "{user.mention} attempted to use {command} in channel {channel}.",
+                    "error_user_warn": "{user.mention} has been warned for the following reason: {reason}.",
+                    "error_user_dm_warn": "You have been warned for the following reason: {reason}.",
+                    "error_warn": "{user.mention} has been warned by {author.mention} for the following reason: {reason}.",
+                    "error_user_channelnotjoinable": "I could not join your channel. Please make sure there is space and verify I have the necessary permissions.",
+                    "error_user_notinchannel": "You're not currently in a voice channel. Please join a valid voice channel and try again.",
+                    "error_user_alreadyconnected": "I'm already connected to a voice channel.",
+                    "error_user_channelnotfound": "I could not find the channel specified, please check the spelling and try again.",
                 }
-            ],
-            "apis": [
-                {
-                    "name": "Api Name",  # API Name for display sake
-                    "token": "Api Token",  # API Token for accessing API Data
-                    "header": {"Authorization": ""}  # API Header for ease of use
-                }
-            ],
-            "messages": [
-                # The following section is for specifying various messages the bot will use. 
-                # Instead of having to specify each one in various areas of code it's centralized here so that duplicate situations can easily use the necessary message without having to specify it in multiple areas.
-                # messages with '_user_' in the name are often public messages that get displayed in the channel the command was called in.
-                # messages with '_user_dm_' in the name are private messages that get sent straight to a user's dm. Such as moderation notices, etc. 
-                # messages with '_bot_' in the name are bot specific such as not having necessary roles, etc. This message get's publicly displayed.
-                # messages with neither of the above are private and go to staff logs. Provide information here that you believe is important for guild staff members to know.
-                # Valid references
-                # {user.name} # Target user's name
-                # {user.mention} # Target user's mention
-                # {author.name} # Command author's name
-                # {author.mention} # Command author's mention
-                # {bot.name} # Bot name specified in config file
-                # {bot.mention} # Bot mention (Keep in mind guilds may nickname your bot, This will display whatever they have set.)
-                # {channel} # Channel mention
-                # {command} # Command used
-                # {argument_name} # This can vary depending on the code that uses it. eg; {reason}, {color_chosen}, etc.
-                # {error} # Error encountered
-                "error_user_insufficientpermissions": "You do not have the necessary permissions to use that. This event has been logged and a staff member has been notified.",
-                "error_bot_insufficientpermissions": "I do not have the necessary permissions to perform {command}, Please insure I have the necessary permissions assigned to my role.",
-                "error_insufficientpermissions": "{user.mention} attempted to use {command} in channel {channel}.",
-                "error_user_warn": "{user.mention} has been warned for the following reason: {reason}.",
-                "error_user_dm_warn": "You have been warned for the following reason: {reason}.",
-                "error_warn": "{user.mention} has been warned by {author.mention} for the following reason: {reason}.",
-                "error_user_channelnotjoinable": "I could not join your channel. Please make sure there is space and verify I have the necessary permissions.",
-                "error_user_notinchannel": "You're not currently in a voice channel. Please join a valid voice channel and try again.",
-                "error_user_alreadyconnected": "I'm already connected to a voice channel.",
-                "error_user_channelnotfound": "I could not find the channel specified, please check the spelling and try again.",
-            ]
-        },
-        "database": {
-            "type": "mysql",
-            "host": "localhost",
-            "port": 3306,
-            "name": "database",  # db name
-            "user": "user",
-            "password": "pass"
-        },
-        "music": {
-            "vc_timeout": True,
-            "vc_timeout_duration": 600,
-            "max_volume": 250,  # Max Volume
-            "vote_skip": True,  # whether vote skip is enabled or not.
-            "vote_skip_ratio": 0.5  # minimum ratio needed for vote skip
-        },
-        "_info": {  # config info
-            "version": CONFIG_VERSION,  # config version
-            "update_reason": "Initial Creation"
+            },
+            "database": {
+                "type": "mysql",
+                "host": "localhost",
+                "port": 3306,
+                "name": "database",  # db name
+                "user": "user",
+                "password": "pass"
+            },
+            "music": {
+                "vc_timeout": True,
+                "vc_timeout_duration": 600,
+                "max_volume": 250,  # Max Volume
+                "vote_skip": True,  # whether vote skip is enabled or not.
+                "vote_skip_ratio": 0.5  # minimum ratio needed for vote skip
+            },
+            "_info": {  # config info
+                "version": self.CONFIG_VERSION,  # config version
+                "update_reason": "Initial Creation"
+            }
         }
-    }
 
-    def exists(configName: str = None):
-        if configName is None:
-            if os.path.exists("hangoutcore.properties") and os.path.isfile("hangoutcore.properties"):
-                with open("hangoutcore.properties",
-                          "r+b") as hangoutcore_config:  # Access stored variables to locate config file
-                    p = Properties()
-                    p.load(hangoutcore_config, "utf-8")
-                    botConfig = p.get("botConfig").data
-                    botConfigDirectory = p.get("botConfigDirectory").data
-                    config.CONFIG_PATH = botConfig
-                    config.CONFIG_DIRECTORY_PATH = botConfigDirectory
-                    config.COG_DIRECTORY_PATH = p.get("botCogDirectory").data
-                    config.LOG_DIRECTORY_PATH = p.get("botLogDirectory").data
-                    if os.path.exists(f"{botConfigDirectory}/{botConfig}") and os.path.isfile(
-                            f"{botConfigDirectory}/{botConfig}"):
-                        return True
-                    else:
-                        return False
-            else:
-                return False
+    # def exists(configName: str = None):
+    #     if configName is None:
+    #         if os.path.exists("hangoutcore.properties") and os.path.isfile("hangoutcore.properties"):
+    #             with open("hangoutcore.properties",
+    #                       "r+b") as hangoutcore_config:  # Access stored variables to locate config file
+    #                 p = Properties()
+    #                 p.load(hangoutcore_config, "utf-8")
+    #                 botConfig = p.get("botConfig").data
+    #                 botConfigDirectory = p.get("botConfigDirectory").data
+    #                 Config().CONFIG_PATH = botConfig
+    #                 Config().CONFIG_DIRECTORY_PATH = botConfigDirectory
+    #                 Config().COG_DIRECTORY_PATH = p.get("botCogDirectory").data
+    #                 Config().LOG_DIRECTORY_PATH = p.get("botLogDirectory").data
+    #                 if os.path.exists(f"{botConfigDirectory}/{botConfig}") and os.path.isfile(
+    #                         f"{botConfigDirectory}/{botConfig}"):
+    #                     return True
+    #                 else:
+    #                     return False
+    #         else:
+    #             return False
+    #     else:
+    #         filePath = configName
+    #         if not filePath.endswith('.json'):
+    #             filePath = filePath + '.json'
+    #         if os.path.exists(f"{Config().CONFIG_DIRECTORY_PATH}/{filePath}") and os.path.isfile(
+    #                 f"{Config().CONFIG_DIRECTORY_PATH}/{filePath}"):
+    #             return True
+    #         else:
+    #             return False
+            
+    def appConfigExists(self, DesiredName: str= None):
+        ConfigName = "hangoutcore.properties"
+        if DesiredName is not None:
+            ConfigName = DesiredName
+        
+        if ".properties" not in ConfigName:
+            ConfigName = ConfigName + ".properties"
+
+        if os.path.exists(ConfigName) and os.path.isfile(ConfigName):
+            return True
         else:
-            filePath = configName
-            if not filePath.endswith('.json'):
-                filePath = filePath + '.json'
-            if os.path.exists(f"{config.CONFIG_DIRECTORY_PATH}/{filePath}") and os.path.isfile(
-                    f"{config.CONFIG_DIRECTORY_PATH}/{filePath}"):
-                return True
-            else:
-                return False
+            return False
+            
+    def botConfigExists(self, DesiredName: str= None):
+        ConfigDirectory = self.CONFIG_DIRECTORY_PATH
+        ConfigName = self.CONFIG_PATH
+        if DesiredName is not None:
+            ConfigName = DesiredName
+        
+        if ".json" not in ConfigName:
+            ConfigName = ConfigName + ".json"
 
-    def init(configName: str = None):
-        if configName is None:
-            with open(f"hangoutcore.properties", "r+b") as hangoutcore_config:
+        if os.path.exists(f"{ConfigDirectory}/{ConfigName}") and os.path.isfile(f"{ConfigDirectory}/{ConfigName}"):
+            return True
+        else:
+            return False
+
+    def setConfigPath(self, configPath: str):
+        if configPath is not None:
+            if configPath.endswith(".json"):
+                self.CONFIG_PATH = configPath
+    
+    def getConfigPath(self):
+        return self.CONFIG_PATH
+
+    def setConfigDirectoryPath(self, configDirectoryPath: str):
+        if configDirectoryPath is not None:
+            self.CONFIG_DIRECTORY_PATH = configDirectoryPath
+    
+    def getConfigDirectoryPath(self):
+        return self.CONFIG_DIRECTORY_PATH
+    
+    def setCogDirectoryPath(self, cogDirectoryPath: str):
+        if cogDirectoryPath is not None:
+            self.COG_DIRECTORY_PATH = cogDirectoryPath
+    
+    def getCogDirectoryPath(self):
+        return self.COG_DIRECTORY_PATH
+    
+    def setLogDirectoryPath(self, logDirectoryPath: str):
+        if logDirectoryPath is not None:
+            self.LOG_DIRECTORY_PATH = logDirectoryPath
+    
+    def getLogDirectoryPath(self):
+        return self.LOG_DIRECTORY_PATH
+        
+    def init(self, appConfig: str = "hangoutcore.properties", botConfig: str = None):
+        if self.appConfigExists():
+            # properties file found. Begin loading info
+            if not appConfig.endswith(".properties"):
+                appConfig = appConfig + ".properties"
+            with open(appConfig, "r+b") as hangoutcore_config:
                 p = Properties()
                 p.load(hangoutcore_config, "utf-8")
-                config.CONFIG_PATH = p["botConfig"].data
-                config.CONFIG_DIRECTORY_PATH = p["botConfigDirectory"].data
-                config.COG_DIRECTORY_PATH = p["botCogDirectory"].data
-                config.LOG_DIRECTORY_PATH = p["botLogDirectory"].data
+                if botConfig is not None:
+                    if not botConfig.endswith(".json"):
+                        botConfig = botConfig + ".json"
+                    self.setConfigPath(botConfig)
+                else:
+                    self.setConfigPath(p["botConfig"].data)
+                self.setConfigDirectoryPath(p["botConfigDirectory"].data)
+                self.setCogDirectoryPath(p["botCogDirectory"].data)
+                self.setLogDirectoryPath(p["botLogDirectory"].data)
         else:
-            if config.exists(configName):
-                with open(f"hangoutcore.properties", "r+b") as hangoutcore_config:
-                    p = Properties()
-                    p.load(hangoutcore_config, "utf-8")
-                    if configName.endswith('.json'):
-                        config.CONFIG_PATH = configName
-                        p["botConfig"] = configName
-                    else:
-                        config.CONFIG_PATH = configName + '.json'
-                        p["botConfig"] = configName + '.json'
-                    config.CONFIG_DIRECTORY_PATH = p["botConfigDirectory"].data
-                    config.COG_DIRECTORY_PATH = p["botCogDirectory"].data
-                    config.LOG_DIRECTORY_PATH = p["botLogDirectory"].data
+            # properties file wasn't found. Assume that this is a fresh install
+            print("Not Found")
 
-                    with open(f"hangoutcore.properties", "wb") as hangoutcore_config:
-                        p.store(hangoutcore_config,
-                                encoding="utf-8")  # Store provided information in a properties file.
-            else:
-                with open(f"hangoutcore.properties", "r+b") as hangoutcore_config:
-                    p = Properties()
-                    p.load(hangoutcore_config, "utf-8")
-                    config.CONFIG_PATH = p["botConfig"].data
-                    config.CONFIG_DIRECTORY_PATH = p["botConfigDirectory"].data
-                    config.COG_DIRECTORY_PATH = p["botCogDirectory"].data
-                    config.LOG_DIRECTORY_PATH = p["botLogDirectory"].data
-                Terminal().Log().ERROR(
-                    f"config: {configName} could not be found. loading config: {p['botConfig'].data} instead.")
+        # return
+        # if configName is None:
+        #     with open(f"hangoutcore.properties", "r+b") as hangoutcore_config:
+        #         p = Properties()
+        #         p.load(hangoutcore_config, "utf-8")
+        #         Config().CONFIG_PATH = p["botConfig"].data
+        #         Config().CONFIG_DIRECTORY_PATH = p["botConfigDirectory"].data
+        #         Config().COG_DIRECTORY_PATH = p["botCogDirectory"].data
+        #         Config().LOG_DIRECTORY_PATH = p["botLogDirectory"].data
+        # else:
+        #     if Config().exists(configName):
+        #         with open(f"hangoutcore.properties", "r+b") as hangoutcore_config:
+        #             p = Properties()
+        #             p.load(hangoutcore_config, "utf-8")
+        #             if configName.endswith('.json'):
+        #                 Config().CONFIG_PATH = configName
+        #                 p["botConfig"] = configName
+        #             else:
+        #                 Config().CONFIG_PATH = configName + '.json'
+        #                 p["botConfig"] = configName + '.json'
+        #             Config().CONFIG_DIRECTORY_PATH = p["botConfigDirectory"].data
+        #             Config().COG_DIRECTORY_PATH = p["botCogDirectory"].data
+        #             Config().LOG_DIRECTORY_PATH = p["botLogDirectory"].data
 
-    def load(configName: str = None):
+        #             with open(f"hangoutcore.properties", "wb") as hangoutcore_config:
+        #                 p.store(hangoutcore_config,
+        #                         encoding="utf-8")  # Store provided information in a properties file.
+        #     else:
+        #         with open(f"hangoutcore.properties", "r+b") as hangoutcore_config:
+        #             p = Properties()
+        #             p.load(hangoutcore_config, "utf-8")
+        #             Config().CONFIG_PATH = p["botConfig"].data
+        #             Config().CONFIG_DIRECTORY_PATH = p["botConfigDirectory"].data
+        #             Config().COG_DIRECTORY_PATH = p["botCogDirectory"].data
+        #             Config().LOG_DIRECTORY_PATH = p["botLogDirectory"].data
+        #         Terminal().Log().ERROR(
+        #             f"config: {configName} could not be found. loading config: {p['botConfig'].data} instead.")
+
+    def load(self):
         """
         Attempt to load the config from path provided if none provided uses the config name provided during initiation.
         """
-        fileName = config.CONFIG_PATH
-        fileDirectory = config.CONFIG_DIRECTORY_PATH
-        if configName is not None:
-            fileName = configName
-        if config.exists(fileName):
+        fileName = self.CONFIG_PATH
+        fileDirectory = self.CONFIG_DIRECTORY_PATH
+
+        if self.botConfigExists():
             with open(f"{fileDirectory}/{fileName}") as configFile:
-                cfg = json.load(configFile)
-                if '_info' in cfg:
-                    if cfg['_info']['version'] >= config.CONFIG_VERSION:
-                        return cfg
-                    else:
-                        if not config.warned:  # Config is outdated
-                            config.warned = True
-                            Terminal().queue("WARNING",
-                                           f"{fileName} is outdated. Please update it to match the example config provided in config.py")
-                            if click.confirm(
-                                    f"Attention: Your config version {cfg['_info']['version']} is outdated. Would you like to update to {config.CONFIG_VERSION}",
+                self.CONFIG = json.load(configFile)
+                if "_info" in self.CONFIG:
+                    if not self.CONFIG["_info"]["version"] >= self.CONFIG_VERSION:
+                        if not self.WARNED:
+                            Terminal().Log().WARNING(f"{fileName} is outdated. Please update it to avoid incompatability with HangoutCore.")
+                            if click.confirm(f"Attention: Your config version {self.CONFIG['_info']['version']} is outdated. Would you like to update to {self.CONFIG_VERSION} ?",
                                     default=True):
-                                new_cfg = config.EXAMPLE_CONFIG
-                                new_cfg['_info']['update_reason'] = f"Update To Config Version {config.CONFIG_VERSION}"
-                                for key in cfg['bot'].keys():
-                                    new_cfg['bot'][key] = cfg['bot'][key]
-                                for key in cfg['database'].keys():
-                                    new_cfg['database'][key] = cfg['database'][key]
-                                for key in cfg['music'].keys():
-                                    new_cfg['music'][key] = cfg['music'][key]
+                                new_cfg = self.EXAMPLE_CONFIG
+                                new_cfg['_info']['update_reason'] = f"Update To Config Version {self.CONFIG_VERSION}"
+                                for key in self.CONFIG['bot'].keys():
+                                    new_cfg['bot'][key] = self.CONFIG['bot'][key]
+                                for key in self.CONFIG['database'].keys():
+                                    new_cfg['database'][key] = self.CONFIG['database'][key]
+                                for key in self.CONFIG['music'].keys():
+                                    new_cfg['music'][key] = self.CONFIG['music'][key]
                                 with open(f"{fileDirectory}/{fileName}", "w") as botConfig:
                                     json.dump(new_cfg, botConfig, indent=4)
-                            else:
-                                return cfg
-                else:
-                    if not config.warned:  # Couldn't Find version, file probably outdated or corrupted.
-                        config.warned = True
-                        Terminal().queue("WARNING",
-                                       f"{fileName} is either outdated or corrupt. Please delete the old one and run the bot again to create a new one.")
-                    return cfg
+                                self.CONFIG = new_cfg
+        # OLD
+        # if self.exists(fileName):
+        #     with open(f"{fileDirectory}/{fileName}") as configFile:
+        #         cfg = json.load(configFile)
+        #         if '_info' in cfg:
+        #             if cfg['_info']['version'] >= self.CONFIG_VERSION:
+        #                 return cfg
+        #             else:
+        #                 if not self.WARNED:  # Config is outdated
+        #                     self.WARNED = True
+        #                     Terminal().queue("WARNING",
+        #                                    f"{fileName} is outdated. Please update it to avoid incompatability")
+        #                     if click.confirm(
+        #                             f"Attention: Your config version {cfg['_info']['version']} is outdated. Would you like to update to {self.CONFIG_VERSION}",
+        #                             default=True):
+        #                         new_cfg = self.EXAMPLE_CONFIG
+        #                         new_cfg['_info']['update_reason'] = f"Update To Config Version {self.CONFIG_VERSION}"
+        #                         for key in cfg['bot'].keys():
+        #                             new_cfg['bot'][key] = cfg['bot'][key]
+        #                         for key in cfg['database'].keys():
+        #                             new_cfg['database'][key] = cfg['database'][key]
+        #                         for key in cfg['music'].keys():
+        #                             new_cfg['music'][key] = cfg['music'][key]
+        #                         with open(f"{fileDirectory}/{fileName}", "w") as botConfig:
+        #                             json.dump(new_cfg, botConfig, indent=4)
+        #                     else:
+        #                         return cfg
+        #         else:
+        #             if not self.WARNED:  # Couldn't Find version, file probably outdated or corrupted.
+        #                 self.WARNED = True
+        #                 Terminal().queue("WARNING",
+        #                                f"{fileName} is either outdated or corrupt. Please delete the old one and run the bot again to create a new one.")
+        #             return cfg
 
-    def setup(init_time: str, manual: bool = False):
+    def setup(self, init_time: str = '{0:%d%b%Y %Hh:%Mm}'.format(datetime.now()), manual: bool = False):
         """
         This function runs through the process of setting up our bot config with the necessary details. such as bot Name, Token, Authorized Users, Etc.
         """
         if not manual:
             print("Oh No! I could not find a config file.")
         if click.confirm("Do you wish to begin the setup process?", default=True):
-            Terminal().initiate(init_time, False, True)  # Clear and prepare terminal for setup process
+            #Terminal().initiate(init_time, False, True)  # Clear and prepare terminal for setup process
 
             def requestBotName():
                 setup_botName = input(f"Please Enter The Bot Name: ")
@@ -374,11 +474,21 @@ class config():
                     setup_botName = input(f"Please Enter The Bot Name: ")
                 return setup_botName
 
+            def requestBotPrefix():
+                default = "!"
+                setup_botPrefix = input(f"Please Enter The Bot Prefex (Default: {default}): ")
+                if setup_botPrefix == "":
+                    return default
+                else:
+                    return setup_botPrefix
+
             def requestBotVersion():
-                setup_botVersion = input(f"Please Enter The Bot Version (Default: 0.0.0): ")
+                default = "0.0.0"
+                setup_botVersion = input(f"Please Enter The Bot Version (Default: {default}): ")
                 if setup_botVersion == "":
-                    setup_botVersion = "0.0.0"
-                return setup_botVersion
+                    return default
+                else:
+                    return setup_botVersion
 
             def requestBotToken():
                 while True:
@@ -390,43 +500,49 @@ class config():
                         print('It seems that bot doesn\'t exist.')
                         continue
                     else:
-                        _cont = input(f'You want to use bot "{setup_bot.get("username")}". Is that correct? (y/n) ')
-                        if _cont.lower() == 'y':
+                        if click.confirm(f"You want to use bot: {setup_bot.get('username')}. Is That Correct?", default=True):
                             break
-                        elif _cont.lower() == 'n':
+                        else:
                             continue
                 return setup_botToken
 
             def requestBotConfigName():
-                botConfigName = input(f"Please enter your desired config name. (Default: config): ")
-                if not botConfigName.endswith(".json") and botConfigName == "":
-                    botConfigName = "config.json"
-                elif not botConfigName.endswith(".json"):
+                default = "config.json"
+                botConfigName = input(f"Please enter your desired config name. (Default: {default}): ")
+                if botConfigName == "":
+                    return default
+                if not botConfigName.endswith(".json"):
                     botConfigName = botConfigName + ".json"
                 return botConfigName
 
             def requestBotConfigDirectory():
+                default = "configs"
                 botConfigDirectory = input(
-                    f"Please enter where you'd like to store your configs (Default: /configs): /")
+                    f"Please enter where you'd like to store your configs (Default: /{default}): /")
                 if botConfigDirectory == "":
-                    botConfigDirectory = "configs"
-                return botConfigDirectory
+                    return default
+                else:
+                    return botConfigDirectory
 
             def requestBotLogDirectory():
-                botLogDirectory = input(f"Please enter where you'd like to store your logs (Default: /logs): /")
+                default = "logs"
+                botLogDirectory = input(f"Please enter where you'd like to store your logs (Default: /{default}): /")
                 if botLogDirectory == "":
-                    botLogDirectory = "logs"
-                return botLogDirectory
+                    return default
+                else:
+                    return botLogDirectory
 
             def requestBotCogDirectory():
-                botCogDirectory = input(f"Please enter where you'd like to store your cogs (Default: /cogs): /")
+                default = "cogs"
+                botCogDirectory = input(f"Please enter where you'd like to store your cogs (Default: /{default}): /")
                 if botCogDirectory == "":
-                    botCogDirectory = "cogs"
-                return botCogDirectory
+                   return default
+                else:
+                    return botCogDirectory
 
             botName = requestBotName()
             botDescription = input("Please enter your bot description, this can be modified in the config file.:\n")
-            botPrefix = input("Please enter your bot prefix.: ")
+            botPrefix = requestBotPrefix()
             botVersion = requestBotVersion()
             botToken = requestBotToken()
             botConfigName = requestBotConfigName()
@@ -434,7 +550,7 @@ class config():
             botLogDirectory = requestBotLogDirectory()
             botCogDirectory = requestBotCogDirectory()
 
-            Terminal().initiate(init_time, False, True)  # refresh terminal
+            #Terminal().initiate(init_time, False, True)  # refresh terminal
             if click.confirm(
                     f"""Bot Name: {botName}\nBot Description: {botDescription}\nBot Version: ({botVersion})\nBot Token: {"*" * len(botToken)}\nBot Config Name: {botConfigName}\nBot Config Directory: /{botConfigDirectory}\nBot Log Directory: /{botLogDirectory}\nBot Cog Directory: /{botCogDirectory}\nAre the values above accurate?""",
                     default=True):
@@ -448,10 +564,11 @@ class config():
                 with open(f"hangoutcore.properties", "wb") as hangoutcore_config:
                     p.store(hangoutcore_config, encoding="utf-8")  # Store provided information in a properties file.
 
-                config.CONFIG_PATH = botConfigName
-                config.CONFIG_DIRECTORY_PATH = botConfigDirectory
-                config.COG_DIRECTORY_PATH = botCogDirectory
-                config.LOG_DIRECTORY_PATH = botLogDirectory
+                self.CONFIG_PATH = botConfigName
+                self.CONFIG_DIRECTORY_PATH = botConfigDirectory
+                self.COG_DIRECTORY_PATH = botCogDirectory
+                self.LOG_DIRECTORY_PATH = botLogDirectory
+
                 if not os.path.exists(botConfigDirectory):
                     Terminal().Log().INFO(f"Creating Config Directory: /{botConfigDirectory}")
                     os.mkdir(botConfigDirectory)
@@ -469,32 +586,33 @@ class config():
                     Terminal().Log().INFO(f"Log directory already exists, skipping...")
 
                 with open(f"{botConfigDirectory}/{botConfigName}", 'w') as file:  # Create initial config file.
-                    json.dump(config.EXAMPLE_CONFIG, file, indent=4)
+                    json.dump(self.EXAMPLE_CONFIG, file, indent=4)
 
-                # return config.load(path=f"{botConfigDirectory}/Config.json")
+                # return Config().load(path=f"{botConfigDirectory}/Config().json")
 
-                config.write(value=botName, key1="bot", key2="name")
-                config.write(value=botDescription, key1="bot", key2="description")
-                config.write(value=botPrefix, key1="bot", key2="prefixes", key3=0)
-                config.write(value=botVersion, key1="bot", key2="version")
-                config.write(value=botToken, key1="bot", key2="token", key3=0)
+                self.write(value=botName, key1="bot", key2="name")
+                self.write(value=botDescription, key1="bot", key2="description")
+                self.write(value=botPrefix, key1="bot", key2="prefixes", key3=0)
+                self.write(value=botVersion, key1="bot", key2="version")
+                self.write(value=botToken, key1="bot", key2="token", key3=0)
             else:
-                config.setup(init_time)
+                self.setup(init_time)
 
         else:
             Terminal().Log().ERROR("HangoutCore Setup Canceled.")
             Terminal().EXIT("Exiting...")
 
-    def write(value: str = None, key1: str = None, key2=None, key3=None, key4=None):
+    def write(self, value: str = None, key1: str = None, key2=None, key3=None, key4=None):
         """
         Attempt to write to the config from path provided in hangoutcore.properties,
         if one does not exist we warn the terminal. We do not create one in the possibility that
         the user misspelled the path provided.
         ***USE CAUTION UPDATING CONFIG WITH THIS, YOU CAN MODIFY CONFIG VALUES TO UNSAFE VALUES THAT WE DO NOT FILTER THROUGH***
         """
-        with open(f"{config.CONFIG_DIRECTORY_PATH}/{config.CONFIG_PATH}", "r") as botConfig:
+        with open(f"{self.CONFIG_DIRECTORY_PATH}/{self.CONFIG_PATH}", "r") as botConfig:
             configData = json.load(botConfig)
 
+    # There's probably a much better way to do this, but it works so eh.
         if key4 is not None:
             configData[key1][key2][key3][key4] = value
         elif key3 is not None:
@@ -504,7 +622,7 @@ class config():
         elif key1 is not None:
             configData[key1] = value
 
-        with open(f"{config.CONFIG_DIRECTORY_PATH}/{config.CONFIG_PATH}", "w") as botConfig:
+        with open(f"{self.CONFIG_DIRECTORY_PATH}/{self.CONFIG_PATH}", "w") as botConfig:
             json.dump(configData, botConfig, indent=4)
 
 
@@ -521,7 +639,7 @@ class database():
         pass
 
     async def RegisterGuild(loop, guild: discord.Guild):
-        cfg = config.load()
+        cfg = Config().load()
         if cfg is not None:
             pool = await aiomysql.create_pool(
                 db=cfg["database"]["name"],
@@ -541,7 +659,7 @@ class database():
 #   › Date: 15 Nov, 2022
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-class local():
+class Local():
     def __init__(self):
         pass
 
@@ -549,7 +667,7 @@ class local():
         valid_files = []
         disabled_files = []
         invalid_files = []
-        for file in os.listdir(config.COG_DIRECTORY_PATH):
+        for file in os.listdir(Config().COG_DIRECTORY_PATH):
             if file.endswith('.py'):
                 valid_files.append(file)
             elif file.endswith('.disabled'):
@@ -568,14 +686,14 @@ class local():
 
     async def load_extensions(self, discordBot: discord.Client, debug_mode: bool = False):
         """
-        Scans for files in the cog directory specified in the config. Loads the file if it ends in '.py', and registers files ending in '.disabled' as disabled cogs.
+        Scans for files in the cog directory specified in the Config(). Loads the file if it ends in '.py', and registers files ending in '.disabled' as disabled cogs.
         """
         cogs = local().GetCogs()
 
         for cog in cogs["valid_files"]:
             Terminal().Log().INFO(f" └ Found {cog}")
             try:
-                await discordBot.load_extension(f'{config.COG_DIRECTORY_PATH}.{cog[:-3]}')
+                await discordBot.load_extension(f'{Config().COG_DIRECTORY_PATH}.{cog[:-3]}')
             except Exception as e:
                 Terminal().errorprocessing.CogLoadError(cog, e, debug_mode)
             else:
@@ -691,7 +809,7 @@ class Terminal():
         """
         Clear's and prepares terminal for bot output.
         """
-        cfg = config.load()
+        cfg = Config().load()
         if cfg is not None:
             if bot_setup:
                 Terminal().clear()
