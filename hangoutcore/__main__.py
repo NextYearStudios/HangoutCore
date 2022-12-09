@@ -154,7 +154,8 @@ async def main():
 
     handler = logging.FileHandler(
         filename=logName,
-        encoding=str(logEncoding)
+        encoding=logEncoding,
+        level=20
     )
     # Root
     # logging.basicConfig(
