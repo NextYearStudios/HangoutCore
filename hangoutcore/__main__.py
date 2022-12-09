@@ -166,7 +166,7 @@ async def main():
 
 
     terminal.initiate(debug=debug, bot_setup=False)
-    terminal.Test()
+    terminal.Log().Test()
     
 def init():
     try:
