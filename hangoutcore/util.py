@@ -891,8 +891,8 @@ class Terminal():
             logging.critical(log)
 
         def Test(self):
-            print(f"Silent Mode: {self.SILENT}")
-            logging.info(f"SilentMode: {self.SILENT}")
+            print(f"Silent Mode: {Terminal().SILENT}")
+            logging.info(f"SilentMode: {Terminal().SILENT}")
 
     def EXIT(self, log: str):
         """Closes script with preset formatting for output message."""

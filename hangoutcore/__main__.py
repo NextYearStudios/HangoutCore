@@ -32,7 +32,6 @@ async def main():
     freshInstall = False
 
     logger = logging.getLogger("discord")
-    logger.setLevel(20) # Logginglevel set to INFO | 0 : NOTSET, 10 : DEBUG, 20 : INFO, 30 : WARNING, 40 : ERROR, 50 : CRITICAL
 
     if '-h' in sys.argv or '--help' in argv:
         print(f"""
@@ -149,11 +148,17 @@ async def main():
     config.load() # Load our bot config here
     
     # We assume that the bot successfully loaded our config. otherwise this wont work the way we intend
+    logName = f"{config.getLogDirectoryPath()}/log_{init_time.replace(' ', '_')}.log", # We clear any spaces in our log name to avoid incompatabilities
 
     handler = logging.FileHandler(
-        filename=f"{config.getLogDirectoryPath()}/log_{init_time.replace(' ', '_')}.log", # We clear any spaces in our log name to avoid incompatabilities
+        filename=logName,
         encoding="utf-8"
     )
+    logging.basicConfig(
+        filename=logName
+    )
+
+    logger.setLevel(20) # Logginglevel set to INFO | 0 : NOTSET, 10 : DEBUG, 20 : INFO, 30 : WARNING, 40 : ERROR, 50 : CRITICAL
 
     date_format = "%m/%d/%Y %I:%M:%s %p"
     formatter = logging.Formatter("""[%(asctime)s][%(levelname)s] %(message)s""", date_format)
