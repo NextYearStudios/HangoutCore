@@ -149,13 +149,16 @@ async def main():
     
     # We assume that the bot successfully loaded our config. otherwise this wont work the way we intend
     logName = f"{config.getLogDirectoryPath()}/log_{init_time.replace(' ', '_')}.log", # We clear any spaces in our log name to avoid incompatabilities
+    logEncoding = "utf-8"
 
     handler = logging.FileHandler(
         filename=logName,
-        encoding="utf-8"
+        encoding=logEncoding
     )
     logging.basicConfig(
-        filename=logName
+        filename=logName,
+        encoding=logEncoding,
+        level=20
     )
 
     logger.setLevel(20) # Logginglevel set to INFO | 0 : NOTSET, 10 : DEBUG, 20 : INFO, 30 : WARNING, 40 : ERROR, 50 : CRITICAL
