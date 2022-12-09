@@ -874,30 +874,32 @@ class Terminal():
         def __init__(self):
             self.logger = logging.getLogger("HangoutCore")
 
-            
+        def setLogger(self, logger):
+            self.logger = logger
+
         def DEBUG(self, log: str):
             print(f"[{Fore.BLUE}DEBUG{Fore.RESET}] {log}")
-            logging.debug(log)
+            self.logger.debug(log)
 
         def INFO(self, log: str):
             print(f"[{Fore.GREEN}INFO{Fore.RESET}] {log}")
-            logging.info(log)
+            self.logger.info(log)
 
         def WARNING(self, log: str):
             print(f"[{Fore.YELLOW}WARNING{Fore.RESET}] {log}")
-            logging.warning(log)
+            self.logger.warning(log)
 
         def ERROR(self, log: str):
             print(f"[{Fore.RED}ERROR{Fore.RESET}] {log}")
-            logging.error(log)
+            self.logger.error(log)
 
         def CRITICAL(self, log: str):
             print(f"{Style.BRIGHT}{Back.RED}[CRITICAL] {log}{Style.RESET_ALL}{Back.RESET}")
-            logging.critical(log)
+            self.logger.critical(log)
 
         def Test(self):
             print(f"Silent Mode: {Terminal().SILENT}")
-            logging.info(f"SilentMode: {Terminal().SILENT}")
+            self.logger.info(f"SilentMode: {Terminal().SILENT}")
 
     def EXIT(self, log: str):
         """Closes script with preset formatting for output message."""

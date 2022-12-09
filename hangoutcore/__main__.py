@@ -31,7 +31,8 @@ async def main():
     silent = False
     freshInstall = False
 
-    logger = logging.getLogger("discord")
+    loggerDiscord = logging.getLogger("discord")
+    loggerHangoutCore = logging.getLogger("HangoutCore")
 
     if '-h' in sys.argv or '--help' in argv:
         print(f"""
@@ -169,7 +170,9 @@ async def main():
 
     formatter = logging.Formatter("""[%(asctime)s][%(levelname)s] %(message)s""", date_format)
     handler.setFormatter(formatter)
-    logger.addHandler(handler)
+    
+    loggerDiscord.addHandler(handler)
+    loggerHangoutCore.addHandler(handler)
 
     terminal.setConfig(config.getConfig())
     terminal.setInitTime(init_time)
