@@ -30,7 +30,7 @@ async def main():
     token = -1
     freshInstall = False
 
-    logger = logging.getlogger("discord")
+    logger = logging.getLogger("discord")
     logger.setLevel(logging.info)
 
     if '-h' in sys.argv or '--help' in argv:
