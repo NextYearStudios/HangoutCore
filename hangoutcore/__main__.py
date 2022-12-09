@@ -90,9 +90,9 @@ async def main():
             Terminal().Log().CRITICAL(f"There appears to be invalid arguments in your entry. Please Double check your spelling and try again.\nYour input: {' '.join(sys.argv)}\nInvalid argument(s): {' '.join(argv)}")
             sys.exit(0)
         
-    print(debug)
-    print(config)
-    print(token)
+    # print(debug)
+    # print(config)
+    # print(token)
 
     exampleToken = "1234567890.1234567890.1234567890"
 
@@ -140,7 +140,7 @@ def init():
     except KeyboardInterrupt:
         Terminal().Log().CRITICAL(f"Please refrain from using CTRL+C to shutdown bot.")
         # Here we'd make sure database exited/saved gracefully as well as any other essential process that may suffer from stopping abruptly.
-        Terminal().Log().CRITICAL(f"Shutting Down...")
+        Terminal().EXIT(f"Shutting Down...")
         sys.exit(0)
     # except:
     #     Terminal().Log().CRITICAL(f"Shutting Down...")

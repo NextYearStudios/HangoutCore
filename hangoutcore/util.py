@@ -832,7 +832,7 @@ class Terminal():
             print(Style.BRIGHT + Back.RED, end="\r")
         else:
             print(Style.NORMAL + Fore.BLACK + Back.WHITE, end="\r")
-        print("") # Empty String for spacing
+        self.print_center("") # Empty String for spacing
         self.print_center("██╗░░██╗░█████╗░███╗░░██╗░██████╗░░█████╗░██╗░░░██╗████████╗░█████╗░░█████╗░██████╗░███████╗")
         self.print_center("██║░░██║██╔══██╗████╗░██║██╔════╝░██╔══██╗██║░░░██║╚══██╔══╝██╔══██╗██╔══██╗██╔══██╗██╔════╝")
         self.print_center("███████║███████║██╔██╗██║██║░░██╗░██║░░██║██║░░░██║░░░██║░░░██║░░╚═╝██║░░██║██████╔╝█████╗░░")
