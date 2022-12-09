@@ -31,7 +31,7 @@ async def main():
     freshInstall = False
 
     logger = logging.getLogger("discord")
-    logger.setLevel(logging.info)
+    logger.setLevel(20) # Logginglevel set to INFO | 0 : NOTSET, 10 : DEBUG, 20 : INFO, 30 : WARNING, 40 : ERROR, 50 : CRITICAL
 
     if '-h' in sys.argv or '--help' in argv:
         print(f"""
