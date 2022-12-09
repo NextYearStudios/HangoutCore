@@ -142,6 +142,9 @@ def init():
         # Here we'd make sure database exited/saved gracefully as well as any other essential process that may suffer from stopping abruptly.
         Terminal().EXIT(f"Shutting Down...")
         sys.exit(0)
+    except Exceptions as e:
+        Terminal().Log().ERROR(e)
+        Terminal().EXIT(f"Shutting Down...")
     # except:
     #     Terminal().Log().CRITICAL(f"Shutting Down...")
     #     sys.exit(0)
