@@ -155,8 +155,7 @@ async def main():
 
     handler = logging.FileHandler(
         filename=logName,
-        encoding=logEncoding,
-        level=20
+        encoding=logEncoding
     )
     # Root
     # logging.basicConfig(
@@ -166,9 +165,10 @@ async def main():
     #     format="[%(asctime)s][%(name)s][%(levelname)s] %(message)s",
     #     datefmt=date_format
     # )
-    logger.setLevel(20) # Logginglevel set to INFO | 0 : NOTSET, 10 : DEBUG, 20 : INFO, 30 : WARNING, 40 : ERROR, 50 : CRITICAL
+    loggerDiscord.setLevel(20) # Logginglevel set to INFO | 0 : NOTSET, 10 : DEBUG, 20 : INFO, 30 : WARNING, 40 : ERROR, 50 : CRITICAL
+    loggerHangoutCore.setLevel(20)
 
-    formatter = logging.Formatter("""[%(asctime)s][%(levelname)s] %(message)s""", date_format)
+    formatter = logging.Formatter("""[%(asctime)s][%(name)s][%(levelname)s] %(message)s""", date_format)
     handler.setFormatter(formatter)
     
     loggerDiscord.addHandler(handler)
