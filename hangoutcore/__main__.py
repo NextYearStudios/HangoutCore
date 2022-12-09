@@ -28,6 +28,7 @@ async def main():
     debug = False
     config = None
     token = -1
+    silent = False
     freshInstall = False
 
     logger = logging.getLogger("discord")
@@ -151,8 +152,7 @@ async def main():
 
     handler = logging.FileHandler(
         filename=f"{config.getLogDirectoryPath()}/log_{init_time.replace(' ', '_')}.log", # We clear any spaces in our log name to avoid incompatabilities
-        encoding="utf-8",
-        maxBytes=32 * 1024 * 1024, # 32 MiB
+        encoding="utf-8"
     )
 
     date_format = "%m/%d/%Y %I:%M:%s %p"
