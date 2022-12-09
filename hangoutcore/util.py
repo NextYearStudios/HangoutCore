@@ -870,6 +870,11 @@ class Terminal():
         self.print_hr()
 
     class Log():
+
+        def __init__(self):
+            self.logger = logging.getLogger("HangoutCore")
+
+            
         def DEBUG(self, log: str):
             print(f"[{Fore.BLUE}DEBUG{Fore.RESET}] {log}")
             logging.debug(log)
