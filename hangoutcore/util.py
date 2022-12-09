@@ -832,56 +832,39 @@ class Terminal():
             print(Style.BRIGHT + Back.RED, end="\r")
         else:
             print(Style.NORMAL + Fore.BLACK + Back.WHITE, end="\r")
+
+        self.print_center("██╗░░██╗░█████╗░███╗░░██╗░██████╗░░█████╗░██╗░░░██╗████████╗░█████╗░░█████╗░██████╗░███████╗")
+        self.print_center("██║░░██║██╔══██╗████╗░██║██╔════╝░██╔══██╗██║░░░██║╚══██╔══╝██╔══██╗██╔══██╗██╔══██╗██╔════╝")
+        self.print_center("███████║███████║██╔██╗██║██║░░██╗░██║░░██║██║░░░██║░░░██║░░░██║░░╚═╝██║░░██║██████╔╝█████╗░░")
+        self.print_center("██╔══██║██╔══██║██║╚████║██║░░╚██╗██║░░██║██║░░░██║░░░██║░░░██║░░██╗██║░░██║██╔══██╗██╔══╝░░")
+        self.print_center("██║░░██║██║░░██║██║░╚███║╚██████╔╝╚█████╔╝╚██████╔╝░░░██║░░░╚█████╔╝╚█████╔╝██║░░██║███████╗")
+        self.print_center("╚═╝░░╚═╝╚═╝░░╚═╝╚═╝░░╚══╝░╚═════╝░░╚════╝░░╚═════╝░░░░╚═╝░░░░╚════╝░░╚════╝░╚═╝░░╚═╝╚══════╝")
+        self.print_center("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+
         if bot_setup:
-            self.print_center("Bot Setup")
-            self.print_center()
-            if start_time is None:
-                self.print_center("// Time Argument Not Provided. \\")
+            self.print_center("Bot Setup\n")
+        else:
+            if cfg is None:
+                self.print_center("// Bot Name Could Not Be Loaded \\")
+                self.print_center("// Bot Version Could Not Be Loaded \\")
+            else:
+                self.print_center(str(cfg["bot"]["name"]))
+                self.print_center(str(cfg["bot"]["version"]))
+
+        if start_time is None:
+            self.print_center("// Time Argument Not Provided. \\")
+        else:
+            self.print_center(str(start_time))
+        
+        if debug:
+            self.print_center(f'// Debug Mode Enabled \\\ ')
+            self.print_center('SYS Version ' + str(sys.version))
+            self.print_center('API Version ' + str(sys.api_version))
+            self.print_center('Discord Version ' + str(discord.__version__))
 
         # prep for rest
         print(Style.RESET_ALL + Back.RESET, end="\r")
         self.print_hr()
-
-        # if cfg is not None:
-        #     if bot_setup:
-        #         self.clear()
-        #         if debug:
-        #             print(Style.BRIGHT + Back.RED, end="\r")
-        #         else:
-        #             print(Style.NORMAL + Fore.BLACK + Back.WHITE, end="\r")
-        #         self.print_center("Bot Setup")
-        #         self.print_center("")
-        #         self.print_center(str(start_time))
-        #         if debug:
-        #             self.print_center(f'// Debug Mode Enabled \\\ ')
-        #             self.print_center('SYS Version ' + str(sys.version))
-        #             self.print_center('API Version ' + str(sys.api_version))
-        #             self.print_center('Discord Version ' + str(discord.__version__))
-        #         print(Style.RESET_ALL + Back.RESET, end="\r")
-        #         self.print_hr()
-        #         self.print_center("██╗░░██╗░█████╗░███╗░░██╗░██████╗░░█████╗░██╗░░░██╗████████╗░█████╗░░█████╗░██████╗░███████╗")
-        #         self.print_center("██║░░██║██╔══██╗████╗░██║██╔════╝░██╔══██╗██║░░░██║╚══██╔══╝██╔══██╗██╔══██╗██╔══██╗██╔════╝")
-        #         self.print_center("███████║███████║██╔██╗██║██║░░██╗░██║░░██║██║░░░██║░░░██║░░░██║░░╚═╝██║░░██║██████╔╝█████╗░░")
-        #         self.print_center("██╔══██║██╔══██║██║╚████║██║░░╚██╗██║░░██║██║░░░██║░░░██║░░░██║░░██╗██║░░██║██╔══██╗██╔══╝░░")
-        #         self.print_center("██║░░██║██║░░██║██║░╚███║╚██████╔╝╚█████╔╝╚██████╔╝░░░██║░░░╚█████╔╝╚█████╔╝██║░░██║███████╗")
-        #         self.print_center("╚═╝░░╚═╝╚═╝░░╚═╝╚═╝░░╚══╝░╚═════╝░░╚════╝░░╚═════╝░░░░╚═╝░░░░╚════╝░░╚════╝░╚═╝░░╚═╝╚══════╝")
-        #         self.print_center("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-        #     elif not bot_setup:
-        #         self.clear()
-        #         if debug:
-        #             print(Style.BRIGHT + Back.RED, end="\r")
-        #         else:
-        #             print(Style.NORMAL + Fore.BLACK + Back.WHITE, end="\r")
-        #         self.print_center(str(cfg["bot"]["name"]))
-        #         self.print_center(str(cfg["bot"]["version"]))
-        #         self.print_center(str(start_time))
-        #         if debug:
-        #             self.print_center(f'// Debug Mode Enabled \\\ ')
-        #             self.print_center('SYS Version ' + str(sys.version))
-        #             self.print_center('API Version ' + str(sys.api_version))
-        #             self.print_center('Discord Version ' + str(discord.__version__))
-        #         print(Style.RESET_ALL + Back.RESET, end="\r")
-        #         self.print_hr()
 
     class Log():
         def DEBUG(self, log: str):
