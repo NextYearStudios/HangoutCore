@@ -148,22 +148,24 @@ async def main():
     config.load() # Load our bot config here
     
     # We assume that the bot successfully loaded our config. otherwise this wont work the way we intend
-    logName = f"{config.getLogDirectoryPath()}/log_{init_time.replace(' ', '_')}.log", # We clear any spaces in our log name to avoid incompatabilities
+    logName = str(f"{config.getLogDirectoryPath()}/log_{init_time.replace(' ', '_')}.log") # We clear any spaces in our log name to avoid incompatabilities
     logEncoding = "utf-8"
+    date_format = "%m/%d/%Y %I:%M:%S %p"
 
     handler = logging.FileHandler(
         filename=logName,
-        encoding=logEncoding
+        encoding=str(logEncoding)
     )
-    logging.basicConfig(
-        filename=logName,
-        encoding=logEncoding,
-        level=20
-    )
-
+    # Root
+    # logging.basicConfig(
+    #     filename=logName,
+    #     encoding=str(logEncoding),
+    #     level=20,
+    #     format="[%(asctime)s][%(name)s][%(levelname)s] %(message)s",
+    #     datefmt=date_format
+    # )
     logger.setLevel(20) # Logginglevel set to INFO | 0 : NOTSET, 10 : DEBUG, 20 : INFO, 30 : WARNING, 40 : ERROR, 50 : CRITICAL
 
-    date_format = "%m/%d/%Y %I:%M:%s %p"
     formatter = logging.Formatter("""[%(asctime)s][%(levelname)s] %(message)s""", date_format)
     handler.setFormatter(formatter)
     logger.addHandler(handler)
@@ -184,9 +186,9 @@ def init():
         # Here we'd make sure database exited/saved gracefully as well as any other essential process that may suffer from stopping abruptly.
         Terminal().EXIT(f"Shutting Down...")
         sys.exit(0)
-    except Exception as e:
-        Terminal().Log().ERROR(e)
-        Terminal().EXIT(f"Shutting Down...")
+    # except Exception as e:
+    #     Terminal().Log().ERROR(e)
+    #     Terminal().EXIT(f"Shutting Down...")
     # except:
     #     Terminal().Log().CRITICAL(f"Shutting Down...")
     #     sys.exit(0)
