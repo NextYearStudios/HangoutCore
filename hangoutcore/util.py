@@ -310,6 +310,9 @@ class Config():
         else:
             return False
 
+    def getConfig(self):
+        return self.CONFIG
+
     def setConfigPath(self, configPath: str):
         if configPath is not None:
             if configPath.endswith(".json"):
@@ -789,6 +792,18 @@ class Local():
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 class Terminal():
+    def __init__(self):
+        self.INIT_TIME = None
+        self.CONFIG = None
+
+    def setConfig(self, config=None):
+        if config is not None:
+            self.CONFIG = config
+    
+    def setInitTime(self, time=None):
+        if time is not None:
+            self.INIT_TIME = time
+
     log_Queue = []
 
     def print_center(self, s: str):
@@ -806,54 +821,58 @@ class Terminal():
         else:
             _ = system('clear')
 
-    def initiate(self):# start_time: str, debug: bool = False, bot_setup: bool = False
+    def initiate(self, debug: bool = False, bot_setup: bool = False):# 
         """
         Clear's and prepares terminal for bot output.
         """
         # work on a way to share config instance with util classes.
         # potentially by setting a variable?
         
-        # cfg = Config().load()
+        cfg = self.CONFIG
+        start_time = self.INIT_TIME
+
+        print(start_time)
+        print(cfg)
         # if cfg is not None:
         #     if bot_setup:
-        #         Terminal().clear()
+        #         self.clear()
         #         if debug:
         #             print(Style.BRIGHT + Back.RED, end="\r")
         #         else:
         #             print(Style.NORMAL + Fore.BLACK + Back.WHITE, end="\r")
-        #         Terminal().print_center("Bot Setup")
-        #         Terminal().print_center("")
-        #         Terminal().print_center(str(start_time))
+        #         self.print_center("Bot Setup")
+        #         self.print_center("")
+        #         self.print_center(str(start_time))
         #         if debug:
-        #             Terminal().print_center(f'// Debug Mode Enabled \\\ ')
-        #             Terminal().print_center('SYS Version ' + str(sys.version))
-        #             Terminal().print_center('API Version ' + str(sys.api_version))
-        #             Terminal().print_center('Discord Version ' + str(discord.__version__))
+        #             self.print_center(f'// Debug Mode Enabled \\\ ')
+        #             self.print_center('SYS Version ' + str(sys.version))
+        #             self.print_center('API Version ' + str(sys.api_version))
+        #             self.print_center('Discord Version ' + str(discord.__version__))
         #         print(Style.RESET_ALL + Back.RESET, end="\r")
-        #         Terminal().print_hr()
-        #         Terminal().print_center("██╗░░██╗░█████╗░███╗░░██╗░██████╗░░█████╗░██╗░░░██╗████████╗░█████╗░░█████╗░██████╗░███████╗")
-        #         Terminal().print_center("██║░░██║██╔══██╗████╗░██║██╔════╝░██╔══██╗██║░░░██║╚══██╔══╝██╔══██╗██╔══██╗██╔══██╗██╔════╝")
-        #         Terminal().print_center("███████║███████║██╔██╗██║██║░░██╗░██║░░██║██║░░░██║░░░██║░░░██║░░╚═╝██║░░██║██████╔╝█████╗░░")
-        #         Terminal().print_center("██╔══██║██╔══██║██║╚████║██║░░╚██╗██║░░██║██║░░░██║░░░██║░░░██║░░██╗██║░░██║██╔══██╗██╔══╝░░")
-        #         Terminal().print_center("██║░░██║██║░░██║██║░╚███║╚██████╔╝╚█████╔╝╚██████╔╝░░░██║░░░╚█████╔╝╚█████╔╝██║░░██║███████╗")
-        #         Terminal().print_center("╚═╝░░╚═╝╚═╝░░╚═╝╚═╝░░╚══╝░╚═════╝░░╚════╝░░╚═════╝░░░░╚═╝░░░░╚════╝░░╚════╝░╚═╝░░╚═╝╚══════╝")
-        #         Terminal().print_center("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+        #         self.print_hr()
+        #         self.print_center("██╗░░██╗░█████╗░███╗░░██╗░██████╗░░█████╗░██╗░░░██╗████████╗░█████╗░░█████╗░██████╗░███████╗")
+        #         self.print_center("██║░░██║██╔══██╗████╗░██║██╔════╝░██╔══██╗██║░░░██║╚══██╔══╝██╔══██╗██╔══██╗██╔══██╗██╔════╝")
+        #         self.print_center("███████║███████║██╔██╗██║██║░░██╗░██║░░██║██║░░░██║░░░██║░░░██║░░╚═╝██║░░██║██████╔╝█████╗░░")
+        #         self.print_center("██╔══██║██╔══██║██║╚████║██║░░╚██╗██║░░██║██║░░░██║░░░██║░░░██║░░██╗██║░░██║██╔══██╗██╔══╝░░")
+        #         self.print_center("██║░░██║██║░░██║██║░╚███║╚██████╔╝╚█████╔╝╚██████╔╝░░░██║░░░╚█████╔╝╚█████╔╝██║░░██║███████╗")
+        #         self.print_center("╚═╝░░╚═╝╚═╝░░╚═╝╚═╝░░╚══╝░╚═════╝░░╚════╝░░╚═════╝░░░░╚═╝░░░░╚════╝░░╚════╝░╚═╝░░╚═╝╚══════╝")
+        #         self.print_center("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
         #     elif not bot_setup:
-        #         Terminal().clear()
+        #         self.clear()
         #         if debug:
         #             print(Style.BRIGHT + Back.RED, end="\r")
         #         else:
         #             print(Style.NORMAL + Fore.BLACK + Back.WHITE, end="\r")
-        #         Terminal().print_center(str(cfg["bot"]["name"]))
-        #         Terminal().print_center(str(cfg["bot"]["version"]))
-        #         Terminal().print_center(str(start_time))
+        #         self.print_center(str(cfg["bot"]["name"]))
+        #         self.print_center(str(cfg["bot"]["version"]))
+        #         self.print_center(str(start_time))
         #         if debug:
-        #             Terminal().print_center(f'// Debug Mode Enabled \\\ ')
-        #             Terminal().print_center('SYS Version ' + str(sys.version))
-        #             Terminal().print_center('API Version ' + str(sys.api_version))
-        #             Terminal().print_center('Discord Version ' + str(discord.__version__))
+        #             self.print_center(f'// Debug Mode Enabled \\\ ')
+        #             self.print_center('SYS Version ' + str(sys.version))
+        #             self.print_center('API Version ' + str(sys.api_version))
+        #             self.print_center('Discord Version ' + str(discord.__version__))
         #         print(Style.RESET_ALL + Back.RESET, end="\r")
-        #         Terminal().print_hr()
+        #         self.print_hr()
 
     class Log():
         def DEBUG(self, log: str):

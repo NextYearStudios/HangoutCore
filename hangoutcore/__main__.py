@@ -11,7 +11,6 @@
         None
     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """
-import anyio
 import asyncio
 import click
 import sys
@@ -120,6 +119,8 @@ async def main():
 
     init_time = '{0:%d%b%Y %Hh:%Mm}'.format(datetime.now())
     config = Config()
+    terminal = Terminal()
+    
     if freshInstall:
         config.setup(manual=True)
     elif not config.appConfigExists():
@@ -127,7 +128,9 @@ async def main():
     config.init() # Load our hangoutcore.properties file and setup config variables.
     config.load() # Load our bot config here
     
-    Terminal().initiate(config)
+    terminal.setConfig(config.getConfig())
+    terminal.setInitTime(init_time)
+    terminal.initiate(debug=debug, bot_setup=False)
     
 def init():
     try:
