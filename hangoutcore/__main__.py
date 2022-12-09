@@ -13,6 +13,9 @@
 """
 import asyncio
 import click
+import discord
+import logging
+import logging.handlers
 import sys
 
 from datetime import datetime
@@ -20,11 +23,15 @@ from hangoutcore.util import *
 from hangoutcore.bot import HangoutCoreBot
 
 async def main():
+    init_time = '{0:%d%b%Y %Hh:%Mm}'.format(datetime.now())
     argv = list(set(sys.argv[1:])) # Setting a list to a set and then back to a list will remove any duplicates as a precaution.
     debug = False
     config = None
     token = -1
     freshInstall = False
+
+    logger = logging.getlogger("discord")
+    logger.setLevel(logging.info)
 
     if '-h' in sys.argv or '--help' in argv:
         print(f"""
@@ -129,7 +136,6 @@ async def main():
 
     obToken = obfuscateString(exampleToken, 4, '*')
 
-    init_time = '{0:%d%b%Y %Hh:%Mm}'.format(datetime.now())
     config = Config()
     terminal = Terminal()
     
@@ -141,11 +147,26 @@ async def main():
     config.init() # Load our hangoutcore.properties file and setup config variables.
     config.load() # Load our bot config here
     
+    # We assume that the bot successfully loaded our config. otherwise this wont work the way we intend
+
+    handler = logging.handlers.FileHandler(
+        filename=f"{config.getLogDirectoryPath()}/log_{init_time.replace(" ", "_")}.log", # We clear any spaces in our log name to avoid incompatabilities
+        encoding="utf-8",
+        maxBytes=32 * 1024 * 1024, # 32 MiB
+    )
+
+    date_format = "%m/%d/%Y %I:%M:%s %p"
+    formatter = logging.Formatter("""[%(asctime)s][%(levelname)s] %(message)s""", date_format)
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+
     terminal.setConfig(config.getConfig())
     terminal.setInitTime(init_time)
     terminal.setSilent(silent)
 
+
     terminal.initiate(debug=debug, bot_setup=False)
+    terminal.Test()
     
 def init():
     try:
