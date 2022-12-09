@@ -654,7 +654,6 @@ class database():
 
             )
 
-
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # ↓ Local ↓ : WIP
 #   › Handles providing local files such as images, video, cogs, py files, etc.
@@ -783,7 +782,6 @@ class Local():
             except Exception as e:
                 Terminal().Log().ERROR(f"{e}")
 
-
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # ↓ Terminal ↓ : WIP
 #   › Used to optimize terminal handling
@@ -825,14 +823,25 @@ class Terminal():
         """
         Clear's and prepares terminal for bot output.
         """
-        # work on a way to share config instance with util classes.
-        # potentially by setting a variable?
         
         cfg = self.CONFIG
         start_time = self.INIT_TIME
 
-        print(start_time)
-        print(cfg)
+        # print header
+        if debug:
+            print(Style.BRIGHT + Back.RED, end="\r")
+        else:
+            print(Style.NORMAL + Fore.BLACK + Back.WHITE, end="\r")
+        if bot_setup:
+            self.print_center("Bot Setup")
+            self.print_center()
+            if start_time is None:
+                self.print_center("// Time Argument Not Provided. \\")
+
+        # prep for rest
+        print(Style.RESET_ALL + Back.RESET, end="\r")
+        self.print_hr()
+
         # if cfg is not None:
         #     if bot_setup:
         #         self.clear()

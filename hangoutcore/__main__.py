@@ -125,11 +125,13 @@ async def main():
         config.setup(manual=True)
     elif not config.appConfigExists():
         config.setup()
+
     config.init() # Load our hangoutcore.properties file and setup config variables.
     config.load() # Load our bot config here
     
     terminal.setConfig(config.getConfig())
     terminal.setInitTime(init_time)
+    
     terminal.initiate(debug=debug, bot_setup=False)
     
 def init():
