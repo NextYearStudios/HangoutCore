@@ -19,6 +19,7 @@ import click
 import ctypes
 import discord
 import json
+import logging
 import pymysql.cursors
 import os, sys
 import shutil
@@ -793,6 +794,7 @@ class Terminal():
     def __init__(self):
         self.INIT_TIME = None
         self.CONFIG = None
+        self.SILENT = False
 
     def setConfig(self, config=None):
         if config is not None:
@@ -802,7 +804,8 @@ class Terminal():
         if time is not None:
             self.INIT_TIME = time
 
-    log_Queue = []
+    def setSilent(self, silentMode: bool = False):
+        self.SILENT = silentMode
 
     def print_center(self, s: str):
         """Print on the center of the terminal. Used primarily for decorative purposes."""
@@ -854,7 +857,7 @@ class Terminal():
         if start_time is None:
             self.print_center("// Time Argument Not Provided. \\")
         else:
-            self.print_center(str(start_time))
+            self.print_center(str(start_time) + "\n")
         
         if debug:
             self.print_center(f'// Debug Mode Enabled \\\ ')
@@ -869,22 +872,27 @@ class Terminal():
     class Log():
         def DEBUG(self, log: str):
             print(f"[{Fore.BLUE}DEBUG{Fore.RESET}] {log}")
+            logging.debug(log)
 
         def INFO(self, log: str):
             print(f"[{Fore.GREEN}INFO{Fore.RESET}] {log}")
+            logging.info(log)
 
         def WARNING(self, log: str):
             print(f"[{Fore.YELLOW}WARNING{Fore.RESET}] {log}")
+            logging.warning(log)
 
         def ERROR(self, log: str):
             print(f"[{Fore.RED}ERROR{Fore.RESET}] {log}")
+            logging.error(log)
 
         def CRITICAL(self, log: str):
             print(f"{Style.BRIGHT}{Back.RED}[CRITICAL] {log}{Style.RESET_ALL}{Back.RESET}")
+            logging.critical(log)
 
-    def queue(self, level, log):
-        if level is not None:
-            Terminal().log_Queue.append(f"{level}|{log}")
+        def Test(self):
+            print(f"Silent Mode: {self.SILENT}")
+            logging.info(f"SilentMode: {self.SILENT}")
 
     def EXIT(self, log: str):
         """Closes script with preset formatting for output message."""
@@ -906,7 +914,6 @@ class Terminal():
             if debug_mode:
                 Terminal().Log().ERROR(f"  └ Failed to load {file}\n" + "".join(ErrorTraceback))
             else:
-
                 Terminal().Log().ERROR(f"""  └ Failed to load {file}.
                 {Back.RED}{error}{Back.RESET}""")
 
@@ -937,10 +944,12 @@ class Terminal():
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# ↓ Terminal ↓ : WIP
-#   › Used to optimize terminal handling
+# ↓ Custom Views ↓ : WIP
+#   › Used as a way to store frequently used views, such as Confirmation, AutoRole, Ticket, etc.
 #   › Author: Lino
 #   › Date: 15 Nov, 2022
+#   Will eventually move to config... This is so that bot configs can control what views are present based off what they need.
+#   Allowing users to quickly transition from bot to bot or even sharing config files without needing them to modify util.py
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 class CustomViews():
