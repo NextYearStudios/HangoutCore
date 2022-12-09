@@ -46,6 +46,8 @@ async def main():
         sys.exit(0)
 
     if len(argv) >= 1:
+        # Need to create a pre-check to make sure the variables exist after the arguments.
+        # otherwise we run into the issue of causing errors down the road that we could easily avoid.
         if '-d' in argv:
             argvPos = argv.index('-d')
             debug = argv[argvPos + 1]
@@ -56,6 +58,17 @@ async def main():
             debug = argv[argvPos + 1]
             argv.pop(argvPos + 1)
             argv.pop(argvPos)
+
+        if '-s' in argv:
+            argvPos = argv.index('-s')
+            silent = argv[argvPos + 1]
+            argv.pop(arvPos + 1)
+            argv.pop(argv)
+        elif '--silent' in argv:
+            argvPos = argv.index('--silent')
+            silent = argv[argvPos + 1]
+            argv.pop(argvPos + 1)
+            argv.pop(argv)
 
         if '-c' in argv:
             argvPos = argv.index('-c')
@@ -83,7 +96,6 @@ async def main():
             argvPos = argv.index('-n')
             freshInstall = True
             argv.pop(argvPos)
-
         
         # Final check to make sure there's no invalid arguments that we missed.
         if len(argv) > 0:
@@ -131,7 +143,8 @@ async def main():
     
     terminal.setConfig(config.getConfig())
     terminal.setInitTime(init_time)
-    
+    terminal.setSilent(silent)
+
     terminal.initiate(debug=debug, bot_setup=False)
     
 def init():
