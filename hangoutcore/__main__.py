@@ -150,7 +150,7 @@ async def main():
     # We assume that the bot successfully loaded our config. otherwise this wont work the way we intend
 
     handler = logging.handlers.FileHandler(
-        filename=f"{config.getLogDirectoryPath()}/log_{init_time.replace(" ", "_")}.log", # We clear any spaces in our log name to avoid incompatabilities
+        filename=f"{config.getLogDirectoryPath()}/log_{init_time.replace(' ', '_')}.log", # We clear any spaces in our log name to avoid incompatabilities
         encoding="utf-8",
         maxBytes=32 * 1024 * 1024, # 32 MiB
     )
