@@ -26,7 +26,7 @@ from questionnaire import Questionnaire
 
 async def main():
     init_time = '{0:%d%b%Y %Hh:%Mm}'.format(datetime.now())
-    argv = list(set(sys.argv[1:])) # Setting a list to a set and then back to a list will remove any duplicates as a precaution.
+    argv = sys.argv[1:] 
     argv_debug = False
     argv_configName = None
     argv_token = -1
@@ -55,6 +55,7 @@ async def main():
         """) # Formatting looks ugly I know. Looks pretty good in the terminal though...
         sys.exit(0)
 
+    terminal.Log().INFO(argv)
     if len(argv) >= 1:
         # Need to create a pre-check to make sure the variables exist after the arguments.
         # otherwise we run into the issue of causing errors down the road that we could easily avoid.
@@ -93,12 +94,12 @@ async def main():
 
         if '-t' in argv:
             argvPos = argv.index('-t')
-            argv_token = argv[argvPos + 1]
+            argv_token = int(argv[argvPos + 1])
             argv.pop(argvPos + 1)
             argv.pop(argvPos)
         elif '--token' in argv:
             argvPos = argv.index('--token')
-            argv_token = argv[argvPos + 1]
+            argv_token = int(argv[argvPos + 1])
             argv.pop(argvPos + 1)
             argv.pop(argvPos)
 
@@ -125,8 +126,8 @@ async def main():
                     outputString = outputString + inputString[i]
                 else:
                     outputString = outputString + obfuscateChar
-            elif i == len(inputString) - amount:
-                outputString = outputString + "-" + inputString[i]
+            # elif i == len(inputString) - amount:
+            #     outputString = outputString + "-" + inputString[i]
             else:
                 outputString = outputString + inputString[i]
         return outputString
@@ -188,7 +189,6 @@ async def main():
     terminal.initiate(debug=argv_debug, bot_setup=False)
 
     # Begin Prepping to launch Bot
-    terminal.Log().INFO(f"{type(config.CONFIG['bot']['token'])}")
 
     configTokens = config.CONFIG['bot']['token']
     botToken = None
@@ -202,11 +202,13 @@ async def main():
             else:
                 filteredTokens = []
                 for token in configTokens:
-                    filteredTokens.append(obfuscateString(token, 4, '*'))
+                    filteredTokens.append(obfuscateString(token, 6, '*'))
                 q = Questionnaire()
                 q.one("token", *filteredTokens,
                 prompt=f"Current Config Loaded: {config.getConfigDirectoryPath}/{config.getConfigPath}\nWhich of the following tokens would you like to use?")
-                botToken = configTokens[filteredTokens.index(q.answers.get('token'))]
+                q.run()
+                tokenChoice = filteredTokens.index(q.answers.get('token'))
+                botToken = configTokens[tokenChoice]
         else:
             lenTokens = len(configTokens)
             if argv_token > lenTokens:
