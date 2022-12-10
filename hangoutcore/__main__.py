@@ -31,9 +31,6 @@ async def main():
     silent = False
     freshInstall = False
 
-    loggerDiscord = logging.getLogger("discord")
-    loggerHangoutCore = logging.getLogger("HangoutCore")
-
     if '-h' in sys.argv or '--help' in argv:
         print(f"""
 
@@ -110,12 +107,6 @@ async def main():
             Terminal().Log().CRITICAL(f"There appears to be invalid arguments in your entry. Please Double check your spelling and try again.\nYour input: {' '.join(sys.argv)}\nInvalid argument(s): {' '.join(argv)}")
             sys.exit(0)
         
-    # print(debug)
-    # print(config)
-    # print(token)
-
-    exampleToken = "1234567890.1234567890.1234567890"
-
     # This function will be moved to util
     def obfuscateString(inputString:str, amount:int=4, obfuscateChar:str='#'):
         """
@@ -135,19 +126,31 @@ async def main():
                 outputString = outputString + inputString[i]
         return outputString
 
-    obToken = obfuscateString(exampleToken, 4, '*')
-
+    
     config = Config()
     terminal = Terminal()
+
+    # This may seem redundant but this allows us to share our instance of the Terminal class across HangoutCore. 
+    # Any Modifications we make to our instance will be immediately available to the rest of HangoutCore
+    config.setConfigTerminal(terminal) 
     
     if freshInstall:
         config.setup(manual=True)
     elif not config.appConfigExists():
         config.setup()
 
-    config.init() # Load our hangoutcore.properties file and setup config variables.
-    config.load() # Load our bot config here
+    if config.init(): # if hangoutcore.properties exists, load it and set our variables
+        config.load(config) # Load our bot config based off these variables ^
+    else:
+        # We should almost never get to this. BUT if we do then we need to make sure the user knows about it to avoid looking elsewhere.
+        terminal.Log().Critical(f"hangoutcore.properties could not be found. This means our setup failed, or we do not have permissions to create/access it. Please restart HangoutCore and try again.")
     
+    # Setup Logging for HangoutCore and Discord.py
+
+    loggerDiscord = logging.getLogger("discord")
+    loggerHangoutCore = logging.getLogger("HangoutCore")
+    loggerRoot = logging.getLogger("root")
+
     # We assume that the bot successfully loaded our config. otherwise this wont work the way we intend
     logName = str(f"{config.getLogDirectoryPath()}/log_{init_time.replace(' ', '_')}.log") # We clear any spaces in our log name to avoid incompatabilities
     logEncoding = "utf-8"
@@ -157,16 +160,14 @@ async def main():
         filename=logName,
         encoding=logEncoding
     )
-    # Root
-    # logging.basicConfig(
-    #     filename=logName,
-    #     encoding=str(logEncoding),
-    #     level=20,
-    #     format="[%(asctime)s][%(name)s][%(levelname)s] %(message)s",
-    #     datefmt=date_format
-    # )
-    loggerDiscord.setLevel(20) # Logginglevel set to INFO | 0 : NOTSET, 10 : DEBUG, 20 : INFO, 30 : WARNING, 40 : ERROR, 50 : CRITICAL
-    loggerHangoutCore.setLevel(20)
+
+    # Logging Level INFO | 0 : NOTSET, 10 : DEBUG, 20 : INFO, 30 : WARNING, 40 : ERROR, 50 : CRITICAL
+    if debug:
+        loggerDiscord.setLevel(10)
+        loggerHangoutCore.setLevel(10)
+    else:
+        loggerDiscord.setLevel(20)
+        loggerHangoutCore.setLevel(20)
 
     formatter = logging.Formatter("""[%(asctime)s][%(name)s][%(levelname)s] %(message)s""", date_format)
     handler.setFormatter(formatter)
@@ -174,14 +175,23 @@ async def main():
     loggerDiscord.addHandler(handler)
     loggerHangoutCore.addHandler(handler)
 
+    # Initiate Terminal class with some necessary variables
+
     terminal.setConfig(config.getConfig())
     terminal.setInitTime(init_time)
     terminal.setSilent(silent)
 
 
     terminal.initiate(debug=debug, bot_setup=False)
-    terminal.Log().Test()
-    
+
+    # Begin Prepping to launch Bot
+    terminal.Log.INFO(type(config.CONFIG["bot"["token"]]))
+
+    # if token != -1:
+    #     config.CONFIG["bot"]["token"]
+
+    # obToken = obfuscateString(exampleToken, 4, '*')
+
 def init():
     try:
         asyncio.run(main())

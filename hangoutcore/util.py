@@ -253,36 +253,7 @@ class Config():
                 "update_reason": "Initial Creation"
             }
         }
-
-    # def exists(configName: str = None):
-    #     if configName is None:
-    #         if os.path.exists("hangoutcore.properties") and os.path.isfile("hangoutcore.properties"):
-    #             with open("hangoutcore.properties",
-    #                       "r+b") as hangoutcore_config:  # Access stored variables to locate config file
-    #                 p = Properties()
-    #                 p.load(hangoutcore_config, "utf-8")
-    #                 botConfig = p.get("botConfig").data
-    #                 botConfigDirectory = p.get("botConfigDirectory").data
-    #                 Config().CONFIG_PATH = botConfig
-    #                 Config().CONFIG_DIRECTORY_PATH = botConfigDirectory
-    #                 Config().COG_DIRECTORY_PATH = p.get("botCogDirectory").data
-    #                 Config().LOG_DIRECTORY_PATH = p.get("botLogDirectory").data
-    #                 if os.path.exists(f"{botConfigDirectory}/{botConfig}") and os.path.isfile(
-    #                         f"{botConfigDirectory}/{botConfig}"):
-    #                     return True
-    #                 else:
-    #                     return False
-    #         else:
-    #             return False
-    #     else:
-    #         filePath = configName
-    #         if not filePath.endswith('.json'):
-    #             filePath = filePath + '.json'
-    #         if os.path.exists(f"{Config().CONFIG_DIRECTORY_PATH}/{filePath}") and os.path.isfile(
-    #                 f"{Config().CONFIG_DIRECTORY_PATH}/{filePath}"):
-    #             return True
-    #         else:
-    #             return False
+        self.terminal = Terminal() # Just incase we don't set, we need to have a backup
             
     def appConfigExists(self, DesiredName: str= None):
         ConfigName = "hangoutcore.properties"
@@ -342,6 +313,10 @@ class Config():
     
     def getLogDirectoryPath(self):
         return self.LOG_DIRECTORY_PATH
+
+    def setConfigTerminal(self, terminal: Terminal):
+        if terminal is not None:
+            self.terminal = terminal
         
     def init(self, appConfig: str = "hangoutcore.properties", botConfig: str = None):
         if self.appConfigExists():
@@ -360,56 +335,26 @@ class Config():
                 self.setConfigDirectoryPath(p["botConfigDirectory"].data)
                 self.setCogDirectoryPath(p["botCogDirectory"].data)
                 self.setLogDirectoryPath(p["botLogDirectory"].data)
+                return True
         else:
             # properties file wasn't found. Assume that this is a fresh install
             print("Not Found")
+            return False
 
-        # return
-        # if configName is None:
-        #     with open(f"hangoutcore.properties", "r+b") as hangoutcore_config:
-        #         p = Properties()
-        #         p.load(hangoutcore_config, "utf-8")
-        #         Config().CONFIG_PATH = p["botConfig"].data
-        #         Config().CONFIG_DIRECTORY_PATH = p["botConfigDirectory"].data
-        #         Config().COG_DIRECTORY_PATH = p["botCogDirectory"].data
-        #         Config().LOG_DIRECTORY_PATH = p["botLogDirectory"].data
-        # else:
-        #     if Config().exists(configName):
-        #         with open(f"hangoutcore.properties", "r+b") as hangoutcore_config:
-        #             p = Properties()
-        #             p.load(hangoutcore_config, "utf-8")
-        #             if configName.endswith('.json'):
-        #                 Config().CONFIG_PATH = configName
-        #                 p["botConfig"] = configName
-        #             else:
-        #                 Config().CONFIG_PATH = configName + '.json'
-        #                 p["botConfig"] = configName + '.json'
-        #             Config().CONFIG_DIRECTORY_PATH = p["botConfigDirectory"].data
-        #             Config().COG_DIRECTORY_PATH = p["botCogDirectory"].data
-        #             Config().LOG_DIRECTORY_PATH = p["botLogDirectory"].data
-
-        #             with open(f"hangoutcore.properties", "wb") as hangoutcore_config:
-        #                 p.store(hangoutcore_config,
-        #                         encoding="utf-8")  # Store provided information in a properties file.
-        #     else:
-        #         with open(f"hangoutcore.properties", "r+b") as hangoutcore_config:
-        #             p = Properties()
-        #             p.load(hangoutcore_config, "utf-8")
-        #             Config().CONFIG_PATH = p["botConfig"].data
-        #             Config().CONFIG_DIRECTORY_PATH = p["botConfigDirectory"].data
-        #             Config().COG_DIRECTORY_PATH = p["botCogDirectory"].data
-        #             Config().LOG_DIRECTORY_PATH = p["botLogDirectory"].data
-        #         Terminal().Log().ERROR(
-        #             f"config: {configName} could not be found. loading config: {p['botConfig'].data} instead.")
-
-    def load(self):
+    def load(self, desiredConfig = None):
         """
         Attempt to load the config from path provided if none provided uses the config name provided during initiation.
         """
         fileName = self.CONFIG_PATH
         fileDirectory = self.CONFIG_DIRECTORY_PATH
 
-        if self.botConfigExists():
+        if desiredConfig is not None:
+            if self.botConfigExists(desiredConfig):
+                filename = desiredConfig
+            else:
+                self.terminal.Log().WARNING(f"Bot Config: {fileDirectory}/{desiredConfig} does not exists. Defaulting to {fileDirectory}{fileName}")
+
+        if self.botConfigExists(fileName):
             with open(f"{fileDirectory}/{fileName}") as configFile:
                 self.CONFIG = json.load(configFile)
                 if "_info" in self.CONFIG:
@@ -429,39 +374,7 @@ class Config():
                                 with open(f"{fileDirectory}/{fileName}", "w") as botConfig:
                                     json.dump(new_cfg, botConfig, indent=4)
                                 self.CONFIG = new_cfg
-        # OLD
-        # if self.exists(fileName):
-        #     with open(f"{fileDirectory}/{fileName}") as configFile:
-        #         cfg = json.load(configFile)
-        #         if '_info' in cfg:
-        #             if cfg['_info']['version'] >= self.CONFIG_VERSION:
-        #                 return cfg
-        #             else:
-        #                 if not self.WARNED:  # Config is outdated
-        #                     self.WARNED = True
-        #                     Terminal().queue("WARNING",
-        #                                    f"{fileName} is outdated. Please update it to avoid incompatability")
-        #                     if click.confirm(
-        #                             f"Attention: Your config version {cfg['_info']['version']} is outdated. Would you like to update to {self.CONFIG_VERSION}",
-        #                             default=True):
-        #                         new_cfg = self.EXAMPLE_CONFIG
-        #                         new_cfg['_info']['update_reason'] = f"Update To Config Version {self.CONFIG_VERSION}"
-        #                         for key in cfg['bot'].keys():
-        #                             new_cfg['bot'][key] = cfg['bot'][key]
-        #                         for key in cfg['database'].keys():
-        #                             new_cfg['database'][key] = cfg['database'][key]
-        #                         for key in cfg['music'].keys():
-        #                             new_cfg['music'][key] = cfg['music'][key]
-        #                         with open(f"{fileDirectory}/{fileName}", "w") as botConfig:
-        #                             json.dump(new_cfg, botConfig, indent=4)
-        #                     else:
-        #                         return cfg
-        #         else:
-        #             if not self.WARNED:  # Couldn't Find version, file probably outdated or corrupted.
-        #                 self.WARNED = True
-        #                 Terminal().queue("WARNING",
-        #                                f"{fileName} is either outdated or corrupt. Please delete the old one and run the bot again to create a new one.")
-        #             return cfg
+                            
 
     def setup(self, init_time: str = '{0:%d%b%Y %Hh:%Mm}'.format(datetime.now()), manual: bool = False):
         """
