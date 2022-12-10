@@ -18,9 +18,11 @@ import logging
 import logging.handlers
 import sys
 
+from aiohttp import ClientSession
 from datetime import datetime
 from hangoutcore.util import *
 from hangoutcore.bot import HangoutCoreBot
+from questionnaire import Questionnaire
 
 async def main():
     init_time = '{0:%d%b%Y %Hh:%Mm}'.format(datetime.now())
@@ -188,9 +190,31 @@ async def main():
     # Begin Prepping to launch Bot
     terminal.Log().INFO(f"{type(config.CONFIG['bot']['token'])}")
 
-    # if token != -1:
-    #     config.CONFIG["bot"]["token"]
+    configTokens = config.CONFIG['bot']['token']
+    botToken = None
 
+    if type(configTokens) == str:
+        botToken = configTokens
+    elif type(configTokens) == list:
+        if argv_token == -1:
+            if argv_silent:
+                botToken = configTokens[0] # Default to the first token
+            else:
+                filteredTokens = []
+                for token in configTokens:
+                    filteredTokens.append(obfuscateString(token, 4, '*'))
+                q = Questionnaire()
+                q.one("token", *filteredTokens,
+                prompt=f"Current Config Loaded: {config.getConfigDirectoryPath}/{config.getConfigPath}\nWhich of the following tokens would you like to use?")
+                botToken = q.answers.get('token')
+        else:
+            lenTokens = len(configTokens)
+            if argv_token > lenTokens:
+                terminal.Log().CRITICAL(f"You attempted to load token #{argv_token}. You only have {lenTokens} Tokens listed in your config file.")
+                sys.exit(1)
+            else:
+                botToken = configTokens[argv_token]
+                
     # obToken = obfuscateString(exampleToken, 4, '*')
 
 def init():
