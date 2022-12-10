@@ -186,7 +186,7 @@ async def main():
     terminal.initiate(debug=argv_debug, bot_setup=False)
 
     # Begin Prepping to launch Bot
-    terminal.Log.INFO(type(config.CONFIG["bot"["token"]]))
+    terminal.Log.INFO(type(config.CONFIG["bot"]["token"]))
 
     # if token != -1:
     #     config.CONFIG["bot"]["token"]
