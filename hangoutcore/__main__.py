@@ -149,7 +149,7 @@ async def main():
     config.load() # Load our bot config here
     
     # We assume that the bot successfully loaded our config. otherwise this wont work the way we intend
-    logName = str(f"{config.getLogDirectoryPath()}/log_{init_time.replace(' ', '_')}.log") # We clear any spaces in our log name to avoid incompatabilities
+    logName = str(fr"{config.getLogDirectoryPath()}/log_{init_time.replace(' ', '_')}.log").replace(':', '') # We clear any spaces in our log name to avoid incompatabilities
     logEncoding = "utf-8"
     date_format = "%m/%d/%Y %I:%M:%S %p"
 
