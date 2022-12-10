@@ -24,18 +24,24 @@ class HangoutCoreBot(commands.Bot):  # Sub class bot so we can have more customi
     def __init__(
             self,
             *args,
-            terminal_args,
-            testing_guild_id: Optional[int] = None,
+            test_Guild_ID: Optional[int] = None,
             web_client: ClientSession,
-            debug_mode: bool,
+            debug_mode: Optional[bool] = False,
+            config: Config,
+            terminal: Terminal,
             **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.web_client = web_client
-        self.testing_guild_id = testing_guild_id
+        # Setup variables that we may need later on
 
-        self.start_time = ""  # Add the start_time variable so that we may access it for debugging or information display purposes.
+        self.start_time = None  # Add the start_time variable so that we may access it for debugging or information display purposes.
+        self.test_Guild_ID : int = test_Guild_ID # This is for testing slash commands. That way we don't sync globally every time we run
         self.debug_mode = debug_mode
+
+        self.web_client = web_client
+        self.config = config
+        self.terminal = terminal
+
 
         self.BotSynced = False
         # BotSynced = False
@@ -45,12 +51,12 @@ class HangoutCoreBot(commands.Bot):  # Sub class bot so we can have more customi
 
         # here, we are loading extensions prior to sync to ensure we are syncing interactions defined in those extensions.
         self.start_time = '{0:%d%b%Y %Hh:%Mm}'.format(datetime.now())
-        Terminal().initiate(self.start_time, self.debug_mode)
-        Terminal().Log().INFO(f"Checking for preloaded bot modules...")
-        for cog in self.cogs.keys():
-            Terminal().Log().INFO(f"Found {cog}")
+        self.terminal.Log().INFO(f"Checking for preloaded bot modules...")
 
-        Terminal().Log().INFO(f"Looking for bot modules in '/{config.COG_DIRECTORY_PATH}'...")
+        for cog in self.cogs.keys():
+            self.terminal.Log().INFO(f"Found {cog}")
+
+        self.terminal.Log().INFO(f"Looking for bot modules in '/{config.COG_DIRECTORY_PATH}'...")
         await local().load_extensions(self, self.debug_mode)  # Scan cog directory and enable cogs.
 
         Bot().audio().verify_opus()  # Looks for opus and loads it if found.
@@ -60,16 +66,16 @@ class HangoutCoreBot(commands.Bot):  # Sub class bot so we can have more customi
             self.BotSynced = True
         
 
-        Terminal().Log().INFO(f"Logged in as {self.user} (ID: {self.user.id}).")
+        self.terminal.Log().INFO(f"Logged in as {self.user} (ID: {self.user.id}).")
 
     async def on_ready(self):
         # self.add_view(utils.bot.CustomViews.autoroleView())
         await self.wait_until_ready()
-        terminal = Terminal()
-        terminal.print_hr()
-        terminal.print_center("Bot Is Online")
-        terminal.print_hr()
-        terminal.Log().WARNING("Updating Guild Database")
+        
+        self.terminal.print_hr()
+        self.terminal.print_center("Bot Is Online")
+        self.terminal.print_hr()
+        self.terminal.Log().WARNING("Updating Guild Database")
         for guild in self.guilds:
             # await bot.database.RegisterGuild(guild)
-            Terminal().Log().INFO(f"Registered {guild.name}:{guild.id}")
+            self.terminal.Log().INFO(f"Registered {guild.name}:{guild.id}")
