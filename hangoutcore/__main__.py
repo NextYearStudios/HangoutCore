@@ -163,7 +163,7 @@ async def main():
     )
 
     # Logging Level INFO | 0 : NOTSET, 10 : DEBUG, 20 : INFO, 30 : WARNING, 40 : ERROR, 50 : CRITICAL
-    if debug:
+    if argv_debug:
         loggerDiscord.setLevel(10)
         loggerHangoutCore.setLevel(10)
     else:
@@ -180,10 +180,10 @@ async def main():
 
     terminal.setConfig(config.getConfig())
     terminal.setInitTime(init_time)
-    terminal.setSilent(silent)
+    terminal.setSilent(argv_silent)
 
 
-    terminal.initiate(debug=debug, bot_setup=False)
+    terminal.initiate(debug=argv_debug, bot_setup=False)
 
     # Begin Prepping to launch Bot
     terminal.Log.INFO(type(config.CONFIG["bot"["token"]]))
