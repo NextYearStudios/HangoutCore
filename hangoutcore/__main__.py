@@ -25,13 +25,16 @@ from hangoutcore.bot import HangoutCoreBot
 async def main():
     init_time = '{0:%d%b%Y %Hh:%Mm}'.format(datetime.now())
     argv = list(set(sys.argv[1:])) # Setting a list to a set and then back to a list will remove any duplicates as a precaution.
-    debug = False
-    config = None
-    token = -1
-    silent = False
-    freshInstall = False
+    argv_debug = False
+    argv_configName = None
+    argv_token = -1
+    argv_silent = False
+    argv_freshInstall = False
 
-    if '-h' in sys.argv or '--help' in argv:
+    config = Config()
+    terminal = Terminal()
+
+    if '-h' in argv or '--help' in argv:
         print(f"""
 
     ██╗░░██╗░█████╗░███╗░░██╗░██████╗░░█████╗░██╗░░░██╗████████╗░█████╗░░█████╗░██████╗░███████╗
@@ -55,56 +58,56 @@ async def main():
         # otherwise we run into the issue of causing errors down the road that we could easily avoid.
         if '-d' in argv:
             argvPos = argv.index('-d')
-            debug = argv[argvPos + 1]
+            argv_debug = argv[argvPos + 1]
             argv.pop(argvPos + 1)
             argv.pop(argvPos)
         elif '--debug' in argv:
             argvPos = argv.index('--debug')
-            debug = argv[argvPos + 1]
+            argv_debug = argv[argvPos + 1]
             argv.pop(argvPos + 1)
             argv.pop(argvPos)
 
         if '-s' in argv:
             argvPos = argv.index('-s')
-            silent = argv[argvPos + 1]
+            argv_silent = argv[argvPos + 1]
             argv.pop(arvPos + 1)
             argv.pop(argv)
         elif '--silent' in argv:
             argvPos = argv.index('--silent')
-            silent = argv[argvPos + 1]
+            argv_silent = argv[argvPos + 1]
             argv.pop(argvPos + 1)
             argv.pop(argv)
 
         if '-c' in argv:
             argvPos = argv.index('-c')
-            config = argv[argvPos + 1]
+            argv_configName = argv[argvPos + 1]
             argv.pop(argvPos + 1)
             argv.pop(argvPos)
         elif '--config' in argv:
             argvPos = argv.index('--config')
-            config = argv[argvPos + 1]
+            argv_configName = argv[argvPos + 1]
             argv.pop(argvPos + 1)
             argv.pop(argvPos)
 
         if '-t' in argv:
             argvPos = argv.index('-t')
-            token = argv[argvPos + 1]
+            argv_token = argv[argvPos + 1]
             argv.pop(argvPos + 1)
             argv.pop(argvPos)
         elif '--token' in argv:
             argvPos = argv.index('--token')
-            token = argv[argvPos + 1]
+            argv_token = argv[argvPos + 1]
             argv.pop(argvPos + 1)
             argv.pop(argvPos)
 
         if '-n' in argv:
             argvPos = argv.index('-n')
-            freshInstall = True
+            argv_freshInstall = True
             argv.pop(argvPos)
         
         # Final check to make sure there's no invalid arguments that we missed.
         if len(argv) > 0:
-            Terminal().Log().CRITICAL(f"There appears to be invalid arguments in your entry. Please Double check your spelling and try again.\nYour input: {' '.join(sys.argv)}\nInvalid argument(s): {' '.join(argv)}")
+            terminal.Log().CRITICAL(f"There appears to be invalid arguments in your entry. Please Double check your spelling and try again.\nYour input: {' '.join(sys.argv)}\nInvalid argument(s): {' '.join(argv)}")
             sys.exit(0)
         
     # This function will be moved to util
@@ -127,8 +130,6 @@ async def main():
         return outputString
 
     
-    config = Config()
-    terminal = Terminal()
 
     # This may seem redundant but this allows us to share our instance of the Terminal class across HangoutCore. 
     # Any Modifications we make to our instance will be immediately available to the rest of HangoutCore
@@ -140,7 +141,7 @@ async def main():
         config.setup()
 
     if config.init(): # if hangoutcore.properties exists, load it and set our variables
-        config.load(config) # Load our bot config based off these variables ^
+        config.load(argv_configName) # Load our bot config based off these variables ^
     else:
         # We should almost never get to this. BUT if we do then we need to make sure the user knows about it to avoid looking elsewhere.
         terminal.Log().Critical(f"hangoutcore.properties could not be found. This means our setup failed, or we do not have permissions to create/access it. Please restart HangoutCore and try again.")
