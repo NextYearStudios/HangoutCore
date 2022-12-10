@@ -165,8 +165,12 @@ async def main():
     #     format="[%(asctime)s][%(name)s][%(levelname)s] %(message)s",
     #     datefmt=date_format
     # )
-    loggerDiscord.setLevel(20) # Logginglevel set to INFO | 0 : NOTSET, 10 : DEBUG, 20 : INFO, 30 : WARNING, 40 : ERROR, 50 : CRITICAL
-    loggerHangoutCore.setLevel(20)
+    if debug:    
+        loggerDiscord.setLevel(10) # Logginglevel set to INFO | 0 : NOTSET, 10 : DEBUG, 20 : INFO, 30 : WARNING, 40 : ERROR, 50 : CRITICAL
+        loggerHangoutCore.setLevel(10)
+    else:
+        loggerDiscord.setLevel(20) # Logginglevel set to INFO | 0 : NOTSET, 10 : DEBUG, 20 : INFO, 30 : WARNING, 40 : ERROR, 50 : CRITICAL
+        loggerHangoutCore.setLevel(20)
 
     formatter = logging.Formatter("""[%(asctime)s][%(name)s][%(levelname)s] %(message)s""", date_format)
     handler.setFormatter(formatter)
