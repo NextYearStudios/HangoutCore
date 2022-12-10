@@ -314,7 +314,7 @@ class Config():
     def getLogDirectoryPath(self):
         return self.LOG_DIRECTORY_PATH
 
-    def setConfigTerminal(self, terminal: Terminal()):
+    def setConfigTerminal(self, terminal):
         if terminal is not None:
             self.terminal = terminal
         
