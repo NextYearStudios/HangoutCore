@@ -135,7 +135,7 @@ async def main():
     # Any Modifications we make to our instance will be immediately available to the rest of HangoutCore
     config.setConfigTerminal(terminal) 
     
-    if freshInstall:
+    if argv_freshInstall:
         config.setup(manual=True)
     elif not config.appConfigExists():
         config.setup()
