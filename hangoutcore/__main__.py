@@ -197,7 +197,7 @@ async def main():
         botToken = configTokens
     elif type(configTokens) == list:
         if argv_token == -1:
-            if argv_silent:
+            if argv_silent or len(configTokens) == 1:
                 botToken = configTokens[0] # Default to the first token
             else:
                 filteredTokens = []
@@ -206,7 +206,7 @@ async def main():
                 q = Questionnaire()
                 q.one("token", *filteredTokens,
                 prompt=f"Current Config Loaded: {config.getConfigDirectoryPath}/{config.getConfigPath}\nWhich of the following tokens would you like to use?")
-                botToken = q.answers.get('token')
+                botToken = configTokens[filteredTokens.index(q.answers.get('token'))]
         else:
             lenTokens = len(configTokens)
             if argv_token > lenTokens:
@@ -215,6 +215,7 @@ async def main():
             else:
                 botToken = configTokens[argv_token]
                 
+    terminal.Log().INFO(botToken)
     # obToken = obfuscateString(exampleToken, 4, '*')
 
 def init():
