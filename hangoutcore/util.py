@@ -623,26 +623,28 @@ class Local():
         cogs = self.GetCogs()
 
         if cogs is not None:
-            for cog in cogs["valid_files"]:
-                self.terminal.Log().INFO(f" └ Found {cog}")
-                try:
-                    await discordBot.load_extension(f'{Config().COG_DIRECTORY_PATH}.{cog[:-3]}')
-                except Exception as e:
-                    self.terminal.errorprocessing.CogLoadError(cog, e, debug_mode)
-                else:
-                    self.terminal.Log().INFO(f"  └ successfully loaded {cog}.")
-            for cog in cogs["disabled_files"]:
-                self.terminal.Log().INFO(f" └ Found Disabled file {cog}, Skipping.")
-            for cog in cogs["invalid_files"]:
-                if cog == "__pycache__" or "__init__":
-                    pass
-                else:
-                    self.terminal.Log().INFO(f" └ Found invalid file {cog}, Skipping.")
-            self.terminal.Log().INFO(f"Successfully loaded {len(cogs['valid_files'])} extension(s).")
-            if len(cogs["invalid_files"]) > 0:
-                self.terminal.Log().WARNING(
-                    f"Found {len(cogs['invalid_files'])} invalid extension(s) in the 'cogs' directory. If you believe this is an error please verify each .py file and make sure it is set up as a cog properly, Otherwise you can ignore this message.")
-
+            if len(cogs["valid_files"]) > 0:
+                for cog in cogs["valid_files"]:
+                    self.terminal.Log().INFO(f" └ Found {cog}")
+                    try:
+                        await discordBot.load_extension(f'{Config().COG_DIRECTORY_PATH}.{cog[:-3]}')
+                    except Exception as e:
+                        self.terminal.errorprocessing.CogLoadError(cog, e, debug_mode)
+                    else:
+                        self.terminal.Log().INFO(f"  └ successfully loaded {cog}.")
+                for cog in cogs["disabled_files"]:
+                    self.terminal.Log().INFO(f" └ Found Disabled file {cog}, Skipping.")
+                for cog in cogs["invalid_files"]:
+                    if cog == "__pycache__" or "__init__":
+                        pass
+                    else:
+                        self.terminal.Log().INFO(f" └ Found invalid file {cog}, Skipping.")
+                self.terminal.Log().INFO(f"Successfully loaded {len(cogs['valid_files'])} extension(s).")
+                if len(cogs["invalid_files"]) > 0:
+                    self.terminal.Log().WARNING(
+                        f"Found {len(cogs['invalid_files'])} invalid extension(s) in the 'cogs' directory. If you believe this is an error please verify each .py file and make sure it is set up as a cog properly, Otherwise you can ignore this message.")
+            else:
+                self.terminal.Log().INFO(f"No extensions where found. Skipping...")
     async def GetTicketTranscript(ticketid: str):
         transcriptDirectory = (f"transcripts\\")
         if os.path.exists(f"{transcriptDirectory}{ticketid}.md"):
