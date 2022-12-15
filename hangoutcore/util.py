@@ -744,13 +744,13 @@ class Terminal():
         
         cfg = self.CONFIG
         start_time = self.INIT_TIME
-
+        self.clear()
         # print header
         if debug:
             print(Style.BRIGHT + Back.RED, end="\r")
         else:
             print(Style.NORMAL + Fore.BLACK + Back.WHITE, end="\r")
-        self.print_center("") # Empty String for spacing
+        self.print_center(" ") # Empty String for spacing
         self.print_center("██╗░░██╗░█████╗░███╗░░██╗░██████╗░░█████╗░██╗░░░██╗████████╗░█████╗░░█████╗░██████╗░███████╗")
         self.print_center("██║░░██║██╔══██╗████╗░██║██╔════╝░██╔══██╗██║░░░██║╚══██╔══╝██╔══██╗██╔══██╗██╔══██╗██╔════╝")
         self.print_center("███████║███████║██╔██╗██║██║░░██╗░██║░░██║██║░░░██║░░░██║░░░██║░░╚═╝██║░░██║██████╔╝█████╗░░")
@@ -772,7 +772,8 @@ class Terminal():
         if start_time is None:
             self.print_center("// Time Argument Not Provided. \\")
         else:
-            self.print_center(str(start_time) + "\n")
+            self.print_center(str(start_time))
+            self.print_center(" ") # if we only us /n in the above line for this space then it messes with formatting. I know, dumb.
         
         if debug:
             self.print_center(f'// Debug Mode Enabled \\\ ')
@@ -793,7 +794,8 @@ class Terminal():
             self.logger = logger
 
         def DEBUG(self, log: str):
-            print(f"[{Fore.BLUE}DEBUG{Fore.RESET}] {log}")
+            if self.logger.level == 10:
+                print(f"[{Fore.BLUE}DEBUG{Fore.RESET}] {log}") # Only print if we need to
             self.logger.debug(log)
 
         def INFO(self, log: str):
