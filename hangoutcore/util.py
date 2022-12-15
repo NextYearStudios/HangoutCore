@@ -37,119 +37,48 @@ from os import system, name
 
 init(strip=not sys.stdout.isatty()) # Strip color if stdout is redirected.
 
+
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# ↓ Bot ↓ : WIP
-#   › Fill with functions as you need, intended to keep other files clear and let utils do the heavy lifting.
+# ↓ Audio Handling ↓ : WIP
+#   › Used for playing music and keeping the audio function clutter out of the main script.
 #   › Author: Lino
 #   › Date: 15 Nov, 2022
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-class Bot():
-    def GetIntents(self):
-        """Retrieves specified bot intents from config file. If the config file is not able to be loaded this sets intents to false just in case."""
-        cfg = Config().load()
-        if cfg is not None:
-            intents = discord.Intents.default()  # Set Bot Intents
-            intents.members = cfg['bot']['intents']['members']
-            intents.message_content = cfg['bot']['intents']['message_content']
-            intents.typing = cfg['bot']['intents']['typing']
-            intents.presences = cfg['bot']['intents']['presences']
-            intents.guilds = cfg['bot']['intents']['guilds']
-            return intents
-        else:
-            Terminal().Log().WARNING(f"Could not retrieve intents from Config(). Setting intents to false as a precaution.")
-            intents = discord.Intents.default()  # Set Bot Intents
-            intents.members = False
-            intents.message_content = False
-            intents.typing = False
-            intents.presences = False
-            intents.guilds = False
-            return intents
+class Audio():
+    class guildstate():
+        def __init__(self):
+            self.now_playing = None
+            self.playlist = []
+            self.skip_votes = set()
+            self.volume = int(Config().load()["music"]["max_volume"]) / 100
 
-    def GetActivity(self):
-        """Retrieves Bot Activity specified in config file. If an activity cannot be loaded from the config then we set it to 'listening to !help'"""
-        cfg = Config().load()
-        if cfg is not None:
-            if cfg["bot"]["status"]["type"] == "listening":  # Set the activity depending on config
-                activity = discord.Activity(
-                    type=discord.ActivityType.listening,
-                    name=cfg["bot"]["status"]["name"]
-                )
-            elif cfg["bot"]["status"]["type"] == "streaming":
-                activity = discord.Activity(
-                    type=discord.ActivityType.streaming,
-                    name=cfg["bot"]["status"]["name"],
-                    url=cfg["bot"]["status"]["url"]
-                )
-            elif cfg["bot"]["status"]["type"] == "watching":
-                activity = discord.Activity(
-                    type=discord.ActivityType.watching,
-                    name=cfg["bot"]["status"]["name"]
-                )
-            elif cfg["bot"]["status"]["type"] == "playing":
-                activity = discord.Activity(
-                    type=discord.ActivityType.playing,
-                    name=cfg["bot"]["status"]["name"],
-                    game=cfg["bot"]["status"]["game"]
-                )
-        else:
-            activity = discord.Activity(
-                type=discord.ActivityType.listening,
-                name="!help"
-            )
-        return activity
-
-    def GetPrefix(discordBot, message: discord.message):
-        """Returns the prefixes specified in the config file. If none can be loaded from config then we set prefix as '!'"""
-        cfg = Config().load()
-        if cfg is not None:
-            prefixes = cfg["bot"]["prefixes"]
-
-            if prefixes is None:
-                return '!'
-            return commands.when_mentioned_or(prefixes[0])(Bot, message)
-
-    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    # ↓ Audio Handling ↓ : WIP
-    #   › Used for playing music and keeping the audio function clutter out of the main script.
-    #   › Author: Lino
-    #   › Date: 15 Nov, 2022
-    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-    class audio():
-        class guildstate():
-            def __init__(self):
-                self.now_playing = None
-                self.playlist = []
-                self.skip_votes = set()
-                self.volume = int(Config().load()["music"]["max_volume"]) / 100
-
-        def verify_opus(self):
-            """
-                Looks for opus throughout the system, Attempts to load if found.
-            """
-            terminal = Terminal()
-            opuslib = ctypes.util.find_library('opus')
-            if opuslib is not None:
-                try:
-                    terminal.Log().INFO(f"Loading Opus.")
-                    discord.opus.load_opus('opus')
-                except Exception as e:
-                    terminal.Log().ERROR(e)
-                else:
-                    if not discord.opus.is_loaded():
-                        terminal.Log().CRITICAL("Opus Failed To Load.")
-                    else:
-                        terminal.Log().INFO("Successfully loaded opus.")
+    def verify_opus(self):
+        """
+            Looks for opus throughout the system, Attempts to load if found.
+        """
+        terminal = Terminal()
+        opuslib = ctypes.util.find_library('opus')
+        if opuslib is not None:
+            try:
+                terminal.Log().INFO(f"Loading Opus.")
+                discord.opus.load_opus('opus')
+            except Exception as e:
+                terminal.Log().ERROR(e)
             else:
-                terminal.Log().WARNING("Could not find Opus, You will not be able to play audio without it.")
+                if not discord.opus.is_loaded():
+                    terminal.Log().CRITICAL("Opus Failed To Load.")
+                else:
+                    terminal.Log().INFO("Successfully loaded opus.")
+        else:
+            terminal.Log().WARNING("Could not find Opus, You will not be able to play audio without it.")
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # ↓ Config ↓ : WIP
 #   › Used for handling bot configuration file.
 #   › Author: Lino
-#   › Date: 15 Nov, 2022
+#   › Date: 15 Dec, 2022
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 class Config():
@@ -318,11 +247,85 @@ class Config():
         if terminal is not None:
             self.terminal = terminal
         
+    # The following functions are not really necessary
+    # However they do reduce clutter in other scripts so eh, We'll leave them for now.
+    def getActivity(self) -> discord.Activity():
+        """
+        Retrieves Bot Activity specified in our loaded bot config. Returns activity type 'listening' if none is found.
+        """
+        if self.CONFIG is not None: # make sure our config exists in the first place
+            self.terminal.Log().DEBUG(f"Found Config Activity Type Entry: {self.CONFIG['bot']['status']['type']}")
+            if self.CONFIG['bot']['status']['type'] == 'listening':
+                return discord.Activity(
+                    type = discord.ActivityType.listening,
+                    name = self.CONFIG['bot']['status']['name']
+                )
+            if self.CONFIG['bot']['status']['type'] == 'streaming':
+                return discord.Activity(
+                    type = discord.ActivityType.streaming,
+                    name = self.CONFIG['bot']['status']['name'],
+                    game = self.CONFIG['bot']['status']['url']
+                )
+            if self.CONFIG['bot']['status']['type'] == 'watching':
+                return discord.Activity(
+                    type = discord.ActivityType.watching,
+                    name = self.CONFIG['bot']['status']['name']
+                )
+            if self.CONFIG['bot']['status']['type'] == 'playing':
+                return discord.Activity(
+                    type = discord.ActivityType.playing,
+                    name = self.CONFIG['bot']['status']['name'],
+                    game = self.CONFIG['bot']['status']['game']
+                )
+            # Assume that we got here because the entry in our config either doesn't exists, or is simply not one of the above.
+            self.terminal.Log().ERROR(f"Config Activity Type Entry: {self.CONFIG['bot']['status']['type']} is not valid. Please check your spelling and try again.")
+            return discord.Activity(
+                type = discord.ActivityType.listening,
+                name= "!help"
+            )
+        else:
+            self.terminal.Log().DEBUG(f"Config is None. Returning Activity Type: 'listening'")
+            return discord.Activity(
+                type = discord.ActivityType.listening,
+                name= "!help"
+            )
+
+    def getIntents(self):
+        """Retrieves specified bot intents from config file. If the config file is not able to be loaded this sets intents to false just in case."""
+        if self.CONFIG is not None:
+            self.terminal.Log().DEBUG(f"Loading Bot Intents from config. Intents: {self.CONFIG['bot']['intents']}")
+            intents = discord.Intents.default()  # Set Bot Intents
+            intents.members         = self.CONFIG['bot']['intents']['members']
+            intents.message_content = self.CONFIG['bot']['intents']['message_content']
+            intents.typing          = self.CONFIG['bot']['intents']['typing']
+            intents.presences       = self.CONFIG['bot']['intents']['presences']
+            intents.guilds          = self.CONFIG['bot']['intents']['guilds']
+            return intents
+        else:
+            self.terminal.Log().WARNING(f"Could not retrieve intents from Config(). Setting intents to false as a precaution.")
+            intents = discord.Intents.default()  # Set Bot Intents
+            intents.members = False
+            intents.message_content = False
+            intents.typing = False
+            intents.presences = False
+            intents.guilds = False
+            return intents
+
+    def getPrefix(self): # Since we're moving to slash commands this will eventually get removed.
+        if self.CONFIG is not None:
+            if self.CONFIG['bot']['prefixes'] is not None:
+                if type(self.CONFIG['bot']['prefixes']) == str:
+                    return list(self.CONFIG['bot']['prefixes'])
+                else:
+                    return self.CONFIG['bot']['prefixes']
+            else:
+                return ['!']
+
     def init(self, appConfig: str = "hangoutcore.properties", botConfig: str = None):
-        if self.appConfigExists():
+        self.terminal.Log().DEBUG(f"Attempting to locate properties file {appConfig}.")
+        if self.appConfigExists(appConfig):
+            self.terminal.Log().DEBUG(f"Found {appConfig}, Loading data.")
             # properties file found. Begin loading info
-            if not appConfig.endswith(".properties"):
-                appConfig = appConfig + ".properties"
             with open(appConfig, "r+b") as hangoutcore_config:
                 p = Properties()
                 p.load(hangoutcore_config, "utf-8")
@@ -338,7 +341,7 @@ class Config():
                 return True
         else:
             # properties file wasn't found. Assume that this is a fresh install
-            print("Not Found")
+            self.terminal.Log().DEBUG(f"Attempted to locate properties file {appConfig}, Nothing was found.")
             return False
 
     def load(self, desiredConfig = None):
@@ -375,7 +378,6 @@ class Config():
                                     json.dump(new_cfg, botConfig, indent=4)
                                 self.CONFIG = new_cfg
                             
-
     def setup(self, init_time: str = '{0:%d%b%Y %Hh:%Mm}'.format(datetime.now()), manual: bool = False):
         """
         This function runs through the process of setting up our bot config with the necessary details. such as bot Name, Token, Authorized Users, Etc.
@@ -472,7 +474,7 @@ class Config():
             if click.confirm(
                     f"""Bot Name: {botName}\nBot Description: {botDescription}\nBot Version: ({botVersion})\nBot Token: {"*" * len(botToken)}\nBot Config Name: {botConfigName}\nBot Config Directory: /{botConfigDirectory}\nBot Log Directory: /{botLogDirectory}\nBot Cog Directory: /{botCogDirectory}\nAre the values above accurate?""",
                     default=True):
-                Terminal().Log().INFO("Creating a properties file to store hangoutcore variables.")
+                self.terminal.Log().INFO("Creating a properties file to store hangoutcore variables.")
                 p = Properties()
                 p["botConfig"] = botConfigName
                 p["botConfigDirectory"] = botConfigDirectory
@@ -488,20 +490,20 @@ class Config():
                 self.LOG_DIRECTORY_PATH = botLogDirectory
 
                 if not os.path.exists(botConfigDirectory):
-                    Terminal().Log().INFO(f"Creating Config Directory: /{botConfigDirectory}")
+                    self.terminal.Log().INFO(f"Creating Config Directory: /{botConfigDirectory}")
                     os.mkdir(botConfigDirectory)
                 else:
-                    Terminal().Log().INFO(f"Config directory already exists, skipping...")
+                    self.terminal.Log().INFO(f"Config directory already exists, skipping...")
                 if not os.path.exists(botCogDirectory):
-                    Terminal().Log().INFO(f"Creating Cog Directory: /{botCogDirectory}")
+                    self.terminal.Log().INFO(f"Creating Cog Directory: /{botCogDirectory}")
                     os.mkdir(botCogDirectory)
                 else:
-                    Terminal().Log().INFO(f"Cog directory already exists, skipping...")
+                    self.terminal.Log().INFO(f"Cog directory already exists, skipping...")
                 if not os.path.exists(botLogDirectory):
-                    Terminal().Log().INFO(f"Creating Log Directory: /{botLogDirectory}")
+                    self.terminal.Log().INFO(f"Creating Log Directory: /{botLogDirectory}")
                     os.mkdir(botLogDirectory)
                 else:
-                    Terminal().Log().INFO(f"Log directory already exists, skipping...")
+                    self.terminal.Log().INFO(f"Log directory already exists, skipping...")
 
                 with open(f"{botConfigDirectory}/{botConfigName}", 'w') as file:  # Create initial config file.
                     json.dump(self.EXAMPLE_CONFIG, file, indent=4)
