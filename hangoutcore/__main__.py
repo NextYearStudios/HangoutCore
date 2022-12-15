@@ -47,58 +47,110 @@ async def main():
     ╚═╝░░╚═╝╚═╝░░╚═╝╚═╝░░╚══╝░╚═════╝░░╚════╝░░╚═════╝░░░░╚═╝░░░░╚════╝░░╚════╝░╚═╝░░╚═╝╚══════╝
     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-[-c, --config : string  ] Load the specified config, Also sets as default. If the specified config cannot be found, return to previous config as a precaution.
-[-d, --debug  : bool    ] Enable debug mode for more information to be displayed in the terminal. Changes log mode to DEBUG.
-[-n, --new    : empty   ] Manually put HangoutCore in a setup state in order to create a new configuration. Sets the new config as default.
-[-s, --silent : bool    ] Enable/Disable to have information sent to log only, or terminal and log(). Useful for running as a service since there's no access to terminal.
+[-c, --config : string  ] Load the specified config, Also sets as default. 
+                          If the specified config cannot be found, return to previous config as a precaution.
+[-d, --debug  : bool    ] Enable debug mode for more information to be displayed in the terminal. 
+                          Changes log mode to DEBUG.
+[-n, --new    : empty   ] Manually put HangoutCore in a setup state in order to create a new configuration. 
+                          Sets the new config as default.
+[-s, --silent : bool    ] Enable/Disable to have information sent to log only, or terminal and log().
+                          Useful for running as a service since there's no access to terminal.
 [-t, --token  : integer ] Specify which token to use if you're using multiple. Allows user to skip token choice prompt.
         """) # Formatting looks ugly I know. Looks pretty good in the terminal though...
         sys.exit(0)
 
-    terminal.Log().INFO(argv)
+    def invalidArg(arg):
+        return terminal.Log().WARNING(f"You need to specify a value for the argument provided. arguments: {arg}")
+
     if len(argv) >= 1:
         # Need to create a pre-check to make sure the variables exist after the arguments.
         # otherwise we run into the issue of causing errors down the road that we could easily avoid.
         if '-d' in argv:
             argvPos = argv.index('-d')
-            argv_debug = argv[argvPos + 1]
+            try:
+                if argv[argvPos + 1].lower() == "true":
+                    argv_debug = True
+                else:
+                    argv_debug = False
+            except IndexError:
+                invalidArg(arg = '-d')
+                return
             argv.pop(argvPos + 1)
             argv.pop(argvPos)
         elif '--debug' in argv:
             argvPos = argv.index('--debug')
-            argv_debug = argv[argvPos + 1]
+            try:
+                if argv[argvPos + 1].lower() == "true":
+                    argv_debug = True
+                else:
+                    argv_debug = False
+            except IndexError:
+                invalidArg('--debug')
+                return 
             argv.pop(argvPos + 1)
             argv.pop(argvPos)
 
         if '-s' in argv:
             argvPos = argv.index('-s')
-            argv_silent = argv[argvPos + 1]
-            argv.pop(arvPos + 1)
+            
+            try:
+                if argv[argvPos + 1].lower() == "true":
+                    argv_silent = True
+                else:
+                    argv_silent = False
+            except IndexError:
+                invalidArg('-s')
+                return
+            argv.pop(argvPos + 1)
             argv.pop(argv)
         elif '--silent' in argv:
             argvPos = argv.index('--silent')
-            argv_silent = argv[argvPos + 1]
+            try:
+                if argv[argvPos + 1].lower() == "true":
+                    argv_silent = True
+                else:
+                    argv_silent = False
+            except IndexError:
+                invalidArg('--silent')
+                return
             argv.pop(argvPos + 1)
             argv.pop(argv)
 
         if '-c' in argv:
             argvPos = argv.index('-c')
-            argv_configName = argv[argvPos + 1]
+            try:
+                argv_configName = argv[argvPos + 1]
+            except IndexError:
+                invalidArg('-c')
+                return
             argv.pop(argvPos + 1)
             argv.pop(argvPos)
         elif '--config' in argv:
             argvPos = argv.index('--config')
-            argv_configName = argv[argvPos + 1]
+            try:
+                argv_configName = argv[argvPos + 1]
+            except IndexError:
+                invalidArg('--config')
+                return
             argv.pop(argvPos + 1)
             argv.pop(argvPos)
 
         if '-t' in argv:
             argvPos = argv.index('-t')
-            argv_token = int(argv[argvPos + 1])
+            try:
+                argv_token = argv[argvPos + 1]
+            except IndexError:
+                invalidArg('-t')
+                return
             argv.pop(argvPos + 1)
             argv.pop(argvPos)
         elif '--token' in argv:
             argvPos = argv.index('--token')
+            try:
+                argv_token = argv[argvPos + 1]
+            except IndexError:
+                invalidArg('--token')
+                return
             argv_token = int(argv[argvPos + 1])
             argv.pop(argvPos + 1)
             argv.pop(argvPos)
@@ -112,7 +164,19 @@ async def main():
         if len(argv) > 0:
             terminal.Log().CRITICAL(f"There appears to be invalid arguments in your entry. Please Double check your spelling and try again.\nYour input: {' '.join(sys.argv)}\nInvalid argument(s): {' '.join(argv)}")
             sys.exit(0)
-        
+    
+    loggerDiscord = logging.getLogger("discord")
+    loggerHangoutCore = logging.getLogger("HangoutCore")
+    loggerRoot = logging.getLogger("root")
+
+    # Logging Level INFO | 0 : NOTSET, 10 : DEBUG, 20 : INFO, 30 : WARNING, 40 : ERROR, 50 : CRITICAL
+    if argv_debug:
+        loggerDiscord.setLevel(10)
+        loggerHangoutCore.setLevel(10)
+    else:
+        loggerDiscord.setLevel(20)
+        loggerHangoutCore.setLevel(20)
+
     # This function will be moved to util
     def obfuscateString(inputString:str, amount:int=4, obfuscateChar:str='#'):
         """
@@ -151,10 +215,6 @@ async def main():
     
     # Setup Logging for HangoutCore and Discord.py
 
-    loggerDiscord = logging.getLogger("discord")
-    loggerHangoutCore = logging.getLogger("HangoutCore")
-    loggerRoot = logging.getLogger("root")
-
     # We assume that the bot successfully loaded our config. otherwise this wont work the way we intend
     logName = str(fr"{config.getLogDirectoryPath()}/log_{init_time.replace(' ', '_')}.log").replace(':', '') # We clear any spaces in our log name to avoid incompatabilities
     logEncoding = "utf-8"
@@ -164,14 +224,6 @@ async def main():
         filename=logName,
         encoding=logEncoding
     )
-
-    # Logging Level INFO | 0 : NOTSET, 10 : DEBUG, 20 : INFO, 30 : WARNING, 40 : ERROR, 50 : CRITICAL
-    if argv_debug:
-        loggerDiscord.setLevel(10)
-        loggerHangoutCore.setLevel(10)
-    else:
-        loggerDiscord.setLevel(20)
-        loggerHangoutCore.setLevel(20)
 
     formatter = logging.Formatter("""[%(asctime)s][%(name)s][%(levelname)s] %(message)s""", date_format)
     handler.setFormatter(formatter)
