@@ -591,7 +591,7 @@ class Local():
         if terminal is not None:
             self.terminal = terminal
 
-    def GetCogs(self):
+    async def GetCogs(self):
         if self.config is not None:
             valid_files = []
             disabled_files = []
@@ -620,7 +620,7 @@ class Local():
         """
         Scans for files in the cog directory specified in the Config(). Loads the file if it ends in '.py', and registers files ending in '.disabled' as disabled cogs.
         """
-        cogs = self.GetCogs()
+        cogs = await self.GetCogs()
 
         if cogs is not None:
             if len(cogs["valid_files"]) > 0:
@@ -645,7 +645,7 @@ class Local():
                         f"Found {len(cogs['invalid_files'])} invalid extension(s) in the 'cogs' directory. If you believe this is an error please verify each .py file and make sure it is set up as a cog properly, Otherwise you can ignore this message.")
             else:
                 self.terminal.Log().INFO(f"No extensions where found. Skipping...")
-                
+
     async def GetTicketTranscript(ticketid: str):
         transcriptDirectory = (f"transcripts\\")
         if os.path.exists(f"{transcriptDirectory}{ticketid}.md"):

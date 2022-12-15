@@ -14,7 +14,7 @@
 
 import discord
 
-from hangoutcore.util import Config, Local, Terminal
+from hangoutcore.util import Audio, Config, Local, Terminal
 from aiohttp import ClientSession
 from datetime import datetime
 from discord.ext import commands
@@ -62,11 +62,14 @@ class HangoutCoreBot(commands.Bot):  # Sub class bot so we can have more customi
         self.terminal.Log().INFO(f"Looking for bot modules in '/{self.config.COG_DIRECTORY_PATH}'...")
         await self.local.load_extensions(self, self.debug_mode)  # Scan cog directory and enable cogs.
 
-        # Bot().audio().verify_opus()  # Looks for opus and loads it if found.
+        Audio().verify_opus()  # Looks for opus and loads it if found.
 
-        # if not self.BotSynced:
-        #     await self.tree.sync()
-        #     self.BotSynced = True
+        if self.debug_mode or self.test_Guild_ID is not None:
+            self.tree.sync(guild=self.test_Guild_ID)
+        else:
+            if not self.BotSynced:
+                await self.tree.sync()
+                self.BotSynced = True
         
 
         self.terminal.Log().INFO(f"Logged in as {self.user} (ID: {self.user.id}).")
