@@ -141,3 +141,4 @@ dmypy.json
 **transcripts/
 **cogs/
 **dist/
+**__pycache__/
