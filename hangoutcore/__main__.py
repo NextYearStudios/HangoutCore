@@ -268,9 +268,21 @@ async def main():
                 sys.exit(1)
             else:
                 botToken = configTokens[argv_token]
-                
-    terminal.Log().INFO(botToken)
-    # obToken = obfuscateString(exampleToken, 4, '*')
+    
+    # Launch Bot
+    async with ClientSession() as our_client:
+        activity = config.getBotActivity()
+        intents = config.getBotIntents()
+        prefixes = config.getBotPrefix()
+        async with HangoutCoreBot(
+            commands.when_mentioned,
+            intents = intents,
+            web_client = our_client,
+            debug_mode = argv_debug,
+            config = config,
+            terminal = terminal
+        ) as HangoutCore:
+            await HangoutCore.start(botToken)
 
 def init():
     try:
