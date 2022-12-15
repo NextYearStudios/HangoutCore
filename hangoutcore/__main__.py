@@ -138,7 +138,7 @@ async def main():
         if '-t' in argv:
             argvPos = argv.index('-t')
             try:
-                argv_token = argv[argvPos + 1]
+                argv_token = int(argv[argvPos + 1])
             except IndexError:
                 invalidArg('-t')
                 return
@@ -267,7 +267,11 @@ async def main():
                 terminal.Log().CRITICAL(f"You attempted to load token #{argv_token}. You only have {lenTokens} Tokens listed in your config file.")
                 sys.exit(1)
             else:
-                botToken = configTokens[argv_token]
+                try:
+                    botToken = configTokens[argv_token]
+                except IndexError:
+                    terminal.Log().ERROR(f"You attempted to specify a token that's out of range. Your config only has {len(config.CONFIG['bot']['token'])} token(s). Please check your input and try again.")
+                    sys.exit(1)
     
     # Launch Bot
     async with ClientSession() as our_client:
@@ -291,7 +295,9 @@ def init():
         Terminal().Log().CRITICAL(f"Please refrain from using CTRL+C to shutdown bot.")
         # Here we'd make sure database exited/saved gracefully as well as any other essential process that may suffer from stopping abruptly.
         Terminal().EXIT(f"Shutting Down...")
-        sys.exit(0)
+    except SystemExit:
+        Terminal().EXIT(f"Exiting...")
+        pass
     # except Exception as e:
     #     Terminal().Log().ERROR(e)
     #     Terminal().EXIT(f"Shutting Down...")
