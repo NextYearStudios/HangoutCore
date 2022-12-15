@@ -18,23 +18,25 @@ import logging
 import logging.handlers
 import sys
 
+from aiohttp import ClientSession
 from datetime import datetime
 from hangoutcore.util import *
 from hangoutcore.bot import HangoutCoreBot
+from questionnaire import Questionnaire
 
 async def main():
     init_time = '{0:%d%b%Y %Hh:%Mm}'.format(datetime.now())
-    argv = list(set(sys.argv[1:])) # Setting a list to a set and then back to a list will remove any duplicates as a precaution.
-    debug = False
-    config = None
-    token = -1
-    silent = False
-    freshInstall = False
+    argv = sys.argv[1:] 
+    argv_debug = False
+    argv_configName = None
+    argv_token = -1
+    argv_silent = False
+    argv_freshInstall = False
 
-    loggerDiscord = logging.getLogger("discord")
-    loggerHangoutCore = logging.getLogger("HangoutCore")
+    config = Config()
+    terminal = Terminal()
 
-    if '-h' in sys.argv or '--help' in argv:
+    if '-h' in argv or '--help' in argv:
         print(f"""
 
     ██╗░░██╗░█████╗░███╗░░██╗░██████╗░░█████╗░██╗░░░██╗████████╗░█████╗░░█████╗░██████╗░███████╗
@@ -53,69 +55,64 @@ async def main():
         """) # Formatting looks ugly I know. Looks pretty good in the terminal though...
         sys.exit(0)
 
+    terminal.Log().INFO(argv)
     if len(argv) >= 1:
         # Need to create a pre-check to make sure the variables exist after the arguments.
         # otherwise we run into the issue of causing errors down the road that we could easily avoid.
         if '-d' in argv:
             argvPos = argv.index('-d')
-            debug = argv[argvPos + 1]
+            argv_debug = argv[argvPos + 1]
             argv.pop(argvPos + 1)
             argv.pop(argvPos)
         elif '--debug' in argv:
             argvPos = argv.index('--debug')
-            debug = argv[argvPos + 1]
+            argv_debug = argv[argvPos + 1]
             argv.pop(argvPos + 1)
             argv.pop(argvPos)
 
         if '-s' in argv:
             argvPos = argv.index('-s')
-            silent = argv[argvPos + 1]
+            argv_silent = argv[argvPos + 1]
             argv.pop(arvPos + 1)
             argv.pop(argv)
         elif '--silent' in argv:
             argvPos = argv.index('--silent')
-            silent = argv[argvPos + 1]
+            argv_silent = argv[argvPos + 1]
             argv.pop(argvPos + 1)
             argv.pop(argv)
 
         if '-c' in argv:
             argvPos = argv.index('-c')
-            config = argv[argvPos + 1]
+            argv_configName = argv[argvPos + 1]
             argv.pop(argvPos + 1)
             argv.pop(argvPos)
         elif '--config' in argv:
             argvPos = argv.index('--config')
-            config = argv[argvPos + 1]
+            argv_configName = argv[argvPos + 1]
             argv.pop(argvPos + 1)
             argv.pop(argvPos)
 
         if '-t' in argv:
             argvPos = argv.index('-t')
-            token = argv[argvPos + 1]
+            argv_token = int(argv[argvPos + 1])
             argv.pop(argvPos + 1)
             argv.pop(argvPos)
         elif '--token' in argv:
             argvPos = argv.index('--token')
-            token = argv[argvPos + 1]
+            argv_token = int(argv[argvPos + 1])
             argv.pop(argvPos + 1)
             argv.pop(argvPos)
 
         if '-n' in argv:
             argvPos = argv.index('-n')
-            freshInstall = True
+            argv_freshInstall = True
             argv.pop(argvPos)
         
         # Final check to make sure there's no invalid arguments that we missed.
         if len(argv) > 0:
-            Terminal().Log().CRITICAL(f"There appears to be invalid arguments in your entry. Please Double check your spelling and try again.\nYour input: {' '.join(sys.argv)}\nInvalid argument(s): {' '.join(argv)}")
+            terminal.Log().CRITICAL(f"There appears to be invalid arguments in your entry. Please Double check your spelling and try again.\nYour input: {' '.join(sys.argv)}\nInvalid argument(s): {' '.join(argv)}")
             sys.exit(0)
         
-    # print(debug)
-    # print(config)
-    # print(token)
-
-    exampleToken = "1234567890.1234567890.1234567890"
-
     # This function will be moved to util
     def obfuscateString(inputString:str, amount:int=4, obfuscateChar:str='#'):
         """
@@ -129,25 +126,35 @@ async def main():
                     outputString = outputString + inputString[i]
                 else:
                     outputString = outputString + obfuscateChar
-            elif i == len(inputString) - amount:
-                outputString = outputString + "-" + inputString[i]
+            # elif i == len(inputString) - amount:
+            #     outputString = outputString + "-" + inputString[i]
             else:
                 outputString = outputString + inputString[i]
         return outputString
 
-    obToken = obfuscateString(exampleToken, 4, '*')
-
-    config = Config()
-    terminal = Terminal()
     
-    if freshInstall:
+
+    # This may seem redundant but this allows us to share our instance of the Terminal class across HangoutCore. 
+    # Any Modifications we make to our instance will be immediately available to the rest of HangoutCore
+    config.setConfigTerminal(terminal) 
+    
+    if argv_freshInstall:
         config.setup(manual=True)
     elif not config.appConfigExists():
         config.setup()
 
-    config.init() # Load our hangoutcore.properties file and setup config variables.
-    config.load() # Load our bot config here
+    if config.init(): # if hangoutcore.properties exists, load it and set our variables
+        config.load(argv_configName) # Load our bot config based off these variables ^
+    else:
+        # We should almost never get to this. BUT if we do then we need to make sure the user knows about it to avoid looking elsewhere.
+        terminal.Log().Critical(f"hangoutcore.properties could not be found. This means our setup failed, or we do not have permissions to create/access it. Please restart HangoutCore and try again.")
     
+    # Setup Logging for HangoutCore and Discord.py
+
+    loggerDiscord = logging.getLogger("discord")
+    loggerHangoutCore = logging.getLogger("HangoutCore")
+    loggerRoot = logging.getLogger("root")
+
     # We assume that the bot successfully loaded our config. otherwise this wont work the way we intend
     logName = str(fr"{config.getLogDirectoryPath()}/log_{init_time.replace(' ', '_')}.log").replace(':', '') # We clear any spaces in our log name to avoid incompatabilities
     logEncoding = "utf-8"
@@ -157,19 +164,13 @@ async def main():
         filename=logName,
         encoding=logEncoding
     )
-    # Root
-    # logging.basicConfig(
-    #     filename=logName,
-    #     encoding=str(logEncoding),
-    #     level=20,
-    #     format="[%(asctime)s][%(name)s][%(levelname)s] %(message)s",
-    #     datefmt=date_format
-    # )
-    if debug:    
-        loggerDiscord.setLevel(10) # Logginglevel set to INFO | 0 : NOTSET, 10 : DEBUG, 20 : INFO, 30 : WARNING, 40 : ERROR, 50 : CRITICAL
+
+    # Logging Level INFO | 0 : NOTSET, 10 : DEBUG, 20 : INFO, 30 : WARNING, 40 : ERROR, 50 : CRITICAL
+    if argv_debug:
+        loggerDiscord.setLevel(10)
         loggerHangoutCore.setLevel(10)
     else:
-        loggerDiscord.setLevel(20) # Logginglevel set to INFO | 0 : NOTSET, 10 : DEBUG, 20 : INFO, 30 : WARNING, 40 : ERROR, 50 : CRITICAL
+        loggerDiscord.setLevel(20)
         loggerHangoutCore.setLevel(20)
 
     formatter = logging.Formatter("""[%(asctime)s][%(name)s][%(levelname)s] %(message)s""", date_format)
@@ -178,14 +179,47 @@ async def main():
     loggerDiscord.addHandler(handler)
     loggerHangoutCore.addHandler(handler)
 
+    # Initiate Terminal class with some necessary variables
+
     terminal.setConfig(config.getConfig())
     terminal.setInitTime(init_time)
-    terminal.setSilent(silent)
+    terminal.setSilent(argv_silent)
 
 
-    terminal.initiate(debug=debug, bot_setup=False)
-    terminal.Log().Test()
-    
+    terminal.initiate(debug=argv_debug, bot_setup=False)
+
+    # Begin Prepping to launch Bot
+
+    configTokens = config.CONFIG['bot']['token']
+    botToken = None
+
+    if type(configTokens) == str:
+        botToken = configTokens
+    elif type(configTokens) == list:
+        if argv_token == -1:
+            if argv_silent or len(configTokens) == 1:
+                botToken = configTokens[0] # Default to the first token
+            else:
+                filteredTokens = []
+                for token in configTokens:
+                    filteredTokens.append(obfuscateString(token, 6, '*'))
+                q = Questionnaire()
+                q.one("token", *filteredTokens,
+                prompt=f"Current Config Loaded: {config.getConfigDirectoryPath}/{config.getConfigPath}\nWhich of the following tokens would you like to use?")
+                q.run()
+                tokenChoice = filteredTokens.index(q.answers.get('token'))
+                botToken = configTokens[tokenChoice]
+        else:
+            lenTokens = len(configTokens)
+            if argv_token > lenTokens:
+                terminal.Log().CRITICAL(f"You attempted to load token #{argv_token}. You only have {lenTokens} Tokens listed in your config file.")
+                sys.exit(1)
+            else:
+                botToken = configTokens[argv_token]
+                
+    terminal.Log().INFO(botToken)
+    # obToken = obfuscateString(exampleToken, 4, '*')
+
 def init():
     try:
         asyncio.run(main())
