@@ -14,7 +14,7 @@
 
 import discord
 
-from hangoutcore.util import Config, Terminal
+from hangoutcore.util import Config, Local, Terminal
 from aiohttp import ClientSession
 from datetime import datetime
 from discord.ext import commands
@@ -25,10 +25,10 @@ class HangoutCoreBot(commands.Bot):  # Sub class bot so we can have more customi
             self,
             *args,
             test_Guild_ID: Optional[int] = None,
-            web_client: ClientSession,
+            web_client,
             debug_mode: Optional[bool] = False,
-            config: Config,
-            terminal: Terminal,
+            config,
+            terminal,
             **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -46,6 +46,9 @@ class HangoutCoreBot(commands.Bot):  # Sub class bot so we can have more customi
         self.BotSynced = False
         # BotSynced = False
         # ViewsAdded = False
+        self.local = Local()
+        self.local.setConfig(self.config)
+        self.local.setTerminal(self.terminal)
 
     async def setup_hook(self) -> None:
 
@@ -56,14 +59,14 @@ class HangoutCoreBot(commands.Bot):  # Sub class bot so we can have more customi
         for cog in self.cogs.keys():
             self.terminal.Log().INFO(f"Found {cog}")
 
-        self.terminal.Log().INFO(f"Looking for bot modules in '/{config.COG_DIRECTORY_PATH}'...")
-        await local().load_extensions(self, self.debug_mode)  # Scan cog directory and enable cogs.
+        self.terminal.Log().INFO(f"Looking for bot modules in '/{self.config.COG_DIRECTORY_PATH}'...")
+        await self.local.load_extensions(self, self.debug_mode)  # Scan cog directory and enable cogs.
 
-        Bot().audio().verify_opus()  # Looks for opus and loads it if found.
+        # Bot().audio().verify_opus()  # Looks for opus and loads it if found.
 
-        if not self.BotSynced:
-            await self.tree.sync()
-            self.BotSynced = True
+        # if not self.BotSynced:
+        #     await self.tree.sync()
+        #     self.BotSynced = True
         
 
         self.terminal.Log().INFO(f"Logged in as {self.user} (ID: {self.user.id}).")

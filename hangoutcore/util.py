@@ -249,7 +249,7 @@ class Config():
         
     # The following functions are not really necessary
     # However they do reduce clutter in other scripts so eh, We'll leave them for now.
-    def getActivity(self) -> discord.Activity():
+    def getBotActivity(self) -> discord.Activity():
         """
         Retrieves Bot Activity specified in our loaded bot config. Returns activity type 'listening' if none is found.
         """
@@ -290,7 +290,7 @@ class Config():
                 name= "!help"
             )
 
-    def getIntents(self):
+    def getBotIntents(self):
         """Retrieves specified bot intents from config file. If the config file is not able to be loaded this sets intents to false just in case."""
         if self.CONFIG is not None:
             self.terminal.Log().DEBUG(f"Loading Bot Intents from config. Intents: {self.CONFIG['bot']['intents']}")
@@ -311,7 +311,7 @@ class Config():
             intents.guilds = False
             return intents
 
-    def getPrefix(self): # Since we're moving to slash commands this will eventually get removed.
+    def getBotPrefix(self): # Since we're moving to slash commands this will eventually get removed.
         if self.CONFIG is not None:
             if self.CONFIG['bot']['prefixes'] is not None:
                 if type(self.CONFIG['bot']['prefixes']) == str:
@@ -580,54 +580,68 @@ class database():
 
 class Local():
     def __init__(self):
-        pass
+        self.config = None
+        self.terminal = None
+
+    def setConfig(self, config):
+        if config is not None:
+            self.config = config
+
+    def setTerminal(self, terminal):
+        if terminal is not None:
+            self.terminal = terminal
 
     def GetCogs(self):
-        valid_files = []
-        disabled_files = []
-        invalid_files = []
-        for file in os.listdir(Config().COG_DIRECTORY_PATH):
-            if file.endswith('.py'):
-                valid_files.append(file)
-            elif file.endswith('.disabled'):
-                disabled_files.append(file)
-            else:
-                if file == "__pycache__" or "__init__":
-                    pass
+        if self.config is not None:
+            valid_files = []
+            disabled_files = []
+            invalid_files = []
+            for file in os.listdir(self.config.COG_DIRECTORY_PATH):
+                if file.endswith('.py'):
+                    valid_files.append(file)
+                elif file.endswith('.disabled'):
+                    disabled_files.append(file)
                 else:
-                    invalid_files.append(file)
-        package = {
-            "valid_files": valid_files,
-            "invalid_files": invalid_files,
-            "disabled_files": disabled_files
-        }
-        return package
+                    if file == "__pycache__" or "__init__":
+                        pass
+                    else:
+                        invalid_files.append(file)
+            package = {
+                "valid_files": valid_files,
+                "invalid_files": invalid_files,
+                "disabled_files": disabled_files
+            }
+            return package
+        else:
+            self.terminal.Log().CRITICAL(f"Failed to fetch cogs, Config is not set.")
+            return None
 
     async def load_extensions(self, discordBot: discord.Client, debug_mode: bool = False):
         """
         Scans for files in the cog directory specified in the Config(). Loads the file if it ends in '.py', and registers files ending in '.disabled' as disabled cogs.
         """
-        cogs = local().GetCogs()
+        cogs = self.GetCogs()
 
-        for cog in cogs["valid_files"]:
-            Terminal().Log().INFO(f" └ Found {cog}")
-            try:
-                await discordBot.load_extension(f'{Config().COG_DIRECTORY_PATH}.{cog[:-3]}')
-            except Exception as e:
-                Terminal().errorprocessing.CogLoadError(cog, e, debug_mode)
-            else:
-                Terminal().Log().INFO(f"  └ successfully loaded {cog}.")
-        for cog in cogs["disabled_files"]:
-            Terminal().Log().INFO(f" └ Found Disabled file {cog}, Skipping.")
-        for cog in cogs["invalid_files"]:
-            if cog == "__pycache__" or "__init__":
-                pass
-            else:
-                Terminal().Log().INFO(f" └ Found invalid file {cog}, Skipping.")
-        Terminal().Log().INFO(f"Successfully loaded {len(cogs['valid_files'])} extension(s).")
-        if len(cogs["invalid_files"]) > 0:
-            Terminal().Log().WARNING(
-                f"Found {len(cogs['invalid_files'])} invalid extension(s) in the 'cogs' directory. If you believe this is an error please verify each .py file and make sure it is set up as a cog properly, Otherwise you can ignore this message.")
+        if cogs is not None:
+            for cog in cogs["valid_files"]:
+                self.terminal.Log().INFO(f" └ Found {cog}")
+                try:
+                    await discordBot.load_extension(f'{Config().COG_DIRECTORY_PATH}.{cog[:-3]}')
+                except Exception as e:
+                    self.terminal.errorprocessing.CogLoadError(cog, e, debug_mode)
+                else:
+                    self.terminal.Log().INFO(f"  └ successfully loaded {cog}.")
+            for cog in cogs["disabled_files"]:
+                self.terminal.Log().INFO(f" └ Found Disabled file {cog}, Skipping.")
+            for cog in cogs["invalid_files"]:
+                if cog == "__pycache__" or "__init__":
+                    pass
+                else:
+                    self.terminal.Log().INFO(f" └ Found invalid file {cog}, Skipping.")
+            self.terminal.Log().INFO(f"Successfully loaded {len(cogs['valid_files'])} extension(s).")
+            if len(cogs["invalid_files"]) > 0:
+                self.terminal.Log().WARNING(
+                    f"Found {len(cogs['invalid_files'])} invalid extension(s) in the 'cogs' directory. If you believe this is an error please verify each .py file and make sure it is set up as a cog properly, Otherwise you can ignore this message.")
 
     async def GetTicketTranscript(ticketid: str):
         transcriptDirectory = (f"transcripts\\")
