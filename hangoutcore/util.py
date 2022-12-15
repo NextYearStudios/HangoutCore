@@ -645,6 +645,7 @@ class Local():
                         f"Found {len(cogs['invalid_files'])} invalid extension(s) in the 'cogs' directory. If you believe this is an error please verify each .py file and make sure it is set up as a cog properly, Otherwise you can ignore this message.")
             else:
                 self.terminal.Log().INFO(f"No extensions where found. Skipping...")
+                
     async def GetTicketTranscript(ticketid: str):
         transcriptDirectory = (f"transcripts\\")
         if os.path.exists(f"{transcriptDirectory}{ticketid}.md"):
