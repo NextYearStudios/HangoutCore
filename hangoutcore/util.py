@@ -46,32 +46,43 @@ init(strip=not sys.stdout.isatty()) # Strip color if stdout is redirected.
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 class Audio():
+    def __init__(self):
+        self.config = None
+        self.terminal = None
+
+    async def setConfig(self, config = None):
+        if config is not None:
+            self.config = config
+
+    async def setTerminal(self, terminal = None):
+        if terminal is not None:
+            self.terminal = terminal
+    
     class guildstate():
         def __init__(self):
             self.now_playing = None
             self.playlist = []
             self.skip_votes = set()
             self.volume = int(Config().load()["music"]["max_volume"]) / 100
-
-    def verify_opus(self):
+    
+    async def verify_opus(self):
         """
             Looks for opus throughout the system, Attempts to load if found.
         """
-        terminal = Terminal()
         opuslib = ctypes.util.find_library('opus')
         if opuslib is not None:
             try:
-                terminal.Log().INFO(f"Loading Opus.")
+                await self.terminal.Log().INFO(f"Loading Opus.")
                 discord.opus.load_opus('opus')
             except Exception as e:
-                terminal.Log().ERROR(e)
+                await self.terminal.Log().ERROR(e)
             else:
                 if not discord.opus.is_loaded():
-                    terminal.Log().CRITICAL("Opus Failed To Load.")
+                    await self.terminal.Log().CRITICAL("Opus Failed To Load.")
                 else:
-                    terminal.Log().INFO("Successfully loaded opus.")
+                    await self.terminal.Log().INFO("Successfully loaded opus.")
         else:
-            terminal.Log().WARNING("Could not find Opus, You will not be able to play audio without it.")
+            await self.terminal.Log().WARNING("Could not find Opus, You will not be able to play audio without it.")
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -184,7 +195,7 @@ class Config():
         }
         self.terminal = Terminal() # Just incase we don't set, we need to have a backup
             
-    def appConfigExists(self, DesiredName: str= None):
+    async def appConfigExists(self, DesiredName: str= None):
         ConfigName = "hangoutcore.properties"
         if DesiredName is not None:
             ConfigName = DesiredName
@@ -197,7 +208,7 @@ class Config():
         else:
             return False
             
-    def botConfigExists(self, DesiredName: str= None):
+    async def botConfigExists(self, DesiredName: str= None):
         ConfigDirectory = self.CONFIG_DIRECTORY_PATH
         ConfigName = self.CONFIG_PATH
         if DesiredName is not None:
@@ -211,50 +222,50 @@ class Config():
         else:
             return False
 
-    def getConfig(self):
+    async def getConfig(self):
         return self.CONFIG
 
-    def setConfigPath(self, configPath: str):
+    async def setConfigPath(self, configPath: str):
         if configPath is not None:
             if configPath.endswith(".json"):
                 self.CONFIG_PATH = configPath
     
-    def getConfigPath(self):
+    async def getConfigPath(self):
         return self.CONFIG_PATH
 
-    def setConfigDirectoryPath(self, configDirectoryPath: str):
+    async def setConfigDirectoryPath(self, configDirectoryPath: str):
         if configDirectoryPath is not None:
             self.CONFIG_DIRECTORY_PATH = configDirectoryPath
     
-    def getConfigDirectoryPath(self):
+    async def getConfigDirectoryPath(self):
         return self.CONFIG_DIRECTORY_PATH
     
-    def setCogDirectoryPath(self, cogDirectoryPath: str):
+    async def setCogDirectoryPath(self, cogDirectoryPath: str):
         if cogDirectoryPath is not None:
             self.COG_DIRECTORY_PATH = cogDirectoryPath
     
-    def getCogDirectoryPath(self):
+    async def getCogDirectoryPath(self):
         return self.COG_DIRECTORY_PATH
     
-    def setLogDirectoryPath(self, logDirectoryPath: str):
+    async def setLogDirectoryPath(self, logDirectoryPath: str):
         if logDirectoryPath is not None:
             self.LOG_DIRECTORY_PATH = logDirectoryPath
     
-    def getLogDirectoryPath(self):
+    async def getLogDirectoryPath(self):
         return self.LOG_DIRECTORY_PATH
 
-    def setConfigTerminal(self, terminal):
+    async def setConfigTerminal(self, terminal = None):
         if terminal is not None:
             self.terminal = terminal
         
     # The following functions are not really necessary
     # However they do reduce clutter in other scripts so eh, We'll leave them for now.
-    def getBotActivity(self) -> discord.Activity():
+    async def getBotActivity(self) -> discord.Activity():
         """
         Retrieves Bot Activity specified in our loaded bot config. Returns activity type 'listening' if none is found.
         """
         if self.CONFIG is not None: # make sure our config exists in the first place
-            self.terminal.Log().DEBUG(f"Found Config Activity Type Entry: {self.CONFIG['bot']['status']['type']}")
+            await self.terminal.Log().DEBUG(f"Found Config Activity Type Entry: {self.CONFIG['bot']['status']['type']}")
             if self.CONFIG['bot']['status']['type'] == 'listening':
                 return discord.Activity(
                     type = discord.ActivityType.listening,
@@ -278,22 +289,22 @@ class Config():
                     game = self.CONFIG['bot']['status']['game']
                 )
             # Assume that we got here because the entry in our config either doesn't exists, or is simply not one of the above.
-            self.terminal.Log().ERROR(f"Config Activity Type Entry: {self.CONFIG['bot']['status']['type']} is not valid. Please check your spelling and try again.")
+            await self.terminal.Log().ERROR(f"Config Activity Type Entry: {self.CONFIG['bot']['status']['type']} is not valid. Please check your spelling and try again.")
             return discord.Activity(
                 type = discord.ActivityType.listening,
                 name= "!help"
             )
         else:
-            self.terminal.Log().DEBUG(f"Config is None. Returning Activity Type: 'listening'")
+            await self.terminal.Log().DEBUG(f"Config is None. Returning Activity Type: 'listening'")
             return discord.Activity(
                 type = discord.ActivityType.listening,
                 name= "!help"
             )
 
-    def getBotIntents(self):
+    async def getBotIntents(self):
         """Retrieves specified bot intents from config file. If the config file is not able to be loaded this sets intents to false just in case."""
         if self.CONFIG is not None:
-            self.terminal.Log().DEBUG(f"Loading Bot Intents from config. Intents: {self.CONFIG['bot']['intents']}")
+            await self.terminal.Log().DEBUG(f"Loading Bot Intents from config. Intents: {self.CONFIG['bot']['intents']}")
             intents = discord.Intents.default()  # Set Bot Intents
             intents.members         = self.CONFIG['bot']['intents']['members']
             intents.message_content = self.CONFIG['bot']['intents']['message_content']
@@ -302,7 +313,7 @@ class Config():
             intents.guilds          = self.CONFIG['bot']['intents']['guilds']
             return intents
         else:
-            self.terminal.Log().WARNING(f"Could not retrieve intents from Config(). Setting intents to false as a precaution.")
+            await self.terminal.Log().WARNING(f"Could not retrieve intents from Config(). Setting intents to false as a precaution.")
             intents = discord.Intents.default()  # Set Bot Intents
             intents.members = False
             intents.message_content = False
@@ -311,7 +322,7 @@ class Config():
             intents.guilds = False
             return intents
 
-    def getBotPrefix(self): # Since we're moving to slash commands this will eventually get removed.
+    async def getBotPrefix(self): # Since we're moving to slash commands this will eventually get removed.
         if self.CONFIG is not None:
             if self.CONFIG['bot']['prefixes'] is not None:
                 if type(self.CONFIG['bot']['prefixes']) == str:
@@ -321,10 +332,10 @@ class Config():
             else:
                 return ['!']
 
-    def init(self, appConfig: str = "hangoutcore.properties", botConfig: str = None):
-        self.terminal.Log().DEBUG(f"Attempting to locate properties file {appConfig}.")
-        if self.appConfigExists(appConfig):
-            self.terminal.Log().DEBUG(f"Found {appConfig}, Loading data.")
+    async def init(self, appConfig: str = "hangoutcore.properties", botConfig: str = None):
+        await self.terminal.Log().DEBUG(f"Attempting to locate properties file {appConfig}.")
+        if await self.appConfigExists(appConfig):
+            await self.terminal.Log().DEBUG(f"Found {appConfig}, Loading data.")
             # properties file found. Begin loading info
             with open(appConfig, "r+b") as hangoutcore_config:
                 p = Properties()
@@ -332,19 +343,19 @@ class Config():
                 if botConfig is not None:
                     if not botConfig.endswith(".json"):
                         botConfig = botConfig + ".json"
-                    self.setConfigPath(botConfig)
+                    await self.setConfigPath(botConfig)
                 else:
-                    self.setConfigPath(p["botConfig"].data)
-                self.setConfigDirectoryPath(p["botConfigDirectory"].data)
-                self.setCogDirectoryPath(p["botCogDirectory"].data)
-                self.setLogDirectoryPath(p["botLogDirectory"].data)
+                    await self.setConfigPath(p["botConfig"].data)
+                await self.setConfigDirectoryPath(p["botConfigDirectory"].data)
+                await self.setCogDirectoryPath(p["botCogDirectory"].data)
+                await self.setLogDirectoryPath(p["botLogDirectory"].data)
                 return True
         else:
             # properties file wasn't found. Assume that this is a fresh install
-            self.terminal.Log().DEBUG(f"Attempted to locate properties file {appConfig}, Nothing was found.")
+            await self.terminal.Log().DEBUG(f"Attempted to locate properties file {appConfig}, Nothing was found.")
             return False
 
-    def load(self, desiredConfig = None):
+    async def load(self, desiredConfig = None):
         """
         Attempt to load the config from path provided if none provided uses the config name provided during initiation.
         """
@@ -352,12 +363,12 @@ class Config():
         fileDirectory = self.CONFIG_DIRECTORY_PATH
 
         if desiredConfig is not None:
-            if self.botConfigExists(desiredConfig):
+            if await self.botConfigExists(desiredConfig):
                 filename = desiredConfig
             else:
-                self.terminal.Log().WARNING(f"Bot Config: {fileDirectory}/{desiredConfig} does not exists. Defaulting to {fileDirectory}{fileName}")
+                await self.terminal.Log().WARNING(f"Bot Config: {fileDirectory}/{desiredConfig} does not exists. Defaulting to {fileDirectory}{fileName}")
 
-        if self.botConfigExists(fileName):
+        if await self.botConfigExists(fileName):
             with open(f"{fileDirectory}/{fileName}") as configFile:
                 self.CONFIG = json.load(configFile)
                 if "_info" in self.CONFIG:
@@ -378,7 +389,7 @@ class Config():
                                     json.dump(new_cfg, botConfig, indent=4)
                                 self.CONFIG = new_cfg
                             
-    def setup(self, init_time: str = '{0:%d%b%Y %Hh:%Mm}'.format(datetime.now()), manual: bool = False):
+    async def setup(self, init_time: str = '{0:%d%b%Y %Hh:%Mm}'.format(datetime.now()), manual: bool = False):
         """
         This function runs through the process of setting up our bot config with the necessary details. such as bot Name, Token, Authorized Users, Etc.
         """
@@ -474,7 +485,7 @@ class Config():
             if click.confirm(
                     f"""Bot Name: {botName}\nBot Description: {botDescription}\nBot Version: ({botVersion})\nBot Token: {"*" * len(botToken)}\nBot Config Name: {botConfigName}\nBot Config Directory: /{botConfigDirectory}\nBot Log Directory: /{botLogDirectory}\nBot Cog Directory: /{botCogDirectory}\nAre the values above accurate?""",
                     default=True):
-                self.terminal.Log().INFO("Creating a properties file to store hangoutcore variables.")
+                await self.terminal.Log().INFO("Creating a properties file to store hangoutcore variables.")
                 p = Properties()
                 p["botConfig"] = botConfigName
                 p["botConfigDirectory"] = botConfigDirectory
@@ -490,20 +501,20 @@ class Config():
                 self.LOG_DIRECTORY_PATH = botLogDirectory
 
                 if not os.path.exists(botConfigDirectory):
-                    self.terminal.Log().INFO(f"Creating Config Directory: /{botConfigDirectory}")
+                    await self.terminal.Log().INFO(f"Creating Config Directory: /{botConfigDirectory}")
                     os.mkdir(botConfigDirectory)
                 else:
-                    self.terminal.Log().INFO(f"Config directory already exists, skipping...")
+                    await self.terminal.Log().INFO(f"Config directory already exists, skipping...")
                 if not os.path.exists(botCogDirectory):
-                    self.terminal.Log().INFO(f"Creating Cog Directory: /{botCogDirectory}")
+                    await self.terminal.Log().INFO(f"Creating Cog Directory: /{botCogDirectory}")
                     os.mkdir(botCogDirectory)
                 else:
-                    self.terminal.Log().INFO(f"Cog directory already exists, skipping...")
+                    await self.terminal.Log().INFO(f"Cog directory already exists, skipping...")
                 if not os.path.exists(botLogDirectory):
-                    self.terminal.Log().INFO(f"Creating Log Directory: /{botLogDirectory}")
+                    await self.terminal.Log().INFO(f"Creating Log Directory: /{botLogDirectory}")
                     os.mkdir(botLogDirectory)
                 else:
-                    self.terminal.Log().INFO(f"Log directory already exists, skipping...")
+                    await self.terminal.Log().INFO(f"Log directory already exists, skipping...")
 
                 with open(f"{botConfigDirectory}/{botConfigName}", 'w') as file:  # Create initial config file.
                     json.dump(self.EXAMPLE_CONFIG, file, indent=4)
@@ -522,7 +533,7 @@ class Config():
             Terminal().Log().ERROR("HangoutCore Setup Canceled.")
             Terminal().EXIT("Exiting...")
 
-    def write(self, value: str = None, key1: str = None, key2=None, key3=None, key4=None):
+    async def write(self, value: str = None, key1: str = None, key2=None, key3=None, key4=None):
         """
         Attempt to write to the config from path provided in hangoutcore.properties,
         if one does not exist we warn the terminal. We do not create one in the possibility that
@@ -554,11 +565,22 @@ class Config():
 #   › TODO: Add support for SQLITE, POSTGRES, MYSQL and more. to make it easier for first time programmers.
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-class database():
+class Database():
     def __init__(self):
-        pass
+        self.loop = asyncio.get_event_loop()
+        self.config = None
+        self.terminal = None
 
-    async def RegisterGuild(loop, guild: discord.Guild):
+    async def setConfig(self, config = None):
+        if config is not None:
+            self.config = config
+
+    async def setTerminal(self, terminal = None):
+        if terminal is not None:
+            self.terminal = terminal
+
+    # Mysql Section
+    async def RegisterGuild(self, guild: discord.Guild):
         cfg = Config().load()
         if cfg is not None:
             pool = await aiomysql.create_pool(
@@ -583,11 +605,11 @@ class Local():
         self.config = None
         self.terminal = None
 
-    def setConfig(self, config):
+    async def setConfig(self, config):
         if config is not None:
             self.config = config
 
-    def setTerminal(self, terminal):
+    async def setTerminal(self, terminal):
         if terminal is not None:
             self.terminal = terminal
 
@@ -613,7 +635,7 @@ class Local():
             }
             return package
         else:
-            self.terminal.Log().CRITICAL(f"Failed to fetch cogs, Config is not set.")
+            await self.terminal.Log().CRITICAL(f"Failed to fetch cogs, Config is not set.")
             return None
 
     async def load_extensions(self, discordBot: discord.Client, debug_mode: bool = False):
@@ -625,26 +647,26 @@ class Local():
         if cogs is not None:
             if len(cogs["valid_files"]) > 0:
                 for cog in cogs["valid_files"]:
-                    self.terminal.Log().INFO(f" └ Found {cog}")
+                    await self.terminal.Log().INFO(f" └ Found {cog}")
                     try:
                         await discordBot.load_extension(f'{Config().COG_DIRECTORY_PATH}.{cog[:-3]}')
                     except Exception as e:
-                        self.terminal.errorprocessing.CogLoadError(cog, e, debug_mode)
+                        await self.terminal.errorprocessing.CogLoadError(cog, e, debug_mode)
                     else:
-                        self.terminal.Log().INFO(f"  └ successfully loaded {cog}.")
+                        await self.terminal.Log().INFO(f"  └ successfully loaded {cog}.")
                 for cog in cogs["disabled_files"]:
-                    self.terminal.Log().INFO(f" └ Found Disabled file {cog}, Skipping.")
+                    await self.terminal.Log().INFO(f" └ Found Disabled file {cog}, Skipping.")
                 for cog in cogs["invalid_files"]:
                     if cog == "__pycache__" or "__init__":
                         pass
                     else:
-                        self.terminal.Log().INFO(f" └ Found invalid file {cog}, Skipping.")
-                self.terminal.Log().INFO(f"Successfully loaded {len(cogs['valid_files'])} extension(s).")
+                        await self.terminal.Log().INFO(f" └ Found invalid file {cog}, Skipping.")
+                await self.terminal.Log().INFO(f"Successfully loaded {len(cogs['valid_files'])} extension(s).")
                 if len(cogs["invalid_files"]) > 0:
-                    self.terminal.Log().WARNING(
+                    await self.terminal.Log().WARNING(
                         f"Found {len(cogs['invalid_files'])} invalid extension(s) in the 'cogs' directory. If you believe this is an error please verify each .py file and make sure it is set up as a cog properly, Otherwise you can ignore this message.")
             else:
-                self.terminal.Log().INFO(f"No extensions where found. Skipping...")
+                await self.terminal.Log().INFO(f"No extensions where found. Skipping...")
 
     async def GetTicketTranscript(ticketid: str):
         transcriptDirectory = (f"transcripts\\")
@@ -728,114 +750,133 @@ class Terminal():
         self.CONFIG = None
         self.SILENT = False
 
-    def setConfig(self, config=None):
+    async def setConfig(self, config=None):
         if config is not None:
             self.CONFIG = config
     
-    def setInitTime(self, time=None):
+    async def setInitTime(self, time=None):
         if time is not None:
             self.INIT_TIME = time
 
-    def setSilent(self, silentMode: bool = False):
+    async def setSilent(self, silentMode: bool = False):
         self.SILENT = silentMode
 
-    def print_center(self, s: str):
+    async def print_center(self, s: str):
         """Print on the center of the terminal. Used primarily for decorative purposes."""
         print(s.center(shutil.get_terminal_size().columns))
 
-    def print_hr(self):
+    async def print_hr(self):
         """Print a horizontal line across the terminal. Used primarily for decorative purposes."""
         print('━'.center(shutil.get_terminal_size().columns, '━'))
 
-    def clear(self):
+    async def clear(self):
         """Clears the terminal."""
         if name == 'nt':
             _ = system('cls')
         else:
             _ = system('clear')
 
-    def initiate(self, debug: bool = False, bot_setup: bool = False):# 
+    async def initiate(self, debug: bool = False, bot_setup: bool = False):# 
         """
         Clear's and prepares terminal for bot output.
         """
         
         cfg = self.CONFIG
         start_time = self.INIT_TIME
-        self.clear()
+        await self.clear()
         # print header
         if debug:
             print(Style.BRIGHT + Back.RED, end="\r")
         else:
             print(Style.NORMAL + Fore.BLACK + Back.WHITE, end="\r")
-        self.print_center(" ") # Empty String for spacing
-        self.print_center("██╗░░██╗░█████╗░███╗░░██╗░██████╗░░█████╗░██╗░░░██╗████████╗░█████╗░░█████╗░██████╗░███████╗")
-        self.print_center("██║░░██║██╔══██╗████╗░██║██╔════╝░██╔══██╗██║░░░██║╚══██╔══╝██╔══██╗██╔══██╗██╔══██╗██╔════╝")
-        self.print_center("███████║███████║██╔██╗██║██║░░██╗░██║░░██║██║░░░██║░░░██║░░░██║░░╚═╝██║░░██║██████╔╝█████╗░░")
-        self.print_center("██╔══██║██╔══██║██║╚████║██║░░╚██╗██║░░██║██║░░░██║░░░██║░░░██║░░██╗██║░░██║██╔══██╗██╔══╝░░")
-        self.print_center("██║░░██║██║░░██║██║░╚███║╚██████╔╝╚█████╔╝╚██████╔╝░░░██║░░░╚█████╔╝╚█████╔╝██║░░██║███████╗")
-        self.print_center("╚═╝░░╚═╝╚═╝░░╚═╝╚═╝░░╚══╝░╚═════╝░░╚════╝░░╚═════╝░░░░╚═╝░░░░╚════╝░░╚════╝░╚═╝░░╚═╝╚══════╝")
-        self.print_center("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+        await self.print_center(" ") # Empty String for spacing
+        await self.print_center("██╗░░██╗░█████╗░███╗░░██╗░██████╗░░█████╗░██╗░░░██╗████████╗░█████╗░░█████╗░██████╗░███████╗")
+        await self.print_center("██║░░██║██╔══██╗████╗░██║██╔════╝░██╔══██╗██║░░░██║╚══██╔══╝██╔══██╗██╔══██╗██╔══██╗██╔════╝")
+        await self.print_center("███████║███████║██╔██╗██║██║░░██╗░██║░░██║██║░░░██║░░░██║░░░██║░░╚═╝██║░░██║██████╔╝█████╗░░")
+        await self.print_center("██╔══██║██╔══██║██║╚████║██║░░╚██╗██║░░██║██║░░░██║░░░██║░░░██║░░██╗██║░░██║██╔══██╗██╔══╝░░")
+        await self.print_center("██║░░██║██║░░██║██║░╚███║╚██████╔╝╚█████╔╝╚██████╔╝░░░██║░░░╚█████╔╝╚█████╔╝██║░░██║███████╗")
+        await self.print_center("╚═╝░░╚═╝╚═╝░░╚═╝╚═╝░░╚══╝░╚═════╝░░╚════╝░░╚═════╝░░░░╚═╝░░░░╚════╝░░╚════╝░╚═╝░░╚═╝╚══════╝")
+        await self.print_center("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
         if bot_setup:
-            self.print_center("Bot Setup\n")
+            await self.print_center("Bot Setup\n")
         else:
             if cfg is None:
-                self.print_center("// Bot Name Could Not Be Loaded \\")
-                self.print_center("// Bot Version Could Not Be Loaded \\")
+                await self.print_center("// Bot Name Could Not Be Loaded \\")
+                await self.print_center("// Bot Version Could Not Be Loaded \\")
             else:
-                self.print_center(str(cfg["bot"]["name"]))
-                self.print_center(str(cfg["bot"]["version"]))
+                await self.print_center(str(cfg["bot"]["name"]))
+                await self.print_center(str(cfg["bot"]["version"]))
 
         if start_time is None:
-            self.print_center("// Time Argument Not Provided. \\")
+            await self.print_center("// Time Argument Not Provided. \\")
         else:
-            self.print_center(str(start_time))
-            self.print_center(" ") # if we only us /n in the above line for this space then it messes with formatting. I know, dumb.
+            await self.print_center(str(start_time))
+            await self.print_center(" ") # if we only us /n in the above line for this space then it messes with formatting. I know, dumb.
         
         if debug:
-            self.print_center(f'// Debug Mode Enabled \\\ ')
-            self.print_center('SYS Version ' + str(sys.version))
-            self.print_center('API Version ' + str(sys.api_version))
-            self.print_center('Discord Version ' + str(discord.__version__))
+            await self.print_center(f'// Debug Mode Enabled \\\ ')
+            await self.print_center('SYS Version ' + str(sys.version))
+            await self.print_center('API Version ' + str(sys.api_version))
+            await self.print_center('Discord Version ' + str(discord.__version__))
 
         # prep for rest
         print(Style.RESET_ALL + Back.RESET, end="\r")
-        self.print_hr()
+        await self.print_hr()
 
     class Log():
 
         def __init__(self):
             self.logger = logging.getLogger("HangoutCore")
 
-        def setLogger(self, logger):
+        async def setLogger(self, logger):
             self.logger = logger
 
-        def DEBUG(self, log: str):
-            if self.logger.level == 10:
-                print(f"[{Fore.BLUE}DEBUG{Fore.RESET}] {log}") # Only print if we need to
-            self.logger.debug(log)
+        async def DEBUG(self, log: str = None):
+            if log is not None:
+                if self.logger.level == 10:
+                    print(f"[{Fore.BLUE}DEBUG{Fore.RESET}] {log}") # Only print if we need to
+                self.logger.debug(log)
 
-        def INFO(self, log: str):
-            print(f"[{Fore.GREEN}INFO{Fore.RESET}] {log}")
-            self.logger.info(log)
+        async def INFO(self, log: str = None):
+            if log is not None:
+                print(f"[{Fore.GREEN}INFO{Fore.RESET}] {log}")
+                self.logger.info(log)
 
-        def WARNING(self, log: str):
-            print(f"[{Fore.YELLOW}WARNING{Fore.RESET}] {log}")
-            self.logger.warning(log)
+        async def WARNING(self, log: str = None):
+            if log is not None:
+                print(f"[{Fore.YELLOW}WARNING{Fore.RESET}] {log}")
+                self.logger.warning(log)
 
-        def ERROR(self, log: str):
-            print(f"[{Fore.RED}ERROR{Fore.RESET}] {log}")
-            self.logger.error(log)
+        async def ERROR(self, log: str = None):
+            if log is not None:
+                print(f"[{Fore.RED}ERROR{Fore.RESET}] {log}")
+                self.logger.error(log)
 
-        def CRITICAL(self, log: str):
-            print(f"{Style.BRIGHT}{Back.RED}[CRITICAL] {log}{Style.RESET_ALL}{Back.RESET}")
-            self.logger.critical(log)
+        async def CRITICAL(self, log: str = None):
+            if log is not None:
+                print(f"{Style.BRIGHT}{Back.RED}[CRITICAL] {log}{Style.RESET_ALL}{Back.RESET}")
+                self.logger.critical(log)
+    
+    async def obfuscateString(inputString:str, amount:int=4, obfuscateChar:str='#'):
+        """
+        Used for allowing our user to recognize a string/token while keeping the rest of it hidden from prying eyes such as a twitch stream, a screen recording or any other public environment.
+        """
 
-        def Test(self):
-            print(f"Silent Mode: {Terminal().SILENT}")
-            self.logger.info(f"SilentMode: {Terminal().SILENT}")
+        outputString = ""
+        for i in range(len(inputString)):
+            if i < len(inputString) - amount:
+                if inputString[i] == '.':
+                    outputString = outputString + inputString[i]
+                else:
+                    outputString = outputString + obfuscateChar
+            # elif i == len(inputString) - amount:
+            #     outputString = outputString + "-" + inputString[i]
+            else:
+                outputString = outputString + inputString[i]
+        return outputString
 
-    def EXIT(self, log: str):
+    async def EXIT(self, log: str):
         """Closes script with preset formatting for output message."""
         exit(f"{Style.BRIGHT}{Back.RED}[SYSTEM]{Back.RESET}{Fore.RED} {log}{Fore.RESET}{Style.RESET_ALL}")
 
