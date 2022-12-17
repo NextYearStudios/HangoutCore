@@ -12,6 +12,7 @@
     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """
 import asyncio
+import aiomysql
 import click
 import discord
 import logging
@@ -262,15 +263,24 @@ async def main():
                     sys.exit(1)
     
     # Launch Bot
+    
     async with ClientSession() as our_client:
         activity = await config.getBotActivity()
         intents = await config.getBotIntents()
         prefixes = await config.getBotPrefix()
+        db_pool = await aiomysql.create_pool(
+                db       = config.CONFIG["database"]["name"],
+                host     = config.CONFIG["database"]["host"],
+                port     = config.CONFIG["database"]["port"],
+                user     = config.CONFIG["database"]["user"],
+                password = config.CONFIG["database"]["password"]
+            )
         async with HangoutCoreBot(
             commands.when_mentioned,
             intents = intents,
             activity = activity,
             web_client = our_client,
+            db_pool = db_pool,
             debug_mode = argv_debug,
             config = config,
             terminal = terminal

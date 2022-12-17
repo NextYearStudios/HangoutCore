@@ -27,6 +27,7 @@ class HangoutCoreBot(commands.Bot):  # Sub class bot so we can have more customi
             activity,
             test_Guild_ID: Optional[int] = None,
             web_client,
+            db_pool,
             debug_mode: Optional[bool] = False,
             config,
             terminal,
@@ -39,6 +40,7 @@ class HangoutCoreBot(commands.Bot):  # Sub class bot so we can have more customi
         self.debug_mode = debug_mode
 
         self.web_client = web_client
+        self.db_pool = db_pool
         self.config = config
         self.terminal = terminal
         self.log = terminal.Log()
@@ -61,8 +63,9 @@ class HangoutCoreBot(commands.Bot):  # Sub class bot so we can have more customi
         
         await self.audio.setConfig(self.config)
         await self.audio.setTerminal(self.terminal)
-        await self.audio.setConfig(self.config)
-        await self.audio.setTerminal(self.terminal)
+        await self.database.setConfig(self.config)
+        await self.database.setTerminal(self.terminal)
+        await self.database.setPool(self.db_pool)
         await self.local.setConfig(self.config)
         await self.local.setTerminal(self.terminal)
 
@@ -100,5 +103,5 @@ class HangoutCoreBot(commands.Bot):  # Sub class bot so we can have more customi
         await self.terminal.print_hr()
         await self.log.WARNING("Updating Guild Database")
         for guild in self.guilds:
-            # await bot.database.RegisterGuild(guild)
+            await self.database.registerGuild(guild)
             await self.log.INFO(f"Registered {guild.name}:{guild.id}")

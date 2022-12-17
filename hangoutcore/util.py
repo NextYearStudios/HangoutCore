@@ -570,6 +570,7 @@ class Database():
         self.loop = asyncio.get_event_loop()
         self.config = None
         self.terminal = None
+        self.pool = None
 
     async def setConfig(self, config = None):
         if config is not None:
@@ -578,19 +579,16 @@ class Database():
     async def setTerminal(self, terminal = None):
         if terminal is not None:
             self.terminal = terminal
+            
+    async def setPool(self, pool = None):
+        if pool is not None:
+            self.pool = pool
 
     # Mysql Section
-    async def RegisterGuild(self, guild: discord.Guild):
-        cfg = Config().load()
-        if cfg is not None:
-            pool = await aiomysql.create_pool(
-                db=cfg["database"]["name"],
-                host=cfg["database"]["host"],
-                port=cfg["database"]["port"],
-                user=cfg["database"]["user"],
-                password=cfg["database"]["password"]
-
-            )
+    async def registerGuild(self, guild: discord.Guild):
+        if self.config is not None and self.pool is not None:
+            print(self.pool)
+            
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # ↓ Local ↓ : WIP
