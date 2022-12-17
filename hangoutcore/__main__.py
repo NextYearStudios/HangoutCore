@@ -178,37 +178,20 @@ async def main():
         loggerHangoutCore.setLevel(20)
 
     # This function will be moved to util
-    def obfuscateString(inputString:str, amount:int=4, obfuscateChar:str='#'):
-        """
-        Used for allowing our user to recognize a string/token while keeping the rest of it hidden from prying eyes such as a twitch stream, a screen recording or any other public environment.
-        """
-
-        outputString = ""
-        for i in range(len(inputString)):
-            if i < len(inputString) - amount:
-                if inputString[i] == '.':
-                    outputString = outputString + inputString[i]
-                else:
-                    outputString = outputString + obfuscateChar
-            # elif i == len(inputString) - amount:
-            #     outputString = outputString + "-" + inputString[i]
-            else:
-                outputString = outputString + inputString[i]
-        return outputString
-
+    
     
 
     # This may seem redundant but this allows us to share our instance of the Terminal class across HangoutCore. 
     # Any Modifications we make to our instance will be immediately available to the rest of HangoutCore
-    config.setConfigTerminal(terminal) 
+    await config.setConfigTerminal(terminal) 
     
     if argv_freshInstall:
-        config.setup(manual=True)
-    elif not config.appConfigExists():
-        config.setup()
+        await config.setup(manual=True)
+    elif not await config.appConfigExists():
+        await config.setup()
 
-    if config.init(): # if hangoutcore.properties exists, load it and set our variables
-        config.load(argv_configName) # Load our bot config based off these variables ^
+    if await config.init(): # if hangoutcore.properties exists, load it and set our variables
+        await config.load(argv_configName) # Load our bot config based off these variables ^
     else:
         # We should almost never get to this. BUT if we do then we need to make sure the user knows about it to avoid looking elsewhere.
         terminal.Log().Critical(f"hangoutcore.properties could not be found. This means our setup failed, or we do not have permissions to create/access it. Please restart HangoutCore and try again.")
@@ -216,7 +199,7 @@ async def main():
     # Setup Logging for HangoutCore and Discord.py
 
     # We assume that the bot successfully loaded our config. otherwise this wont work the way we intend
-    logName = str(fr"{config.getLogDirectoryPath()}/log_{init_time.replace(' ', '_')}.log").replace(':', '') # We clear any spaces in our log name to avoid incompatabilities
+    logName = str(fr"{await config.getLogDirectoryPath()}/log_{init_time.replace(' ', '_')}.log").replace(':', '') # We clear any spaces in our log name to avoid incompatabilities
     logEncoding = "utf-8"
     date_format = "%m/%d/%Y %I:%M:%S %p"
 
@@ -233,12 +216,12 @@ async def main():
 
     # Initiate Terminal class with some necessary variables
 
-    terminal.setConfig(config.getConfig())
-    terminal.setInitTime(init_time)
-    terminal.setSilent(argv_silent)
+    await terminal.setConfig(config.CONFIG)
+    await terminal.setInitTime(init_time)
+    await terminal.setSilent(argv_silent)
 
 
-    terminal.initiate(debug=argv_debug, bot_setup=False)
+    await terminal.initiate(debug=argv_debug, bot_setup=False)
 
     # Begin Prepping to launch Bot
 
@@ -246,41 +229,47 @@ async def main():
     botToken = None
 
     if type(configTokens) == str:
+        await terminal.Log().DEBUG(f"Token entry in config file is a string.")
         botToken = configTokens
     elif type(configTokens) == list:
+        await terminal.Log().DEBUG(f"Token entry in config file is a list.")
         if argv_token == -1:
             if argv_silent or len(configTokens) == 1:
+                await terminal.Log().DEBUG(f"Found 1 token or silent mode is enabled. Using Token 0.")
                 botToken = configTokens[0] # Default to the first token
             else:
+                await terminal.Log().DEBUG(f"Multiple tokens were found, Prompting user to choose.")
                 filteredTokens = []
                 for token in configTokens:
-                    filteredTokens.append(obfuscateString(token, 6, '*'))
+                    filteredTokens.append(await terminal.obfuscateString(token, 6, '*'))
                 q = Questionnaire()
                 q.one("token", *filteredTokens,
-                prompt=f"Current Config Loaded: {config.getConfigDirectoryPath}/{config.getConfigPath}\nWhich of the following tokens would you like to use?")
+                prompt=f"Current Config Loaded: {await config.getConfigDirectoryPath}/{await config.getConfigPath}\nWhich of the following tokens would you like to use?")
                 q.run()
                 tokenChoice = filteredTokens.index(q.answers.get('token'))
                 botToken = configTokens[tokenChoice]
         else:
             lenTokens = len(configTokens)
             if argv_token > lenTokens:
-                terminal.Log().CRITICAL(f"You attempted to load token #{argv_token}. You only have {lenTokens} Tokens listed in your config file.")
+                await terminal.Log().CRITICAL(f"You attempted to load token #{argv_token}. You only have {lenTokens} Tokens listed in your config file.")
                 sys.exit(1)
             else:
                 try:
+                    await terminal.Log().DEBUG(f"User requested Token {argv_token}.")
                     botToken = configTokens[argv_token]
                 except IndexError:
-                    terminal.Log().ERROR(f"You attempted to specify a token that's out of range. Your config only has {len(config.CONFIG['bot']['token'])} token(s). Please check your input and try again.")
+                    await terminal.Log().ERROR(f"You attempted to specify a token that's out of range. Your config only has {len(config.CONFIG['bot']['token'])} token(s). Please check your input and try again.")
                     sys.exit(1)
     
     # Launch Bot
     async with ClientSession() as our_client:
-        activity = config.getBotActivity()
-        intents = config.getBotIntents()
-        prefixes = config.getBotPrefix()
+        activity = await config.getBotActivity()
+        intents = await config.getBotIntents()
+        prefixes = await config.getBotPrefix()
         async with HangoutCoreBot(
             commands.when_mentioned,
             intents = intents,
+            activity = activity,
             web_client = our_client,
             debug_mode = argv_debug,
             config = config,
@@ -295,6 +284,7 @@ def init():
         Terminal().Log().CRITICAL(f"Please refrain from using CTRL+C to shutdown bot.")
         # Here we'd make sure database exited/saved gracefully as well as any other essential process that may suffer from stopping abruptly.
         Terminal().EXIT(f"Shutting Down...")
+        pass
     except SystemExit:
         Terminal().EXIT(f"Exiting...")
         pass
