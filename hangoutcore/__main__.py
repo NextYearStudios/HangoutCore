@@ -291,12 +291,18 @@ def init():
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        Terminal().Log().CRITICAL(f"Please refrain from using CTRL+C to shutdown bot.")
-        # Here we'd make sure database exited/saved gracefully as well as any other essential process that may suffer from stopping abruptly.
-        Terminal().EXIT(f"Shutting Down...")
+        try:
+            asyncio.run(Terminal().Log().CRITICAL(f"Please refrain from using CTRL+C to shutdown bot."))
+            # Here we'd make sure database exited/saved gracefully as well as any other essential process that may suffer from stopping abruptly.
+            asyncio.run(Terminal().EXIT(f"Shutting Down..."))
+        except:
+            pass
         pass
     except SystemExit:
-        Terminal().EXIT(f"Exiting...")
+        try:
+            asyncio.run(Terminal().EXIT(f"Exiting..."))
+        except:
+            pass
         pass
     # except Exception as e:
     #     Terminal().Log().ERROR(e)
