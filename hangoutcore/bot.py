@@ -27,7 +27,7 @@ class HangoutCoreBot(commands.Bot):  # Sub class bot so we can have more customi
             activity,
             test_Guild_ID: Optional[int] = None,
             web_client,
-            db_pool,
+            #db_pool,
             debug_mode: Optional[bool] = False,
             config,
             terminal,
@@ -40,7 +40,7 @@ class HangoutCoreBot(commands.Bot):  # Sub class bot so we can have more customi
         self.debug_mode = debug_mode
 
         self.web_client = web_client
-        self.db_pool = db_pool
+        #self.db_pool = db_pool
         self.config = config
         self.terminal = terminal
         self.log = terminal.Log()
@@ -65,7 +65,7 @@ class HangoutCoreBot(commands.Bot):  # Sub class bot so we can have more customi
         await self.audio.setTerminal(self.terminal)
         await self.database.setConfig(self.config)
         await self.database.setTerminal(self.terminal)
-        await self.database.setPool(self.db_pool)
+        #await self.database.setPool(self.db_pool)
         await self.local.setConfig(self.config)
         await self.local.setTerminal(self.terminal)
 
@@ -75,15 +75,20 @@ class HangoutCoreBot(commands.Bot):  # Sub class bot so we can have more customi
             await self.log.INFO(f"Found {cog}")
 
         await self.log.INFO(f"Looking for bot modules in '/{self.config.COG_DIRECTORY_PATH}'...")
-        await self.local.load_extensions(self, self.debug_mode)  # Scan cog directory and enable cogs.
-
+        await self.local.load_extensions(self, self.debug_mode, False)  # Scan cog directory and enable cogs.
+        await self.log.INFO(f"Looking for system bot modules")
+        await self.local.load_extensions(self, self.debug_mode, True)
         await self.audio.verify_opus()  # Looks for opus and loads it if found.
 
         if self.debug_mode:
-            devGuildID = self.config.CONFIG['bot']['developer_guild_id']
+            devGuildID = int(self.config.CONFIG['bot']['developer_guild_id'])
+            devGuild = discord.Object(devGuildID)
             if int(devGuildID) != 0:
                 await self.log.DEBUG(f"Syncing to guild ID: {devGuildID}")
-                await self.tree.sync(guild=discord.Object(devGuildID))
+                # We'll copy in the global commands to test with:
+                self.tree.copy_global_to(guild=devGuild)
+                await self.tree.sync(guild=devGuild)
+                self.BotSynced = True
             else:
                 await self.log.ERROR(f"Unable to sync to developer guild. Please provide your Guild ID in your config file.")
         else:
