@@ -215,14 +215,24 @@ async def main():
     loggerDiscord.addHandler(handler)
     loggerHangoutCore.addHandler(handler)
 
-    # Initiate Terminal class with some necessary variables
-
     await terminal.setConfig(config.CONFIG)
     await terminal.setInitTime(init_time)
     await terminal.setSilent(argv_silent)
 
 
+    # Initiate Terminal class with some necessary variables
     await terminal.initiate(debug=argv_debug, bot_setup=False)
+
+    logFiles = os.listdir(config.LOG_DIRECTORY_PATH)
+    
+    while len(logFiles) > 5:
+        logFiles = os.listdir(config.LOG_DIRECTORY_PATH)
+        oldest_file = sorted([ f"{config.LOG_DIRECTORY_PATH}/{f}" for f in os.listdir(config.LOG_DIRECTORY_PATH)], key=os.path.getctime)[0]
+
+        if len(logFiles) > 5:
+            os.remove(oldest_file)
+        else:
+            break
 
     # Begin Prepping to launch Bot
 
@@ -268,19 +278,19 @@ async def main():
         activity = await config.getBotActivity()
         intents = await config.getBotIntents()
         prefixes = await config.getBotPrefix()
-        db_pool = await aiomysql.create_pool(
-                db       = config.CONFIG["database"]["name"],
-                host     = config.CONFIG["database"]["host"],
-                port     = config.CONFIG["database"]["port"],
-                user     = config.CONFIG["database"]["user"],
-                password = config.CONFIG["database"]["password"]
-            )
+        # db_pool = await aiomysql.create_pool(
+        #         db       = config.CONFIG["database"]["name"],
+        #         host     = config.CONFIG["database"]["host"],
+        #         port     = config.CONFIG["database"]["port"],
+        #         user     = config.CONFIG["database"]["user"],
+        #         password = config.CONFIG["database"]["password"]
+        #     )
         async with HangoutCoreBot(
             commands.when_mentioned,
             intents = intents,
             activity = activity,
             web_client = our_client,
-            db_pool = db_pool,
+            #db_pool = db_pool,
             debug_mode = argv_debug,
             config = config,
             terminal = terminal
