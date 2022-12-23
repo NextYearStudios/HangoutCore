@@ -18,8 +18,10 @@ import aiomysql  # Async MYSQL
 import click
 import ctypes
 import discord
+import hangoutcore
 import json
 import logging
+import pathlib
 import pymysql.cursors
 import os, sys
 import shutil
@@ -97,8 +99,8 @@ class Config():
     def __init__(self):
         self.WARNED = False
         self.CONFIG = None
-        self.CONFIG_VERSION = 5.8
-        self.CONFIG_PATH = 'configold.json'  # Path and name of config file.
+        self.CONFIG_VERSION = 6.0
+        self.CONFIG_PATH = 'config.json'  # Path and name of config file.
         self.CONFIG_DIRECTORY_PATH = "configs"  # Name of directory where cogs will be stored.
         self.COG_DIRECTORY_PATH = "cogs"  # Name of directory where cogs will be stored.
         self.LOG_DIRECTORY_PATH = "logs"  # Name of directory where log files will be stored.
@@ -109,11 +111,30 @@ class Config():
                 "token": [""],
                 # If you intend on using any token other than the first in the list, change hangoutcore.py to match.
                 "intents": {
-                    "members": True,
-                    "message_content": True,
-                    "typing": True,
-                    "presences": True,
-                    "guilds": True
+                    "guilds": False,
+                    "members": False,
+                    "bans": False,
+                    "emojis": False,
+                    "emojis_and_stickers": False,
+                    "integrations": False,
+                    "webhooks": False,
+                    "invites": False,
+                    "voice_states": False,
+                    "presences": False,
+                    "messages": False,
+                    "guild_messages": False,
+                    "dm_messages": False,
+                    "reactions": False,
+                    "guild_reactions": False,
+                    "dm_reactions": False,
+                    "typing": False,
+                    "guild_typing": False,
+                    "dm_typing": False,
+                    "message_content": False,
+                    "guild_scheduled_events": False,
+                    "auto_moderation": False,
+                    "auto_moderation_configuration": False,
+                    "auto_moderation_execution": False
                 },
                 "status": {
                     "type": "listening",  # Valid Options are competing, playing, listening, streaming, watching
@@ -161,6 +182,8 @@ class Config():
                     # {command} # Command used
                     # {argument_name} # This can vary depending on the code that uses it. eg; {reason}, {color_chosen}, etc.
                     # {error} # Error encountered
+                    "error_dev_runningextensionname": "The Extension name you provided matches an already loaded extension. Please check your spelling and try again.",
+                    "error_dev_invalidextensionname": "The Extension name you provided does not match any valid or existing extensions. Please check your spelling and try again.",
                     "error_user_insufficientpermissions": "You do not have the necessary permissions to use that. This event has been logged and a staff member has been notified.",
                     "error_bot_insufficientpermissions": "I do not have the necessary permissions to perform {command}, Please insure I have the necessary permissions assigned to my role.",
                     "error_insufficientpermissions": "{user.mention} attempted to use {command} in channel {channel}.",
@@ -380,11 +403,12 @@ class Config():
                                 new_cfg = self.EXAMPLE_CONFIG
                                 new_cfg['_info']['update_reason'] = f"Update To Config Version {self.CONFIG_VERSION}"
                                 for key in self.CONFIG['bot'].keys():
-                                    new_cfg['bot'][key] = self.CONFIG['bot'][key]
-                                for key in self.CONFIG['database'].keys():
-                                    new_cfg['database'][key] = self.CONFIG['database'][key]
-                                for key in self.CONFIG['music'].keys():
-                                    new_cfg['music'][key] = self.CONFIG['music'][key]
+                                    if key != "intents" and key != "messages":
+                                        new_cfg['bot'][key] = self.CONFIG['bot'][key]
+                                # for key in self.CONFIG['database'].keys():
+                                #     new_cfg['database'][key] = self.CONFIG['database'][key]
+                                # for key in self.CONFIG['music'].keys():
+                                #     new_cfg['music'][key] = self.CONFIG['music'][key]
                                 with open(f"{fileDirectory}/{fileName}", "w") as botConfig:
                                     json.dump(new_cfg, botConfig, indent=4)
                                 self.CONFIG = new_cfg
@@ -600,8 +624,8 @@ class Database():
 
 class Local():
     def __init__(self):
-        self.config = None
-        self.terminal = None
+        self.config: Config = None
+        self.terminal: Terminal = None
 
     async def setConfig(self, config):
         if config is not None:
@@ -611,12 +635,21 @@ class Local():
         if terminal is not None:
             self.terminal = terminal
 
-    async def GetCogs(self):
-        if self.config is not None:
+    async def GetCogs(self, proposedCogDirectory: str = None):
+        cogDirectory = None
+        if self.config is not None and proposedCogDirectory is None:
+            cogDirectory = self.config.COG_DIRECTORY_PATH
+        elif proposedCogDirectory is not None:
+            cogDirectory = proposedCogDirectory
+        else:
+            await self.terminal.Log().CRITICAL(f"Failed to fetch cogs, Config is not set and no path was supplied.")
+            return None
+
+        try:
             valid_files = []
             disabled_files = []
             invalid_files = []
-            for file in os.listdir(self.config.COG_DIRECTORY_PATH):
+            for file in os.listdir(cogDirectory):
                 if file.endswith('.py'):
                     valid_files.append(file)
                 elif file.endswith('.disabled'):
@@ -632,24 +665,29 @@ class Local():
                 "disabled_files": disabled_files
             }
             return package
-        else:
-            await self.terminal.Log().CRITICAL(f"Failed to fetch cogs, Config is not set.")
+        except Exception as e:
+            await self.terminal.Log().CRITICAL(f"{e}")
             return None
 
-    async def load_extensions(self, discordBot: discord.Client, debug_mode: bool = False):
+    async def load_extensions(self, discordBot: commands.Bot, debug_mode: bool = False, systemCogs: bool = False):
         """
         Scans for files in the cog directory specified in the Config(). Loads the file if it ends in '.py', and registers files ending in '.disabled' as disabled cogs.
         """
-        cogs = await self.GetCogs()
+        cogDirectory = self.config.COG_DIRECTORY_PATH
+        cogs = await self.GetCogs(cogDirectory)
+
+        if systemCogs:
+            cogDirectory = "hangoutcore.SystemCogs"
+            cogs = await self.GetCogs(os.path.join(os.path.dirname(__file__), 'SystemCogs'))
 
         if cogs is not None:
             if len(cogs["valid_files"]) > 0:
                 for cog in cogs["valid_files"]:
                     await self.terminal.Log().INFO(f" └ Found {cog}")
                     try:
-                        await discordBot.load_extension(f'{Config().COG_DIRECTORY_PATH}.{cog[:-3]}')
+                        await discordBot.load_extension(f'{cogDirectory}.{cog[:-3]}')
                     except Exception as e:
-                        await self.terminal.errorprocessing.CogLoadError(cog, e, debug_mode)
+                        await self.terminal.errorprocessing().CogLoadError(cog, e, debug_mode)
                     else:
                         await self.terminal.Log().INFO(f"  └ successfully loaded {cog}.")
                 for cog in cogs["disabled_files"]:
@@ -659,15 +697,19 @@ class Local():
                         pass
                     else:
                         await self.terminal.Log().INFO(f" └ Found invalid file {cog}, Skipping.")
-                await self.terminal.Log().INFO(f"Successfully loaded {len(cogs['valid_files'])} extension(s).")
+                if systemCogs:
+                    await self.terminal.Log().INFO(f"Successfully loaded {len(cogs['valid_files'])} System Extension(s).")
+                else:
+                    await self.terminal.Log().INFO(f"Successfully loaded {len(cogs['valid_files'])} Extension(s).")
                 if len(cogs["invalid_files"]) > 0:
                     await self.terminal.Log().WARNING(
                         f"Found {len(cogs['invalid_files'])} invalid extension(s) in the 'cogs' directory. If you believe this is an error please verify each .py file and make sure it is set up as a cog properly, Otherwise you can ignore this message.")
             else:
                 await self.terminal.Log().INFO(f"No extensions where found. Skipping...")
 
+
     async def GetTicketTranscript(ticketid: str):
-        transcriptDirectory = (f"transcripts\\")
+        transcriptDirectory = (fr"transcripts\\")
         if os.path.exists(f"{transcriptDirectory}{ticketid}.md"):
             with open(f"{transcriptDirectory}{ticketid}.md", 'rb') as transcriptFile:
                 return transcriptFile
@@ -825,10 +867,11 @@ class Terminal():
     class Log():
 
         def __init__(self):
-            self.logger = logging.getLogger("HangoutCore")
+            self.loggerName = "HangoutCore"
+            self.logger = logging.getLogger(self.loggerName)
 
-        async def setLogger(self, logger):
-            self.logger = logger
+        def setLoggerName(self, loggerName):
+            self.loggerName = loggerName
 
         async def DEBUG(self, log: str = None):
             if log is not None:
@@ -885,23 +928,23 @@ class Terminal():
 
     class errorprocessing():
         def __init__(self):
-            pass
+            self.terminal = Terminal()
 
-        def CogLoadError(self, file, error, debug_mode):
+        async def CogLoadError(self, file, error, debug_mode):
             """ Error Processing tailored to display the specific error when loading a cog, 
                 designed to minimise clutter and lines not relevant."""
             ErrorTraceback = traceback.format_exception(type(error), error, error.__traceback__)
             if debug_mode:
-                Terminal().Log().ERROR(f"  └ Failed to load {file}\n" + "".join(ErrorTraceback))
+                await self.terminal.Log().ERROR(f"  └ Failed to load {file}\n" + "".join(ErrorTraceback))
             else:
-                Terminal().Log().ERROR(f"""  └ Failed to load {file}.
+                await self.terminal.Log().ERROR(f"""  └ Failed to load {file}.
                 {Back.RED}{error}{Back.RESET}""")
 
         class CommandError:
 
             def InsufficientPerms(self, NotifyGuild: bool, command: commands.Command, member: discord.Member):
                 ErrorMessage = f"""{member.name} attempted to execute command: {command.name} however they do not have sufficient permissions."""
-                Terminal().Log().ERROR(ErrorMessage)
+                self.terminal.Log().ERROR(ErrorMessage)
                 return ErrorMessage
 
         async def NotifyGuildStaff(self, guild: discord.Guild, color=discord.Color.from_rgb(47, 49, 54),
@@ -918,7 +961,7 @@ class Terminal():
                 await NotificationChannel.send(embed=GuildNotificationEmbed)
                 return None
             else:
-                Terminal().Log().CRITICAL(
+                self.terminal.Log().CRITICAL(
                     f"{guild.name} does not have a Notification Channel set up. They will not be able to recieve Notifications.")
                 return f"This Guild does not have a notification channel registered in our database. Please utilize the **/setup** command and try again"
 
@@ -999,3 +1042,5 @@ class CustomViews():
     class CustomButtons():
         def __init__(self):
             pass
+
+#
