@@ -142,5 +142,5 @@ dmypy.json
 **transcripts/
 **configs/
 **cogs/
-**dist/
-**.pyc
+
+.idea/
