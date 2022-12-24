@@ -49,6 +49,7 @@ Once you run the command above you can simply run the bot like normal until you'
     - Starting HangoutCore with one token specified in your config will not require any other input before starting.
     - Starting HangoutCore normally with more than one token specified will cause HangoutCore to prompt you in the terminal to specify which token you'd like to use.
     <img src="https://i.imgur.com/SOYHY1T.png" width="500">
+    
     - Starting HangoutCore Via ```hangoutcore -t int``` or ```hangoutcore --token int``` 
     will use the number specifed to choose which token to start with ultimately skipping the prompt for token choice.
     
