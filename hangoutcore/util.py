@@ -545,13 +545,13 @@ class Config():
 
                 # return Config().load(path=f"{botConfigDirectory}/Config().json")
 
-                self.write(value=botName, key1="bot", key2="name")
-                self.write(value=botDescription, key1="bot", key2="description")
-                self.write(value=botPrefix, key1="bot", key2="prefixes", key3=0)
-                self.write(value=botVersion, key1="bot", key2="version")
-                self.write(value=botToken, key1="bot", key2="token", key3=0)
+                await self.write(value=botName, key1="bot", key2="name")
+                await self.write(value=botDescription, key1="bot", key2="description")
+                await self.write(value=botPrefix, key1="bot", key2="prefixes", key3=0)
+                await self.write(value=botVersion, key1="bot", key2="version")
+                await self.write(value=botToken, key1="bot", key2="token", key3=0)
             else:
-                self.setup(init_time)
+                await self.setup(init_time)
 
         else:
             Terminal().Log().ERROR("HangoutCore Setup Canceled.")
@@ -975,7 +975,114 @@ class Terminal():
 #   Allowing users to quickly transition from bot to bot or even sharing config files without needing them to modify util.py
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-class CustomViews():
+class CommonUI(): # use this as a place to store commonly used discord ui objects such as embeds, views, etc.
+    
+    class ConfirmationView(discord.ui.View):
+        def __init__(self):
+            super().__init__()
+            self.value = None
+
+        @discord.ui.button(label='Confirm', style=discord.ButtonStyle.green)
+        async def confirm(self, interaction: discord.Interaction, button: discord.ui.Button):
+            await interaction.response.send_message('Confirming', ephemeral=True)
+            self.value = True
+            self.stop()
+
+        @discord.ui.button(label='Cancel', style=discord.ButtonStyle.grey)
+        async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
+            await interaction.response.send_message('Cancelling', ephemeral=True)
+            self.value = False
+            self.stop()
+
+    class PaginationView(discord.ui.View):
+        def __init__(self, data, footer, key, description, value, interaction: discord.Interaction, timeout: Optional[float] = 180, pageMax: Optional[int] = 10):
+            super().__init__(timeout=timeout)
+            self.data = data
+            self.dataKey = key
+            self.dataDescription = description
+            self.dataValue = value
+            self.originalInteraction = interaction
+            self.messageFooter: str = footer
+            self.currentPage: int = 0
+            self.maxItems = pageMax
+
+        def filterData(self):
+            _data = []
+            # wip
+            return _data
+
+        def createEmbed(self):
+            embedObject = discord.Embed(title = self.data[self.currentPage][self.dataKey], color = discord.Color.from_rgb(47, 49, 54), timestamp=datetime.now())
+            embedObject.set_footer(text=f"Page: {self.currentPage+1} of {len(self.data)} - {self.messageFooter}")
+            embedObject.description = f"{self.data[self.currentPage][self.dataDescription]}\n"
+            for value in self.data[self.currentPage][self.dataValue]:
+                embedObject.description = f"{embedObject.description} {value}\n"
+            return embedObject
+
+        async def update_message(self):
+            self.updateButtons()
+            await self.originalInteraction.edit_original_response(embed=self.createEmbed(), view=self)
+
+        def updateButtons(self):
+            if (len(self.data)-1) == 0:
+                self.first.disabled = True
+                self.first.style = discord.ButtonStyle.gray
+                self.previous.disabled = True
+                self.previous.style = discord.ButtonStyle.gray
+                self.last.disabled = True
+                self.last.style = discord.ButtonStyle.gray
+                self.next.disabled = True
+                self.next.style = discord.ButtonStyle.gray
+                return
+
+            if self.currentPage == 0:
+                self.first.disabled = True
+                self.first.style = discord.ButtonStyle.gray
+                self.previous.disabled = True
+                self.previous.style = discord.ButtonStyle.gray
+            else:
+                self.first.disabled = False
+                self.first.style = discord.ButtonStyle.blurple
+                self.previous.disabled = False
+                self.previous.style = discord.ButtonStyle.gray
+
+            if self.currentPage == (len(self.data)-1):
+                self.last.disabled = True
+                self.last.style = discord.ButtonStyle.gray
+                self.next.disabled = True
+                self.next.style = discord.ButtonStyle.gray
+            else:
+                self.last.disabled = False
+                self.last.style = discord.ButtonStyle.blurple
+                self.next.disabled = False
+                self.next.style = discord.ButtonStyle.gray
+
+        @discord.ui.button(label="|<", style=discord.ButtonStyle.blurple)
+        async def first(self, interaction: discord.Interaction, button: discord.ui.Button):
+            await interaction.response.defer(ephemeral=True)
+            self.currentPage = 0
+            await self.update_message()
+        
+        @discord.ui.button(label="<", style=discord.ButtonStyle.gray)
+        async def previous(self, interaction: discord.Interaction, button: discord.ui.Button):
+            await interaction.response.defer(ephemeral=True)
+            if self.currentPage != 0:
+                self.currentPage -= 1
+                await self.update_message()
+        
+        @discord.ui.button(label=">", style=discord.ButtonStyle.gray)
+        async def next(self, interaction: discord.Interaction, button: discord.ui.Button):
+            await interaction.response.defer(ephemeral=True)
+            if self.currentPage != (len(self.data)-1):
+                self.currentPage += 1
+                await self.update_message()
+        
+        @discord.ui.button(label=">|", style=discord.ButtonStyle.blurple)
+        async def last(self, interaction: discord.Interaction, button: discord.ui.Button):
+            await interaction.response.defer(ephemeral=True)
+            self.currentPage = len(self.data)-1
+            await self.update_message()
+
     # class autoroleView(discord.ui.View):
     #     def __init__(self):
     #         super().__init__(timeout=None)
@@ -1017,30 +1124,3 @@ class CustomViews():
     #     else:
     #         await user.add_roles(role, reason="User added via AutoRole.")
     #         await interaction.response.send_message(f"You've successfully been assigned {role.mention}.", ephemeral=True)
-
-    class Confirm(discord.ui.View):
-        def __init__(self):
-            super().__init__()
-            self.value = None
-
-        # When the confirm button is pressed, set the inner value to `True` and
-        # stop the View from listening to more input.
-        # We also send the user an ephemeral message that we're confirming their choice.
-        @discord.ui.button(label='Confirm', style=discord.ButtonStyle.green)
-        async def confirm(self, interaction: discord.Interaction, button: discord.ui.Button):
-            await interaction.response.send_message('Confirming', ephemeral=True)
-            self.value = True
-            self.stop()
-
-        # This one is similar to the confirmation button except sets the inner value to `False`
-        @discord.ui.button(label='Cancel', style=discord.ButtonStyle.grey)
-        async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
-            await interaction.response.send_message('Cancelling', ephemeral=True)
-            self.value = False
-            self.stop()
-
-    class CustomButtons():
-        def __init__(self):
-            pass
-
-#

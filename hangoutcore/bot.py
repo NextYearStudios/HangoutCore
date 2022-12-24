@@ -41,19 +41,33 @@ class HangoutCoreBot(commands.Bot):  # Sub class bot so we can have more customi
 
         self.web_client = web_client
         #self.db_pool = db_pool
-        self.config = config
-        self.terminal = terminal
-        self.log = terminal.Log()
+        self.config: Config = config
+        self.terminal: Terminal = terminal
+        self.log: Terminal.Log = terminal.Log()
 
-        self.audio = Audio()
-        self.database = Database()
-        self.local = Local()
+        self.audio: Audio = Audio()
+        self.database: Database = Database()
+        self.local: Local = Local()
         self.activity = activity
 
 
         self.BotSynced = False
         # BotSynced = False
         # ViewsAdded = False
+
+    async def syncBot(self):
+        if self.debug_mode:
+            devGuildID = int(self.config.CONFIG['bot']['developer_guild_id'])
+            devGuild = discord.Object(devGuildID)
+            if int(devGuildID) != 0:
+                await self.log.DEBUG(f"Syncing to guild ID: {devGuildID}")
+                # We'll copy in the global commands to test with:
+                self.tree.copy_global_to(guild=devGuild)
+                await self.tree.sync(guild=devGuild)
+            else:
+                await self.log.ERROR(f"Unable to sync to developer guild. Please provide your Guild ID in your config file.")
+        else:
+            await self.tree.sync()
 
     async def setup_hook(self) -> None:
 
@@ -80,21 +94,7 @@ class HangoutCoreBot(commands.Bot):  # Sub class bot so we can have more customi
         await self.local.load_extensions(self, self.debug_mode, True)
         await self.audio.verify_opus()  # Looks for opus and loads it if found.
 
-        if self.debug_mode:
-            devGuildID = int(self.config.CONFIG['bot']['developer_guild_id'])
-            devGuild = discord.Object(devGuildID)
-            if int(devGuildID) != 0:
-                await self.log.DEBUG(f"Syncing to guild ID: {devGuildID}")
-                # We'll copy in the global commands to test with:
-                self.tree.copy_global_to(guild=devGuild)
-                await self.tree.sync(guild=devGuild)
-                self.BotSynced = True
-            else:
-                await self.log.ERROR(f"Unable to sync to developer guild. Please provide your Guild ID in your config file.")
-        else:
-            if not self.BotSynced:
-                await self.tree.sync()
-                self.BotSynced = True
+        await self.syncBot()
         
 
         await self.log.INFO(f"Logged in as {self.user} (ID: {self.user.id}).")
