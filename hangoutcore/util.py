@@ -85,6 +85,7 @@ class Audio():
                     await self.terminal.Log().INFO("Successfully loaded opus.")
         else:
             await self.terminal.Log().WARNING("Could not find Opus, You will not be able to play audio without it.")
+            await self.terminal.Log().WARNING("To download opus codec source code follow this link: https://opus-codec.org/downloads/")
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
