@@ -255,7 +255,7 @@ async def main():
                     filteredTokens.append(await terminal.obfuscateString(token, 6, '*'))
                 q = Questionnaire()
                 q.one("token", *filteredTokens,
-                prompt=f"Current Config Loaded: {await config.getConfigDirectoryPath}/{await config.getConfigPath}\nWhich of the following tokens would you like to use?")
+                prompt=f"Current Config Loaded: {await config.getConfigDirectoryPath()}/{await config.getConfigPath()}\nWhich of the following tokens would you like to use?")
                 q.run()
                 tokenChoice = filteredTokens.index(q.answers.get('token'))
                 botToken = configTokens[tokenChoice]

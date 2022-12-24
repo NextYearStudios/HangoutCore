@@ -900,7 +900,7 @@ class Terminal():
                 print(f"{Style.BRIGHT}{Back.RED}[CRITICAL] {log}{Style.RESET_ALL}{Back.RESET}")
                 self.logger.critical(log)
     
-    async def obfuscateString(inputString:str, amount:int=4, obfuscateChar:str='#'):
+    async def obfuscateString(self, inputString:str, amount:int=4, obfuscateChar:str='#'):
         """
         Used for allowing our user to recognize a string/token while keeping the rest of it hidden from prying eyes such as a twitch stream, a screen recording or any other public environment.
         """
