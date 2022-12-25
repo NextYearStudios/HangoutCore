@@ -144,3 +144,5 @@ dmypy.json
 **cogs/
 
 .idea/
+
+*PushFiles.bat
