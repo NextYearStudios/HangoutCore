@@ -138,6 +138,11 @@ dmypy.json
 
 **logs/
 **utils/
+**hangoutcore/__pycache__
 **transcripts/
+**configs/
 **cogs/
+
+.idea/
+
 **configs/
