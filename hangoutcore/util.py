@@ -817,7 +817,7 @@ class Terminal():
         else:
             _ = system('clear')
 
-    async def initiate(self, debug: bool = False, bot_setup: bool = False):# 
+    async def initiate(self, debug: bool = False, bot_setup: bool = False, outdated: bool = False):# 
         """
         Clear's and prepares terminal for bot output.
         """
@@ -860,7 +860,12 @@ class Terminal():
             await self.print_center('SYS Version ' + str(sys.version))
             await self.print_center('API Version ' + str(sys.api_version))
             await self.print_center('Discord Version ' + str(discord.__version__))
+            await self.print_center('HangoutCore Version ' + str(hangoutcore.__version__))
 
+        if outdated:
+            print(Style.RESET_ALL + Back.RESET, end="\r")
+            print(Style.BRIGHT + Back.RED, end="\r")
+            await self.print_center(f"// HangoutCore Is Outdated \\\ ")
         # prep for rest
         print(Style.RESET_ALL + Back.RESET, end="\r")
         await self.print_hr()

@@ -33,6 +33,8 @@ async def main():
     argv_token = -1
     argv_silent = False
     argv_freshInstall = False
+    sys.path.append(os.getcwd()) # This expands package finding to our working directory 
+    
 
     config = Config()
     terminal = Terminal()
@@ -221,7 +223,18 @@ async def main():
 
 
     # Initiate Terminal class with some necessary variables
-    await terminal.initiate(debug=argv_debug, bot_setup=False)
+    
+    response = requests.get(f"https://pypi.org/pypi/hangoutcore/json")
+    latest_version = response.json()['info']['version']
+    if hangoutcore.__version__ != latest_version:
+        await terminal.initiate(debug=argv_debug, bot_setup=False, outdated=True)
+    else:
+        await terminal.initiate(debug=argv_debug, bot_setup=False)
+        
+
+
+    await terminal.Log().WARNING(f"HangoutCore is out of date. Please update to the latest version using 'pip update hangoutcore'.")
+    await terminal.Log().WARNING(f"Current Version: {hangoutcore.__version__} | HangoutCore Latest Version: {latest_version}")
 
     logFiles = os.listdir(config.LOG_DIRECTORY_PATH)
     
