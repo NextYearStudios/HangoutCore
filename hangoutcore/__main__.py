@@ -233,7 +233,7 @@ async def main():
         
 
 
-    await terminal.Log().WARNING(f"HangoutCore is out of date. Please update to the latest version using 'pip update hangoutcore'.")
+    await terminal.Log().WARNING(f"HangoutCore is out of date. Please update to the latest version using 'pip install -U hangoutcore'.")
     await terminal.Log().WARNING(f"Current Version: {hangoutcore.__version__} | HangoutCore Latest Version: {latest_version}")
 
     logFiles = os.listdir(config.LOG_DIRECTORY_PATH)
