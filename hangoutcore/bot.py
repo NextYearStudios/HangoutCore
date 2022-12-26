@@ -106,8 +106,8 @@ class HangoutCoreBot(commands.Bot):  # Sub class bot so we can have more customi
         await self.terminal.print_hr()
         await self.terminal.print_center("Bot Is Online")
         await self.terminal.print_hr()
-        
+
         await self.log.WARNING("Updating Guild Database")
 
         for guild in self.guilds:
-            await self.database.registerGuild(guild)
+            await self.database.registerGuild(self.database.GuildData(id = guild.id, name = guild.name))

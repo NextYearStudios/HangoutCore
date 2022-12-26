@@ -31,6 +31,7 @@ import requests
 from getpass import getpass
 from asyncio import sleep
 from colorama import *
+from dataclasses import dataclass
 from datetime import datetime
 from discord.ext import commands
 from jproperties import Properties
@@ -597,6 +598,54 @@ class Database():
         self.terminal = None
         self.pool = None
 
+    @dataclass
+    class GuildData():
+        def __init__(self, id: int, name: str, selfAssignableRoles: Optional(list[int]), verifiedRoleID: int = 0, moderationRoleID: int = 0, administrationRoleID: int = 0, ticketStaffRoleID: int = 0, guildNotificationChannelID: int = 0, staffNotificationChannelID: int = 0, guildStatChannelID: int = 0, guildSuggestionChannelID: int = 0, ticketSystemChannelID: int = 0, voiceLobbyChannelID: int = 0, autoRoleEnabled: bool = False, selfRoleEnabled: bool = False, guildStatsEnabled: bool = False, voiceLobbyEnabled: bool = False, guildSuggestionsEnabled: bool = False, ticketSystemEnabled: bool = False):
+            self.id: int = id
+            self.name: str = name
+            # roles
+            self.selfAssignableRoles: list[int] = selfAssignableRoles
+            self.verifiedRoleID: int = verifiedRoleID
+            self.moderationRoleID: int = moderationRoleID
+            self.administrationRoleID: int = administrationRoleID
+            self.ticketStaffRoleID: int = ticketStaffRoleID
+            # channels
+            self.guildNotificationChannelID: int = guildNotificationChannelID
+            self.staffNotificationChannelID: int = staffNotificationChannelID
+            self.guildStatChannelID: int = guildStatChannelID
+            self.guildSuggestionChannelID: int = guildSuggestionChannelID
+            self.ticketSystemChannelID: int = ticketSystemChannelID
+            self.voiceLobbyChannelID: int = voiceLobbyChannelID
+            # variables
+            self.autoRoleEnabled: bool = autoRoleEnabled
+            self.selfRoleEnabled: bool = selfRoleEnabled
+            self.guildStatsEnabled: bool = guildStatsEnabled
+            self.voiceLobbyEnabled: bool = voiceLobbyEnabled
+            self.guildSuggestionsEnabled: bool = guildSuggestionsEnabled
+            self.ticketSystemEnabled: bool = ticketSystemEnabled
+
+        # id BIGINT PRIMARY KEY UNIQUE NOT NULL, 
+        # name text, 
+        # guild_notification_channel_id BIGINT, 
+        # stickymessage_ids text, 
+        # stickymessage_moderator_id BIGINT, 
+        # autorole_enabled text NOT NULL DEFAULT 'False', 
+        # autorole_moderator_id BIGINT, 
+        # autorole_role_ids text, 
+        # selfrole_enabled text NOT NULL DEFAULT 'False', 
+        # selfrole_moderator_id BIGINT, 
+        # selfrole_role_ids text, 
+        # guildstats_enabled text NOT NULL DEFAULT 'False', 
+        # guildstats_channel_id BIGINT, 
+        # guildstats_options text, 
+        # voicelobby_enabled text NOT NULL DEFAULT 'False', 
+        # voicelobby_channel_id BIGINT, 
+        # guildsuggestions_enabled text NOT NULL DEFAULT 'False', 
+        # guildsuggestions_channel_id BIGINT, 
+        # ticketsystem_enabled text NOT NULL DEFAULT 'False', 
+        # ticketsystem_moderator_id BIGINT, 
+        # ticketsystem_channel_id BIGINT
+
     async def setConfig(self, config = None):
         if config is not None:
             self.config = config
@@ -610,7 +659,7 @@ class Database():
             self.pool = pool
 
     # Mysql Section
-    async def registerGuild(self, guild: discord.Guild):
+    async def registerGuild(self, guild: GuildData):
         if self.config is not None and self.pool is not None:
             async with self.pool.get() as conn:
                 async with conn.cursor() as cursor:
@@ -652,8 +701,24 @@ class Database():
                         finally:
                             await self.terminal.Log().INFO(f"Successfully updated database entry for guild: {guild.name}")
                         await conn.commit()
-            
 
+    async def retrieveGuild(self, guild: discord.Guild):
+        if self.config is not None and self.pool is not None:
+            async with self.pool.get() as conn:
+                async with conn.cursor() as cursor:
+                    try:
+                        await cursor.execute(f"""\
+                            SELECT * FROM guilds 
+                            WHERE id = (%s)
+                            """,(guild.id))
+                    except Exception as e:
+                        await self.terminal.Log().WARNING(f"{e}")
+                    result = cursor.fetchone()
+                    if result is None:
+                        return None
+                    else:
+                        return result
+            
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # ↓ Local ↓ : WIP
 #   › Handles providing local files such as images, video, cogs, py files, etc.
