@@ -27,7 +27,7 @@ class HangoutCoreBot(commands.Bot):  # Sub class bot so we can have more customi
             activity,
             test_Guild_ID: Optional[int] = None,
             web_client,
-            #db_pool,
+            db_pool,
             debug_mode: Optional[bool] = False,
             config,
             terminal,
@@ -40,7 +40,7 @@ class HangoutCoreBot(commands.Bot):  # Sub class bot so we can have more customi
         self.debug_mode = debug_mode
 
         self.web_client = web_client
-        #self.db_pool = db_pool
+        self.db_pool = db_pool
         self.config: Config = config
         self.terminal: Terminal = terminal
         self.log: Terminal.Log = terminal.Log()
@@ -79,7 +79,7 @@ class HangoutCoreBot(commands.Bot):  # Sub class bot so we can have more customi
         await self.audio.setTerminal(self.terminal)
         await self.database.setConfig(self.config)
         await self.database.setTerminal(self.terminal)
-        #await self.database.setPool(self.db_pool)
+        await self.database.setPool(self.db_pool)
         await self.local.setConfig(self.config)
         await self.local.setTerminal(self.terminal)
 
