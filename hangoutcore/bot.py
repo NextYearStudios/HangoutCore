@@ -27,7 +27,7 @@ class HangoutCoreBot(commands.Bot):  # Sub class bot so we can have more customi
             activity,
             test_Guild_ID: Optional[int] = None,
             web_client,
-            db_pool,
+            db_pool = None,
             debug_mode: Optional[bool] = False,
             config,
             terminal,
