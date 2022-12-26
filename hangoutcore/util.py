@@ -600,7 +600,7 @@ class Database():
 
     @dataclass
     class GuildData():
-        def __init__(self, id: int, name: str, selfAssignableRoles: Optional(list[int]), verifiedRoleID: int = 0, moderationRoleID: int = 0, administrationRoleID: int = 0, ticketStaffRoleID: int = 0, guildNotificationChannelID: int = 0, staffNotificationChannelID: int = 0, guildStatChannelID: int = 0, guildSuggestionChannelID: int = 0, ticketSystemChannelID: int = 0, voiceLobbyChannelID: int = 0, autoRoleEnabled: bool = False, selfRoleEnabled: bool = False, guildStatsEnabled: bool = False, voiceLobbyEnabled: bool = False, guildSuggestionsEnabled: bool = False, ticketSystemEnabled: bool = False):
+        def __init__(self, id: int, name: str, selfAssignableRoles: list[int] = [], verifiedRoleID: int = 0, moderationRoleID: int = 0, administrationRoleID: int = 0, ticketStaffRoleID: int = 0, guildNotificationChannelID: int = 0, staffNotificationChannelID: int = 0, guildStatChannelID: int = 0, guildSuggestionChannelID: int = 0, ticketSystemChannelID: int = 0, voiceLobbyChannelID: int = 0, autoRoleEnabled: bool = False, selfRoleEnabled: bool = False, guildStatsEnabled: bool = False, voiceLobbyEnabled: bool = False, guildSuggestionsEnabled: bool = False, ticketSystemEnabled: bool = False):
             self.id: int = id
             self.name: str = name
             # roles
