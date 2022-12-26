@@ -228,13 +228,13 @@ async def main():
     latest_version = response.json()['info']['version']
     if hangoutcore.__version__ != latest_version:
         await terminal.initiate(debug=argv_debug, bot_setup=False, outdated=True)
+        await terminal.Log().WARNING(f"HangoutCore is out of date. Please update to the latest version using 'pip install -U hangoutcore'.")
+        await terminal.Log().WARNING(f"Current Version: {hangoutcore.__version__} | HangoutCore Latest Version: {latest_version}")
     else:
         await terminal.initiate(debug=argv_debug, bot_setup=False)
         
 
 
-    await terminal.Log().WARNING(f"HangoutCore is out of date. Please update to the latest version using 'pip install -U hangoutcore'.")
-    await terminal.Log().WARNING(f"Current Version: {hangoutcore.__version__} | HangoutCore Latest Version: {latest_version}")
 
     logFiles = os.listdir(config.LOG_DIRECTORY_PATH)
     
