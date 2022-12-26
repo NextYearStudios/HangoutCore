@@ -291,7 +291,7 @@ async def main():
         activity = await config.getBotActivity()
         intents = await config.getBotIntents()
         prefixes = await config.getBotPrefix()
-        # db_pool = await aiomysql.create_pool(
+        db_pool = None #await aiomysql.create_pool(
         #         db       = config.CONFIG["database"]["name"],
         #         host     = config.CONFIG["database"]["host"],
         #         port     = config.CONFIG["database"]["port"],
@@ -303,7 +303,7 @@ async def main():
             intents = intents,
             activity = activity,
             web_client = our_client,
-            #db_pool = db_pool,
+            db_pool = db_pool,
             debug_mode = argv_debug,
             config = config,
             terminal = terminal
