@@ -108,5 +108,4 @@ class HangoutCoreBot(commands.Bot):  # Sub class bot so we can have more customi
         await self.terminal.print_hr()
         await self.log.WARNING("Updating Guild Database")
         for guild in self.guilds:
-            await self.database.registerGuild(guild)
             await self.log.INFO(f"Registered {guild.name}:{guild.id}")
