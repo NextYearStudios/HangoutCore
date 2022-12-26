@@ -182,7 +182,6 @@ async def main():
 
     # This function will be moved to util
     
-    
 
     # This may seem redundant but this allows us to share our instance of the Terminal class across HangoutCore. 
     # Any Modifications we make to our instance will be immediately available to the rest of HangoutCore

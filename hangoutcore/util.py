@@ -612,7 +612,46 @@ class Database():
     # Mysql Section
     async def registerGuild(self, guild: discord.Guild):
         if self.config is not None and self.pool is not None:
-            print(self.pool)
+            async with self.pool.get() as conn:
+                async with conn.cursor() as cursor:
+                    
+                    try:
+                        await cursor.execute('''\
+                            CREATE TABLE IF NOT EXISTS guilds 
+                            (id BIGINT PRIMARY KEY UNIQUE NOT NULL, name text, guild_notification_channel_id BIGINT, stickymessage_ids text, stickymessage_moderator_id BIGINT, autorole_enabled text NOT NULL DEFAULT 'False', autorole_moderator_id BIGINT, autorole_role_ids text, selfrole_enabled text NOT NULL DEFAULT 'False', selfrole_moderator_id BIGINT, selfrole_role_ids text, guildstats_enabled text NOT NULL DEFAULT 'False', guildstats_channel_id BIGINT, guildstats_options text, voicelobby_enabled text NOT NULL DEFAULT 'False', voicelobby_channel_id BIGINT, guildsuggestions_enabled text NOT NULL DEFAULT 'False', guildsuggestions_channel_id BIGINT, ticketsystem_enabled text NOT NULL DEFAULT 'False', ticketsystem_moderator_id BIGINT, ticketsystem_channel_id BIGINT)''')
+                    except Exception as e:
+                        await self.terminal.Log().WARNING(f"{e}")
+
+                    try:
+                        result = await cursor.execute(f"""\
+                            SELECT * FROM guilds 
+                            WHERE id = (%s)
+                            """,(guild.id))
+                    except Exception as e:
+                        await self.terminal.Log().WARNING(f"{e}")
+                    if result is None:
+                        try:
+                            result = await cursor.execute(f"""\
+                                    INSERT INTO guilds
+                                    (id, name, autorole_enabled, selfrole_enabled, guildstats_enabled, voicelobby_enabled, guildsuggestions_enabled, ticketsystem_enabled)
+                                    VALUES( %s, %s, 'False', 'False', 'False', 'False', 'False', 'False')
+                                    """, (int(guild.id), guild.name))
+                        except Exception as e:
+                            await self.terminal.Log().WARNING(f"{e}")
+                        finally:
+                            await self.terminal.Log().INFO(f"Successfully created a database entry for guild: {guild.name}")
+                        await conn.commit()
+                    else:
+                        try:
+                            result = await cursor.execute(f"""\
+                                    UPDATE guilds SET name = %s
+                                    WHERE id = %s"""
+                                    , (guild.name, guild.id))
+                        except Exception as e:
+                            await self.terminal.Log().WARNING(f"{e}")
+                        finally:
+                            await self.terminal.Log().INFO(f"Successfully updated database entry for guild: {guild.name}")
+                        await conn.commit()
             
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
