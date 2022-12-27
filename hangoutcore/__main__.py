@@ -4,7 +4,7 @@
         › Please do not modify any of the following content unless you know what you're doing. Modifying the following code and not updating the rest of the bot code to match can/will cause issues.
         › If you do decide to modify the following code please understand that HangoutCore's Dev team, Discord.py's Dev Team nor Python's Dev team are obligated to help you.
         › By Modifying the following code you acknowledge and agree to the text above.
-    Module Last Updated: December 7, 2022
+    Module Last Updated: December 26, 2022
     Module Last Updated by: Lino
     License: Refer to LICENSE.md
     Notes:
@@ -290,7 +290,8 @@ async def main():
         activity = await config.getBotActivity()
         intents = await config.getBotIntents()
         prefixes = await config.getBotPrefix()
-        db_pool = None #await aiomysql.create_pool(
+        db_pool = None # Change this to your database
+        # db_pool = await aiomysql.create_pool(
         #         db       = config.CONFIG["database"]["name"],
         #         host     = config.CONFIG["database"]["host"],
         #         port     = config.CONFIG["database"]["port"],

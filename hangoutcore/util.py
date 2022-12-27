@@ -4,7 +4,7 @@
         › Please do not modify any of the following content unless you know what you're doing. Modifying the following code and not updating the rest of the bot code to match can/will cause issues.
         › If you do decide to modify the following code please understand that HangoutCore's Dev team, Discord.py's Dev Team nor Python's Dev team are obligated to help you.
         › By Modifying the following code you acknowledge and agree to the text above.
-    Module Last Updated: December 7, 2022
+    Module Last Updated: December 26, 2022
     Module Last Updated by: Lino
     License: Refer to LICENSE.md
     Notes:
@@ -597,54 +597,93 @@ class Database():
         self.config = None
         self.terminal = None
         self.pool = None
-
-    @dataclass
-    class GuildData():
-        def __init__(self, id: int, name: str, selfAssignableRoles: list[int] = [], verifiedRoleID: int = 0, moderationRoleID: int = 0, administrationRoleID: int = 0, ticketStaffRoleID: int = 0, guildNotificationChannelID: int = 0, staffNotificationChannelID: int = 0, guildStatChannelID: int = 0, guildSuggestionChannelID: int = 0, ticketSystemChannelID: int = 0, voiceLobbyChannelID: int = 0, autoRoleEnabled: bool = False, selfRoleEnabled: bool = False, guildStatsEnabled: bool = False, voiceLobbyEnabled: bool = False, guildSuggestionsEnabled: bool = False, ticketSystemEnabled: bool = False):
-            self.id: int = id
-            self.name: str = name
-            # roles
-            self.selfAssignableRoles: list[int] = selfAssignableRoles
-            self.verifiedRoleID: int = verifiedRoleID
-            self.moderationRoleID: int = moderationRoleID
-            self.administrationRoleID: int = administrationRoleID
-            self.ticketStaffRoleID: int = ticketStaffRoleID
-            # channels
-            self.guildNotificationChannelID: int = guildNotificationChannelID
-            self.staffNotificationChannelID: int = staffNotificationChannelID
-            self.guildStatChannelID: int = guildStatChannelID
-            self.guildSuggestionChannelID: int = guildSuggestionChannelID
-            self.ticketSystemChannelID: int = ticketSystemChannelID
-            self.voiceLobbyChannelID: int = voiceLobbyChannelID
-            # variables
-            self.autoRoleEnabled: bool = autoRoleEnabled
-            self.selfRoleEnabled: bool = selfRoleEnabled
-            self.guildStatsEnabled: bool = guildStatsEnabled
-            self.voiceLobbyEnabled: bool = voiceLobbyEnabled
-            self.guildSuggestionsEnabled: bool = guildSuggestionsEnabled
-            self.ticketSystemEnabled: bool = ticketSystemEnabled
-
-        # id BIGINT PRIMARY KEY UNIQUE NOT NULL, 
-        # name text, 
-        # guild_notification_channel_id BIGINT, 
-        # stickymessage_ids text, 
-        # stickymessage_moderator_id BIGINT, 
-        # autorole_enabled text NOT NULL DEFAULT 'False', 
-        # autorole_moderator_id BIGINT, 
-        # autorole_role_ids text, 
-        # selfrole_enabled text NOT NULL DEFAULT 'False', 
-        # selfrole_moderator_id BIGINT, 
-        # selfrole_role_ids text, 
-        # guildstats_enabled text NOT NULL DEFAULT 'False', 
-        # guildstats_channel_id BIGINT, 
-        # guildstats_options text, 
-        # voicelobby_enabled text NOT NULL DEFAULT 'False', 
-        # voicelobby_channel_id BIGINT, 
-        # guildsuggestions_enabled text NOT NULL DEFAULT 'False', 
-        # guildsuggestions_channel_id BIGINT, 
-        # ticketsystem_enabled text NOT NULL DEFAULT 'False', 
-        # ticketsystem_moderator_id BIGINT, 
-        # ticketsystem_channel_id BIGINT
+        self.dataTemplate = {
+  "roles": {
+    "guild_verified": 0,
+    "guild_trial_moderator": 0,
+    "guild_moderator": 0,
+    "guild_administrator": 0,
+    "guild_owner": 0
+  },
+  "channels": {
+    "guild_bot_notification": 0,
+    "guild_staff_notification": 0,
+    "guild_announcements": {}
+  },
+  "extras": {
+    "guild_announcements": {
+      "member_join": {
+        "enabled": False,
+        "message": ""
+      },
+      "member_rejoin": {
+        "enabled": False,
+        "message": ""
+      },
+      "member_left": {
+        "enabled": False,
+        "message": ""
+      },
+      "member_banned": {
+        "enabled": False,
+        "message": ""
+      },
+      "member_kicked": {
+        "enabled": False,
+        "message": ""
+      },
+      "member_bot_blacklist": {
+        "enabled": False,
+        "message": ""
+      }
+    },
+    "guild_autoroles": {
+      "enabled": False,
+      "roles": []
+    },
+    "guild_economy": {
+      "enabled": False,
+      "name": "",
+      "currency": "",
+      "channel": 0,
+      "balance_start": 1000
+    },
+    "guild_level": {
+      "enabled": False,
+      "announce": False,
+      "channel": 0
+    },
+    "guild_selfroles": {
+      "enabled": False,
+      "channel": 0,
+      "message": 0,
+      "roles": {}
+    },
+    "guild_stats": {
+      "enabled": False,
+      "channel": 0,
+      "display": {
+        "active_members": False,
+        "total_members": False,
+        "bots": False
+      }
+    },
+    "guild_suggestions": {
+      "enabled": False,
+      "channel": 0,
+      "allow_vote": False
+    },
+    "guild_tickets": {
+      "enabled": False,
+      "channel": 0,
+      "role_staff": 0
+    },
+    "guild_voice_lobby": {
+      "enabled": False,
+      "channel": 0
+    }
+  }
+}
 
     async def setConfig(self, config = None):
         if config is not None:
@@ -659,7 +698,7 @@ class Database():
             self.pool = pool
 
     # Mysql Section
-    async def registerGuild(self, guild: GuildData):
+    async def registerGuild(self, guild: discord.Guild):
         if self.config is not None and self.pool is not None:
             async with self.pool.get() as conn:
                 async with conn.cursor() as cursor:
@@ -667,24 +706,25 @@ class Database():
                     try:
                         await cursor.execute('''\
                             CREATE TABLE IF NOT EXISTS guilds 
-                            (id BIGINT PRIMARY KEY UNIQUE NOT NULL, name text, guild_notification_channel_id BIGINT, stickymessage_ids text, stickymessage_moderator_id BIGINT, autorole_enabled text NOT NULL DEFAULT 'False', autorole_moderator_id BIGINT, autorole_role_ids text, selfrole_enabled text NOT NULL DEFAULT 'False', selfrole_moderator_id BIGINT, selfrole_role_ids text, guildstats_enabled text NOT NULL DEFAULT 'False', guildstats_channel_id BIGINT, guildstats_options text, voicelobby_enabled text NOT NULL DEFAULT 'False', voicelobby_channel_id BIGINT, guildsuggestions_enabled text NOT NULL DEFAULT 'False', guildsuggestions_channel_id BIGINT, ticketsystem_enabled text NOT NULL DEFAULT 'False', ticketsystem_moderator_id BIGINT, ticketsystem_channel_id BIGINT)''')
+                            (id BIGINT PRIMARY KEY UNIQUE NOT NULL, name text, data JSON)''')
                     except Exception as e:
                         await self.terminal.Log().WARNING(f"{e}")
 
                     try:
-                        result = await cursor.execute(f"""\
+                        await cursor.execute(f"""\
                             SELECT * FROM guilds 
                             WHERE id = (%s)
                             """,(guild.id))
                     except Exception as e:
                         await self.terminal.Log().WARNING(f"{e}")
+                    result = await cursor.fetchone()
                     if result is None:
                         try:
                             result = await cursor.execute(f"""\
                                     INSERT INTO guilds
-                                    (id, name, autorole_enabled, selfrole_enabled, guildstats_enabled, voicelobby_enabled, guildsuggestions_enabled, ticketsystem_enabled)
-                                    VALUES( %s, %s, 'False', 'False', 'False', 'False', 'False', 'False')
-                                    """, (int(guild.id), guild.name))
+                                    (id, name, data)
+                                    VALUES( %s, %s, %s)
+                                    """, (int(guild.id), guild.name, self.dataTemplate))
                         except Exception as e:
                             await self.terminal.Log().WARNING(f"{e}")
                         finally:
@@ -701,6 +741,7 @@ class Database():
                         finally:
                             await self.terminal.Log().INFO(f"Successfully updated database entry for guild: {guild.name}")
                         await conn.commit()
+                    conn.close()
 
     async def retrieveGuild(self, guild: discord.Guild):
         if self.config is not None and self.pool is not None:
@@ -713,7 +754,7 @@ class Database():
                             """,(guild.id))
                     except Exception as e:
                         await self.terminal.Log().WARNING(f"{e}")
-                    result = cursor.fetchone()
+                    result = await cursor.fetchone()
                     if result is None:
                         return None
                     else:
