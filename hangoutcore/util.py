@@ -14,15 +14,12 @@
 
 import asyncio
 import aiofiles
-import aiomysql  # Async MYSQL
 import click
 import ctypes
 import discord
 import hangoutcore
 import json
 import logging
-import pathlib
-import pymysql.cursors
 import os, sys
 import shutil
 import traceback
