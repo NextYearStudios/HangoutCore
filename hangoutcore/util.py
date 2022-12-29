@@ -148,7 +148,7 @@ class Config():
                     {
                         "name": "Contributer Name",  # Contributer name
                         "discord_id": 000000000,  # Contributer discord id
-                        "owner": True  # Set this to true if they're an owner. otherwise set it to false
+                        "owner": True  # Set this to true if they're an owner. otherwise set it to False
                     },
                     {
                         "name": "Contributer Name",
@@ -324,7 +324,7 @@ class Config():
             )
 
     async def getBotIntents(self):
-        """Retrieves specified bot intents from config file. If the config file is not able to be loaded this sets intents to false just in case."""
+        """Retrieves specified bot intents from config file. If the config file is not able to be loaded this sets intents to False just in case."""
         if self.CONFIG is not None:
             await self.terminal.Log().DEBUG(f"Loading Bot Intents from config. Intents: {self.CONFIG['bot']['intents']}")
             intents = discord.Intents.default()  # Set Bot Intents
@@ -335,7 +335,7 @@ class Config():
             intents.guilds          = self.CONFIG['bot']['intents']['guilds']
             return intents
         else:
-            await self.terminal.Log().WARNING(f"Could not retrieve intents from Config(). Setting intents to false as a precaution.")
+            await self.terminal.Log().WARNING(f"Could not retrieve intents from Config(). Setting intents to False as a precaution.")
             intents = discord.Intents.default()  # Set Bot Intents
             intents.members = False
             intents.message_content = False
@@ -596,16 +596,14 @@ class Database():
         self.pool = None
         self.dataTemplate = {
   "roles": {
-    "guild_verified": 0,
+    "guild_muted": 0,
     "guild_trial_moderator": 0,
     "guild_moderator": 0,
     "guild_administrator": 0,
     "guild_owner": 0
   },
   "channels": {
-    "guild_bot_notification": 0,
-    "guild_staff_notification": 0,
-    "guild_announcements": {}
+    "guild_announcements": 0
   },
   "extras": {
     "guild_announcements": {
@@ -628,15 +626,15 @@ class Database():
       "member_kicked": {
         "enabled": False,
         "message": ""
-      },
-      "member_bot_blacklist": {
-        "enabled": False,
-        "message": ""
       }
     },
     "guild_autoroles": {
       "enabled": False,
       "roles": []
+    },
+    "guild_bot_announcements": {
+      "enabled": False,
+      "channel": 0
     },
     "guild_economy": {
       "enabled": False,
@@ -665,6 +663,17 @@ class Database():
         "bots": False
       }
     },
+    "guild_staff_announcements": {
+      "enabled": False,
+      "channel": 0,
+      "variables": {
+        "user_ban": False,
+        "user_kick": False,
+        "user_mute": False,
+        "user_reported": False,
+        "user_warn": False
+      }
+    },
     "guild_suggestions": {
       "enabled": False,
       "channel": 0,
@@ -674,6 +683,11 @@ class Database():
       "enabled": False,
       "channel": 0,
       "role_staff": 0
+    },
+    "guild_verification": {
+      "enabled": False,
+      "channel": 0,
+      "role": 0
     },
     "guild_voice_lobby": {
       "enabled": False,
@@ -721,24 +735,12 @@ class Database():
                                     INSERT INTO guilds
                                     (id, name, data)
                                     VALUES( %s, %s, %s)
-                                    """, (int(guild.id), guild.name, self.dataTemplate))
+                                    """, (int(guild.id), guild.name, json.dumps(self.dataTemplate)))
                         except Exception as e:
                             await self.terminal.Log().WARNING(f"{e}")
                         finally:
                             await self.terminal.Log().INFO(f"Successfully created a database entry for guild: {guild.name}")
-                        await conn.commit()
-                    else:
-                        try:
-                            result = await cursor.execute(f"""\
-                                    UPDATE guilds SET name = %s
-                                    WHERE id = %s"""
-                                    , (guild.name, guild.id))
-                        except Exception as e:
-                            await self.terminal.Log().WARNING(f"{e}")
-                        finally:
-                            await self.terminal.Log().INFO(f"Successfully updated database entry for guild: {guild.name}")
-                        await conn.commit()
-                    conn.close()
+                    await conn.commit()
 
     async def retrieveGuild(self, guild: discord.Guild):
         if self.config is not None and self.pool is not None:
@@ -752,11 +754,51 @@ class Database():
                     except Exception as e:
                         await self.terminal.Log().WARNING(f"{e}")
                     result = await cursor.fetchone()
-                    if result is None:
-                        return None
+                    if result is not None:
+                        data = [int(result[0]), str(result[1]), json.loads(result[2])]
+                        return data
                     else:
-                        return result
-            
+                        return None
+                           
+    async def updateGuild(self, guild: discord.Guild, data: str):
+        if self.config is not None and self.pool is not None:
+            async with self.pool.get() as conn:
+                async with conn.cursor() as cursor:
+                    try:
+                        await cursor.execute(f"""\
+                            SELECT * FROM guilds 
+                            WHERE id = (%s)
+                            """,(guild.id))
+                    except Exception as e:
+                        await self.terminal.Log().WARNING(f"{e}")
+                    result = await cursor.fetchone()
+                    if result is None:
+                        try:
+                            result = await cursor.execute(f"""\
+                                    INSERT INTO guilds
+                                    (id, name, data)
+                                    VALUES( %s, %s, %s)
+                                    """, (int(guild.id), guild.name, json.dumps(data)))
+                        except Exception as e:
+                            await self.terminal.Log().WARNING(f"{e}")
+                        finally:
+                            await self.terminal.Log().INFO(f"Successfully created a database entry for guild: {guild.name}")
+                        
+                    else:
+                        try:
+                            result = await cursor.execute(f"""\
+                                    UPDATE guilds SET name = %s, data = %s
+                                    WHERE id = %s"""
+                                    , (guild.name, json.dumps(data), guild.id))
+                        except Exception as e:
+                            await self.terminal.Log().WARNING(f"{e}")
+                        finally:
+                            await self.terminal.Log().INFO(f"Successfully updated database entry for guild: {guild.name}")
+
+                    await conn.commit()
+
+
+
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # ↓ Local ↓ : WIP
 #   › Handles providing local files such as images, video, cogs, py files, etc.

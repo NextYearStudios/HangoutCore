@@ -56,18 +56,18 @@ class HangoutCoreBot(commands.Bot):  # Sub class bot so we can have more customi
         # ViewsAdded = False
 
     async def syncBot(self):
-        if self.debug_mode:
-            devGuildID = int(self.config.CONFIG['bot']['developer_guild_id'])
-            devGuild = discord.Object(devGuildID)
-            if int(devGuildID) != 0:
-                await self.log.DEBUG(f"Syncing to guild ID: {devGuildID}")
-                # We'll copy in the global commands to test with:
-                self.tree.copy_global_to(guild=devGuild)
-                await self.tree.sync(guild=devGuild)
+        if not self.BotSynced:
+            if self.debug_mode:
+                devGuildID = int(self.config.CONFIG['bot']['developer_guild_id'])
+                devGuild = discord.Object(devGuildID)
+                if int(devGuildID) != 0:
+                    await self.log.DEBUG(f"Syncing to guild ID: {devGuildID}")
+                    self.tree.copy_global_to(guild=devGuild)
+                    await self.tree.sync() # guild=devGuild
+                else:
+                    await self.log.ERROR(f"Unable to sync to developer guild. Please provide your Guild ID in your config file.")
             else:
-                await self.log.ERROR(f"Unable to sync to developer guild. Please provide your Guild ID in your config file.")
-        else:
-            await self.tree.sync()
+                await self.tree.sync()
 
     async def setup_hook(self) -> None:
 

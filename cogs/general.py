@@ -1,0 +1,143 @@
+import discord
+import typing
+import math
+
+from datetime import datetime
+from discord import app_commands, ui
+from discord.ext import commands
+
+from hangoutcore.bot import HangoutCoreBot
+from hangoutcore.util import Config, CommonUI, Local, Terminal
+
+class General(commands.Cog):
+    """Commands meant to be used by the public for general purposes."""
+
+    def __init__(self, bot: HangoutCoreBot) -> None:
+        self.bot = bot
+        self.config: Config = bot.config
+        self.terminal: Terminal = Terminal()
+        self.log = self.terminal.Log()
+        self.log.setLoggerName("Cog_General")
+        self.development = False
+        self.hidden = False
+
+        self.local = Local()
+        super().__init__()
+
+    async def helpData(self, administrator: bool = False, developer: bool = False, developerGuild: bool = False):
+        cogs = self.bot.cogs
+        pageLimit = 5
+        data = []
+        
+        nsfwEmoji = "<:nsfw:1056285352723230751>"
+        helpFooter = f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n*Commands with the following emoij are NSFW: {nsfwEmoji}*"
+        
+        def processItem(item, description, subItems):
+            _data = {
+                "dataName": item,
+                "dataDescription": description,
+                "dataValue": []}
+            for subItem in subItems:
+                _data["dataValue"].append(subItem)
+            _data["dataValue"].append(helpFooter)
+            data.append(_data)
+
+        for cog in sorted(list(cogs)):
+            cogObject = cogs.get(cog)
+
+            if cogObject.hidden and not administrator:
+                continue
+
+            if cogObject.development and not developer:
+                continue
+            
+            if cogObject.development and not developerGuild:
+                continue
+            
+            
+            commands = []
+            for command in cogObject.walk_app_commands():
+                if type(command) == app_commands.commands.Group:
+                    continue
+                else:
+                    commandInfo = f"/**"
+                    if command.parent is not None:
+                        parent = command.parent
+                        while parent.parent is not None:
+                            parent = parent.parent
+                            if parent is not None:
+                                commandInfo = f"{commandInfo}{parent.name} "
+
+                        commandInfo = f"{commandInfo}{command.parent.name} {command.name}"
+                    else:
+                        commandInfo = f"{commandInfo}{command.name}"
+
+                    if command.nsfw:
+                        commandInfo = f"{commandInfo}**: {nsfwEmoji}"
+                    else:
+                        commandInfo = f"{commandInfo}**:"
+
+                    commandInfo = f"{commandInfo}\n- *{command.description}*\n"
+                    commands.append(commandInfo)
+
+            if len(commands) > pageLimit:
+                _count = 0
+                _countMult = 0
+                _maxCount = math.ceil(len(commands)/pageLimit)
+                _data = []
+                processing = True
+
+                while processing:
+
+                    if _count == pageLimit or _count + _countMult == len(commands):
+                        if _countMult > 0:
+                            processItem(f"{self.config.CONFIG['bot']['name']} {cog} Extension (cont'd)", f"```{cogObject.description}```\n**Commands**:", _data)
+                        else:
+                            processItem(f"{self.config.CONFIG['bot']['name']} {cog} Extension", f"```{cogObject.description}```\n**Commands**:", _data)
+                        _countMult += pageLimit
+                        _count = 0
+                        _data = []
+                        _maxCount -= 1
+                    else:
+                        _data.append(commands[_count+_countMult])
+                        _count += 1
+
+                    if _maxCount == 0:
+                        processing = False
+            else:
+                processItem(f"{cog}", f"```{cogObject.description}```\n**Commands**:", commands)
+
+        return data
+
+    @app_commands.command(description = f"Help command used to display the commands supported by this bot.")
+    async def help(self, interaction: discord.Interaction):
+        administrator = True
+        developer = False
+        developerGuild = False
+
+        # if interaction.user.guild_permissions.administrator:
+        #     administrator = True
+
+        for contributer in self.config.CONFIG['bot']['contributers']:
+            if contributer['discord_id'] == interaction.user.id:
+                developer = True
+
+        if interaction.guild_id == self.config.CONFIG['bot']['developer_guild_id']:
+            developerGuild = True
+
+        data = await self.helpData(administrator, developer, developerGuild) # administrator: bool = False, developer: bool = False, developerGuild: int = 0
+
+        
+        pageView = CommonUI.PaginationView(data, "System Response", "dataName", "dataDescription", "dataValue", interaction, None)
+        await interaction.response.send_message(ephemeral=True, view=pageView)
+        await pageView.update_message()
+
+
+async def setup(bot: HangoutCoreBot):
+    await bot.add_cog(General(bot))
+    await Terminal().Log().WARNING(f"General has been loaded.")
+    
+    
+async def teardown(bot: HangoutCoreBot):
+    await bot.remove_cog(General(bot))
+    await Terminal().Log().WARNING(f"General has been unloaded.")

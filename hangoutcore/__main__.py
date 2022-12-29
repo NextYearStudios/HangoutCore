@@ -13,8 +13,6 @@
 """
 import asyncio
 import aiomysql
-import click
-import discord
 import logging
 import logging.handlers
 import sys
