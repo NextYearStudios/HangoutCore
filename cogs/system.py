@@ -9,7 +9,7 @@ from discord.utils import get
 from typing import Optional
 
 from hangoutcore.bot import HangoutCoreBot
-from hangoutcore.util import Config, CommonUI, Local, Terminal
+from hangoutcore.util import Config, Database, CommonUI, Local, Terminal
 
         
 class System(commands.Cog):
@@ -17,14 +17,14 @@ class System(commands.Cog):
 
     def __init__(self, bot: HangoutCoreBot) -> None:
         self.bot = bot
-        self.config = bot.config
-        self.database = bot.database
-        self.terminal = Terminal()
-        self.log = self.terminal.Log()
+        self.config: Config = bot.config
+        self.database: Database = bot.database
+        self.local: Local = Local()
+        self.terminal: Terminal = Terminal()
+        self.log: Terminal.Log = self.terminal.Log()
         self.log.setLoggerName("Cog_System")
         self.development = False
         self.hidden = True
-        self.local = Local()
 
         self.contextMenu_Setup = app_commands.ContextMenu(
             name='Setup Bot',
@@ -209,76 +209,133 @@ class System(commands.Cog):
         else:
             await interaction.followup.send(f"Failed to retrieve database entry for guild: {interaction.guild.name}.")
 
-    economyGroup = app_commands.Group(parent=setupGroup, name="economy", description=f"Toggleable Features.")
+    # economyGroup = app_commands.Group(parent=setupGroup, name="economy", description=f"Toggleable Features.")
         
-    @economyGroup.command(description="Enable/Disable Economy locally.\nRunning command with no variable will return current status.")
-    async def status(self, interaction: discord.Interaction, enable: Optional[bool]):
-        await interaction.response.defer(thinking=True,ephemeral=True)
-        guildData = await self.database.retrieveGuild(interaction.guild)
+    # @economyGroup.command(description="Enable/Disable Economy locally.\nRunning command with no variable will return current status.")
+    # async def status(self, interaction: discord.Interaction, enable: Optional[bool]):
+    #     await interaction.response.defer(thinking=True,ephemeral=True)
+    #     guildData = await self.database.retrieveGuild(interaction.guild)
 
-        if guildData is not None:
+    #     if guildData is not None:
+    #         data = guildData[2]
+    #         if enable is None:
+    #             await interaction.followup.send(f"Economy is currently `{data['extras']['guild_economy']['enabled']}`.\nBank Name: `{data['extras']['guild_economy']['name']}`\nBank Currency: `{data['extras']['guild_economy']['currency']}`\nBank Channel: {interaction.guild.get_channel(data['extras']['guild_economy']['channel']).mention}\nBank Starting Balance: `{data['extras']['guild_economy']['currency']}{data['extras']['guild_economy']['balance_start']}`")
+    #         else:
+    #             data['extras']['guild_economy']['enabled'] = enable
+    #             await self.database.updateGuild(interaction.guild, data)
+    #             await interaction.followup.send(f"Economy was set to `{data['extras']['guild_economy']['enabled']}`.")
+    #     else:
+    #         await interaction.followup.send(f"Failed to retrieve database entry for guild: {interaction.guild.name}.")
+
+    # @economyGroup.command(description="Set Guild Bank Name.")
+    # async def bank_name(self, interaction: discord.Interaction, name: str):
+    #     await interaction.response.defer(thinking=True,ephemeral=True)
+    #     guildData = await self.database.retrieveGuild(interaction.guild)
+
+    #     if guildData is not None:
+    #         data = guildData[2]
+    #         data['extras']['guild_economy']['name'] = name
+    #         await self.database.updateGuild(interaction.guild, data)
+    #         await interaction.followup.send(f"Bank Name has been set to `{name}`.")
+    #     else:
+    #         await interaction.followup.send(f"Failed to retrieve database entry for guild: {interaction.guild.name}.")
+            
+    # @economyGroup.command(description="Set Guild Bank Currency Icon.")
+    # async def currency(self, interaction: discord.Interaction, icon: str):
+    #     await interaction.response.defer(thinking=True,ephemeral=True)
+    #     guildData = await self.database.retrieveGuild(interaction.guild)
+
+    #     if guildData is not None:
+    #         data = guildData[2]
+    #         data['extras']['guild_economy']['currency'] = icon
+    #         await self.database.updateGuild(interaction.guild, data)
+    #         await interaction.followup.send(f"Bank Currency Icon has been set to `{icon}`.")
+    #     else:
+    #         await interaction.followup.send(f"Failed to retrieve database entry for guild: {interaction.guild.name}.")
+            
+    # @economyGroup.command(description="Set Guild Bank Channel.")
+    # async def channel(self, interaction: discord.Interaction, channel: discord.TextChannel):
+    #     await interaction.response.defer(thinking=True,ephemeral=True)
+    #     guildData = await self.database.retrieveGuild(interaction.guild)
+
+    #     if guildData is not None:
+    #         data = guildData[2]
+    #         data['extras']['guild_economy']['channel'] = channel.id
+    #         await self.database.updateGuild(interaction.guild, data)
+    #         await interaction.followup.send(f"Bank Channel has been set to {channel.mention}")
+    #     else:
+    #         await interaction.followup.send(f"Failed to retrieve database entry for guild: {interaction.guild.name}.")
+            
+    # @economyGroup.command(description="Set Guild Bank Starting Balance.")
+    # async def starting_balance(self, interaction: discord.Interaction, amount: int):
+    #     await interaction.response.defer(thinking=True,ephemeral=True)
+    #     guildData = await self.database.retrieveGuild(interaction.guild)
+
+    #     if guildData is not None:
+    #         data = guildData[2]
+    #         data['extras']['guild_economy']['balance_start'] = amount
+    #         await self.database.updateGuild(interaction.guild, data)
+    #         await interaction.followup.send(f"Bank Starting Amount is now {data['extras']['guild_economy']['currency']}`{amount}`.")
+    #     else:
+    #         await interaction.followup.send(f"Failed to retrieve database entry for guild: {interaction.guild.name}.")
+
+    @setupGroup.command(description="Enable/Disable Guild Economy. For More do `/help setup economy`")
+    @app_commands.default_permissions(administrator=True)
+    async def economy(self, interaction: discord.Interaction, enable: bool, channel: Optional[discord.TextChannel], bank_name: Optional[str], bank_currency_icon: Optional[str], bank_starting_balance: Optional[int]):
+        await interaction.response.defer(thinking=True, ephemeral=True)
+        guildData = await self.database.retrieveGuild(interaction.guild)
+        if guildData is None:
+            await interaction.followup.send(f"Failed to retrieve database entry for guild: {interaction.guild.name}.", ephemeral=True)
+        else:
             data = guildData[2]
-            if enable is None:
-                await interaction.followup.send(f"Economy is currently `{data['extras']['guild_economy']['enabled']}`.\nBank Name: `{data['extras']['guild_economy']['name']}`\nBank Currency: `{data['extras']['guild_economy']['currency']}`\nBank Channel: {interaction.guild.get_channel(data['extras']['guild_economy']['channel']).mention}\nBank Starting Balance: `{data['extras']['guild_economy']['currency']}{data['extras']['guild_economy']['balance_start']}`")
+
+        if enable is None:
+            await interaction.followup.send(f"Command Failed. Please notify bot staff.", ephemeral=True)
+
+        if enable:
+            data['extras']['guild_economy']['enabled'] = enable
+            _bank_channel = None
+            _bank_message = None
+            _bank_name = f"{interaction.guild.name} Bank!"
+            _bank_icon = "$"
+            _bank_starting_amount = 1000
+
+            if bank_name is not None:
+                _bank_name = bank_name
+            data['extras']['guild_economy']['name'] = _bank_name
+
+            if bank_currency_icon is not None:
+                _bank_icon = bank_currency_icon
+            data['extras']['guild_economy']['currency'] = _bank_icon
+
+            if bank_starting_balance is not None:
+                _bank_starting_amount = bank_starting_balance
+            data['extras']['guild_economy']['balance_start'] = _bank_starting_amount
+
+            if channel is not None:
+                _bank_channel = channel
             else:
-                data['extras']['guild_economy']['enabled'] = enable
-                await self.database.updateGuild(interaction.guild, data)
-                await interaction.followup.send(f"Economy was set to `{data['extras']['guild_economy']['enabled']}`.")
-        else:
-            await interaction.followup.send(f"Failed to retrieve database entry for guild: {interaction.guild.name}.")
+                _bank_channel_overwites = discord.PermissionOverwrite()
+                _bank_channel = await interaction.guild.create_text_channel(name=f"Guild Bank", reason=f"{self.config.CONFIG['bot']['name']} Economy Module")
+                data['extras']['guild_economy']['channel'] = _bank_channel.id
 
-    @economyGroup.command(description="Set Guild Bank Name.")
-    async def bank_name(self, interaction: discord.Interaction, name: str):
-        await interaction.response.defer(thinking=True,ephemeral=True)
-        guildData = await self.database.retrieveGuild(interaction.guild)
-
-        if guildData is not None:
-            data = guildData[2]
-            data['extras']['guild_economy']['name'] = name
+                _bank_message = await _bank_channel.send("...")
+                bankView = CommonUI.GuildBankView( _bank_message, self.database, data, "System Response", None)
+                await _bank_channel.edit(content=None, view=bankView)
+                await _bank_channel.set_permissions(interaction.guild.default_role, reason="Economy Module", send_messages=False, use_application_commands=True)
+                data['extras']['guild_economy']['message'] = _bank_message.id
+                
             await self.database.updateGuild(interaction.guild, data)
-            await interaction.followup.send(f"Bank Name has been set to `{name}`.")
-        else:
-            await interaction.followup.send(f"Failed to retrieve database entry for guild: {interaction.guild.name}.")
-            
-    @economyGroup.command(description="Set Guild Bank Currency Icon.")
-    async def currency(self, interaction: discord.Interaction, icon: str):
-        await interaction.response.defer(thinking=True,ephemeral=True)
-        guildData = await self.database.retrieveGuild(interaction.guild)
 
-        if guildData is not None:
-            data = guildData[2]
-            data['extras']['guild_economy']['currency'] = icon
+            await interaction.followup.send(f"Updated Database.")
+            await bankView.update_message()
+        else:
+            data['extras']['guild_economy']['enabled'] = enable
             await self.database.updateGuild(interaction.guild, data)
-            await interaction.followup.send(f"Bank Currency Icon has been set to `{icon}`.")
-        else:
-            await interaction.followup.send(f"Failed to retrieve database entry for guild: {interaction.guild.name}.")
-            
-    @economyGroup.command(description="Set Guild Bank Channel.")
-    async def channel(self, interaction: discord.Interaction, channel: discord.TextChannel):
-        await interaction.response.defer(thinking=True,ephemeral=True)
-        guildData = await self.database.retrieveGuild(interaction.guild)
+            await interaction.followup.send(f"Updated Database.")
 
-        if guildData is not None:
-            data = guildData[2]
-            data['extras']['guild_economy']['channel'] = channel.id
-            await self.database.updateGuild(interaction.guild, data)
-            await interaction.followup.send(f"Bank Channel has been set to {channel.mention}")
-        else:
-            await interaction.followup.send(f"Failed to retrieve database entry for guild: {interaction.guild.name}.")
-            
-    @economyGroup.command(description="Set Guild Bank Starting Balance.")
-    async def starting_balance(self, interaction: discord.Interaction, amount: int):
-        await interaction.response.defer(thinking=True,ephemeral=True)
-        guildData = await self.database.retrieveGuild(interaction.guild)
 
-        if guildData is not None:
-            data = guildData[2]
-            data['extras']['guild_economy']['balance_start'] = amount
-            await self.database.updateGuild(interaction.guild, data)
-            await interaction.followup.send(f"Bank Starting Amount is now {data['extras']['guild_economy']['currency']}`{amount}`.")
-        else:
-            await interaction.followup.send(f"Failed to retrieve database entry for guild: {interaction.guild.name}.")
-
+    @app_commands.default_permissions(administrator=True)
     @setupGroup.command(description="Enable/Disable Staff Announcements.\nSet Staff Announcement Channel.")
     async def staff_announcements(self, interaction: discord.Interaction, enable: bool, channel: discord.TextChannel, announce_user_ban: Optional[bool], announce_user_kick: Optional[bool], announce_user_mute: Optional[bool], announce_user_reported: Optional[bool], announce_user_warn: Optional[bool]):
         await interaction.response.defer(thinking=True,ephemeral=True)
@@ -305,7 +362,6 @@ class System(commands.Cog):
         else:
             await interaction.followup.send(f"Failed to retrieve database entry for guild: {interaction.guild.name}.")
         
-
 async def setup(bot: HangoutCoreBot):
     await bot.add_cog(System(bot))
     await Terminal().Log().WARNING(f"System has been loaded.")

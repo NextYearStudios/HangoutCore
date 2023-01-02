@@ -5,9 +5,10 @@ import math
 from datetime import datetime
 from discord import app_commands, ui
 from discord.ext import commands
+from typing import Optional
 
 from hangoutcore.bot import HangoutCoreBot
-from hangoutcore.util import Config, CommonUI, Local, Terminal
+from hangoutcore.util import Config, Database, CommonUI, Local, Terminal
 
 class General(commands.Cog):
     """Commands meant to be used by the public for general purposes."""
@@ -15,13 +16,14 @@ class General(commands.Cog):
     def __init__(self, bot: HangoutCoreBot) -> None:
         self.bot = bot
         self.config: Config = bot.config
+        self.database: Database = bot.database
+        self.local: Local = Local()
         self.terminal: Terminal = Terminal()
-        self.log = self.terminal.Log()
+        self.log: Terminal.Log = self.terminal.Log()
         self.log.setLoggerName("Cog_General")
         self.development = False
         self.hidden = False
 
-        self.local = Local()
         super().__init__()
 
     async def helpData(self, administrator: bool = False, developer: bool = False, developerGuild: bool = False):
@@ -110,28 +112,46 @@ class General(commands.Cog):
         return data
 
     @app_commands.command(description = f"Help command used to display the commands supported by this bot.")
-    async def help(self, interaction: discord.Interaction):
-        administrator = True
-        developer = False
-        developerGuild = False
+    async def help(self, interaction: discord.Interaction, extension: Optional[str], command: Optional[str]):
+        userData = await self.database.retrieveUser(interaction.user)
+        _userData = None
+        if userData is not None:
+            _userData = userData[2]
+        if not _userData['bot']['blacklisted']:
+            administrator = False
+            developer = False
+            developerGuild = False
 
-        # if interaction.user.guild_permissions.administrator:
-        #     administrator = True
+            if interaction.user.guild_permissions.administrator:
+                administrator = True
 
-        for contributer in self.config.CONFIG['bot']['contributers']:
-            if contributer['discord_id'] == interaction.user.id:
-                developer = True
+            for contributer in self.config.CONFIG['bot']['contributers']:
+                if contributer['discord_id'] == interaction.user.id:
+                    developer = True
 
-        if interaction.guild_id == self.config.CONFIG['bot']['developer_guild_id']:
-            developerGuild = True
+            if interaction.guild_id == self.config.CONFIG['bot']['developer_guild_id']:
+                developerGuild = True
 
-        data = await self.helpData(administrator, developer, developerGuild) # administrator: bool = False, developer: bool = False, developerGuild: int = 0
+            data = await self.helpData(administrator, developer, developerGuild) # administrator: bool = False, developer: bool = False, developerGuild: int = 0
 
-        
-        pageView = CommonUI.PaginationView(data, "System Response", "dataName", "dataDescription", "dataValue", interaction, None)
-        await interaction.response.send_message(ephemeral=True, view=pageView)
-        await pageView.update_message()
+            
+            pageView = CommonUI.PaginationView(data, "System Response", "dataName", "dataDescription", "dataValue", interaction, None)
+            await interaction.response.send_message(ephemeral=True, view=pageView)
+            await pageView.update_message()
+            
+        else:
+            await interaction.response.send_message(f"You're blacklisted from using this bot. If you believe this is an error please contact a bot staff member.", ephemeral=True)
 
+
+
+    @commands.Cog.listener()
+    async def on_app_command_completion(self, interaction: discord.Interaction, command):
+        await self.database.updateCommandUse(interaction.user, command.module.split('.')[-1], command.name)
+
+    @commands.Cog.listener()
+    async def on_message(self, message: discord.Message):
+        if message.content == "<@753399339669520406>":
+            await message.reply(f"For help please use the /help command.")
 
 async def setup(bot: HangoutCoreBot):
     await bot.add_cog(General(bot))

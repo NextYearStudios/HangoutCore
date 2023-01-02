@@ -594,107 +594,135 @@ class Database():
         self.config = None
         self.terminal = None
         self.pool = None
-        self.dataTemplate = {
-  "roles": {
-    "guild_muted": 0,
-    "guild_trial_moderator": 0,
-    "guild_moderator": 0,
-    "guild_administrator": 0,
-    "guild_owner": 0
-  },
-  "channels": {
-    "guild_announcements": 0
-  },
-  "extras": {
-    "guild_announcements": {
-      "member_join": {
-        "enabled": False,
-        "message": ""
-      },
-      "member_rejoin": {
-        "enabled": False,
-        "message": ""
-      },
-      "member_left": {
-        "enabled": False,
-        "message": ""
-      },
-      "member_banned": {
-        "enabled": False,
-        "message": ""
-      },
-      "member_kicked": {
-        "enabled": False,
-        "message": ""
-      }
-    },
-    "guild_autoroles": {
-      "enabled": False,
-      "roles": []
-    },
-    "guild_bot_announcements": {
-      "enabled": False,
-      "channel": 0
-    },
-    "guild_economy": {
-      "enabled": False,
-      "name": "",
-      "currency": "",
-      "channel": 0,
-      "balance_start": 1000
-    },
-    "guild_level": {
-      "enabled": False,
-      "announce": False,
-      "channel": 0
-    },
-    "guild_selfroles": {
-      "enabled": False,
-      "channel": 0,
-      "message": 0,
-      "roles": {}
-    },
-    "guild_stats": {
-      "enabled": False,
-      "channel": 0,
-      "display": {
-        "active_members": False,
-        "total_members": False,
-        "bots": False
-      }
-    },
-    "guild_staff_announcements": {
-      "enabled": False,
-      "channel": 0,
-      "variables": {
-        "user_ban": False,
-        "user_kick": False,
-        "user_mute": False,
-        "user_reported": False,
-        "user_warn": False
-      }
-    },
-    "guild_suggestions": {
-      "enabled": False,
-      "channel": 0,
-      "allow_vote": False
-    },
-    "guild_tickets": {
-      "enabled": False,
-      "channel": 0,
-      "role_staff": 0
-    },
-    "guild_verification": {
-      "enabled": False,
-      "channel": 0,
-      "role": 0
-    },
-    "guild_voice_lobby": {
-      "enabled": False,
-      "channel": 0
-    }
-  }
-}
+        self.guildTemplate = {
+        "roles": {
+            "guild_muted": 0,
+            "guild_trial_moderator": 0,
+            "guild_moderator": 0,
+            "guild_administrator": 0,
+            "guild_owner": 0
+        },
+        "channels": {
+            "guild_announcements": 0
+        },
+        "extras": {
+            "guild_announcements": {
+            "member_join": {
+                "enabled": False,
+                "message": ""
+            },
+            "member_rejoin": {
+                "enabled": False,
+                "message": ""
+            },
+            "member_left": {
+                "enabled": False,
+                "message": ""
+            },
+            "member_banned": {
+                "enabled": False,
+                "message": ""
+            },
+            "member_kicked": {
+                "enabled": False,
+                "message": ""
+            }
+            },
+            "guild_applications": {
+            "enabled": False,
+            "channel": 0,
+            "roles": [
+                {
+                "role_name": "",
+                "role_id": 0
+                }
+            ]
+            },
+            "guild_autoroles": {
+            "enabled": False,
+            "roles": []
+            },
+            "guild_bot_announcements": {
+            "enabled": False,
+            "channel": 0
+            },
+            "guild_economy": {
+            "enabled": False,
+            "name": "",
+            "currency": "",
+            "channel": 0,
+            "message": 0,
+            "balance_start": 1000
+            },
+            "guild_level": {
+            "enabled": False,
+            "announce": False,
+            "channel": 0
+            },
+            "guild_selfroles": {
+            "enabled": False,
+            "channel": 0,
+            "message": 0,
+            "roles": []
+            },
+            "guild_stats": {
+            "enabled": False,
+            "channel": 0,
+            "display": {
+                "active_members": False,
+                "total_members": False,
+                "bots": False
+            }
+            },
+            "guild_staff_announcements": {
+            "enabled": False,
+            "channel": 0,
+            "variables": {
+                "user_ban": False,
+                "user_kick": False,
+                "user_mute": False,
+                "user_reported": False,
+                "user_warn": False
+            }
+            },
+            "guild_suggestions": {
+            "enabled": False,
+            "channel": 0,
+            "allow_vote": False
+            },
+            "guild_tickets": {
+            "enabled": False,
+            "channel": 0,
+            "role_staff": 0
+            },
+            "guild_verification": {
+            "enabled": False,
+            "channel": 0,
+            "role": 0
+            },
+            "guild_voice_lobby": {
+            "enabled": False,
+            "channel": 0
+            }
+        }
+        }
+        self.userTemplate = {
+        "experience": 0,
+        "level": 0,
+        "inventory": [],
+        "economy": {
+            "balance": 0,
+            "guild": []
+        },
+        "bot": {
+            "blacklisted": False,
+            "reason": "",
+            "reports": [],
+            "bans": [],
+            "kicks": [],
+            "command_stats": {}
+        }
+        }
 
     async def setConfig(self, config = None):
         if config is not None:
@@ -735,12 +763,30 @@ class Database():
                                     INSERT INTO guilds
                                     (id, name, data)
                                     VALUES( %s, %s, %s)
-                                    """, (int(guild.id), guild.name, json.dumps(self.dataTemplate)))
+                                    """, (int(guild.id), guild.name, json.dumps(self.guildTemplate)))
                         except Exception as e:
                             await self.terminal.Log().WARNING(f"{e}")
                         finally:
                             await self.terminal.Log().INFO(f"Successfully created a database entry for guild: {guild.name}")
                     await conn.commit()
+
+    async def retrieveTableColumn(self, table, column):
+        if self.config is not None and self.pool is not None:
+            async with self.pool.get() as conn:
+                async with conn.cursor() as cursor:
+                    try:
+                        await cursor.execute(f"SELECT {column} FROM {table}")
+                    except Exception as e:
+                        await self.terminal.Log().WARNING(f"{e}")
+                        return None
+                    result = await cursor.fetchall()
+                    data = []
+                    if result is not None:
+                        for entry in result:
+                            data.append(entry[0])
+                        return data
+                    else:
+                        return None
 
     async def retrieveGuild(self, guild: discord.Guild):
         if self.config is not None and self.pool is not None:
@@ -796,6 +842,129 @@ class Database():
                             await self.terminal.Log().INFO(f"Successfully updated database entry for guild: {guild.name}")
 
                     await conn.commit()
+
+    async def registerUser(self, user):
+        if self.config is not None and self.pool is not None:
+            async with self.pool.get() as conn:
+                async with conn.cursor() as cursor:
+                    
+                    try:
+                        await cursor.execute('''\
+                            CREATE TABLE IF NOT EXISTS users 
+                            (id BIGINT PRIMARY KEY UNIQUE NOT NULL, name text, data JSON)''')
+                    except Exception as e:
+                        await self.terminal.Log().WARNING(f"{e}")
+
+                    try:
+                        await cursor.execute(f"""\
+                            SELECT * FROM users 
+                            WHERE id = (%s)
+                            """,(user.id))
+                    except Exception as e:
+                        await self.terminal.Log().WARNING(f"{e}")
+                    result = await cursor.fetchone()
+                    if result is None:
+                        try:
+                            result = await cursor.execute(f"""\
+                                    INSERT INTO users
+                                    (id, name, data)
+                                    VALUES( %s, %s, %s)
+                                    """, (int(user.id), user.name, json.dumps(self.userTemplate)))
+                        except Exception as e:
+                            await self.terminal.Log().WARNING(f"{e}")
+                        finally:
+                            await self.terminal.Log().INFO(f"Successfully created a database entry for member: {user.name}")
+                    await conn.commit()
+
+    async def retrieveUser(self, user):
+        if self.config is not None and self.pool is not None:
+            async with self.pool.get() as conn:
+                async with conn.cursor() as cursor:
+                    try:
+                        await cursor.execute(f"""\
+                            SELECT * FROM users 
+                            WHERE id = (%s)
+                            """,(user.id))
+                    except Exception as e:
+                        await self.terminal.Log().WARNING(f"{e}")
+                    result = await cursor.fetchone()
+                    if result is not None:
+                        data = [int(result[0]), str(result[1]), json.loads(result[2])]
+                        return data
+                    else:
+                        return None
+                           
+    async def updateUser(self, user, data: str):
+        if self.config is not None and self.pool is not None:
+            async with self.pool.get() as conn:
+                async with conn.cursor() as cursor:
+                    try:
+                        await cursor.execute(f"""\
+                            SELECT * FROM users 
+                            WHERE id = (%s)
+                            """,(user.id))
+                    except Exception as e:
+                        await self.terminal.Log().WARNING(f"{e}")
+                    result = await cursor.fetchone()
+                    if result is None:
+                        try:
+                            result = await cursor.execute(f"""\
+                                    INSERT INTO users
+                                    (id, name, data)
+                                    VALUES( %s, %s, %s)
+                                    """, (int(user.id), user.name, json.dumps(data)))
+                        except Exception as e:
+                            await self.terminal.Log().WARNING(f"{e}")
+                        finally:
+                            await self.terminal.Log().INFO(f"Successfully created a database entry for user: {user.name}")
+                        
+                    else:
+                        try:
+                            result = await cursor.execute(f"""\
+                                    UPDATE users SET name = %s, data = %s
+                                    WHERE id = %s"""
+                                    , (user.name, json.dumps(data), user.id))
+                        except Exception as e:
+                            await self.terminal.Log().WARNING(f"{e}")
+                        finally:
+                            await self.terminal.Log().INFO(f"Successfully updated database entry for guild: {user.name}")
+
+                    await conn.commit()
+
+    async def updateCommandUse(self, user, cog:str, command:str):
+        userData = await self.retrieveUser(user)
+        _userData = None
+
+        if userData is not None:
+            _userData = userData[2]
+        
+        if _userData is not None:
+            _cog = None
+            _command = None
+            try:
+                _cog = _userData['bot']['command_stats'][f'{cog}']
+                # _userData['bot']['command_stats'][f'{cog}'][f'{command}'] += 1
+            except Exception as e:
+                print(e)
+                # _userData['bot']['command_stats'][f'{cog}'][f'{command}'] = 1
+            if _cog is None:
+                _userData['bot']['command_stats'][f'{cog}'] = {}
+            try:
+                _command = _userData['bot']['command_stats'][f'{cog}'][f'{command}']
+            except Exception as e:
+                print(e)
+
+            if _command is None:
+                try:
+                    addition = {f"{command}": 1}
+                    _userData['bot']['command_stats'][f'{cog}'].update(addition)
+                except Exception as e:
+                    print(e)
+            else:
+                _userData['bot']['command_stats'][f'{cog}'][f'{command}'] += 1
+
+            await self.updateUser(user, _userData)
+
 
 
 
@@ -1185,7 +1354,7 @@ class CommonUI(): # use this as a place to store commonly used discord ui object
             self.stop()
 
     class PaginationView(discord.ui.View):
-        def __init__(self, data, footer, key, description, value, interaction: discord.Interaction, timeout: Optional[float] = 180, pageMax: Optional[int] = 10):
+        def __init__(self, data, footer, key, description, value, interaction: discord.Interaction, timeout: Optional[float] = 180):
             super().__init__(timeout=timeout)
             self.data = data
             self.dataKey = key
@@ -1194,13 +1363,7 @@ class CommonUI(): # use this as a place to store commonly used discord ui object
             self.originalInteraction = interaction
             self.messageFooter: str = footer
             self.currentPage: int = 0
-            self.maxItems = pageMax
-
-        def filterData(self):
-            _data = []
-            # wip
-            return _data
-
+            
         def createEmbed(self):
             embedObject = discord.Embed(title = self.data[self.currentPage][self.dataKey], color = discord.Color.from_rgb(47, 49, 54), timestamp=datetime.now())
             embedObject.set_footer(text=f"Page: {self.currentPage+1} of {len(self.data)} - {self.messageFooter}")
@@ -1247,6 +1410,8 @@ class CommonUI(): # use this as a place to store commonly used discord ui object
                 self.next.disabled = False
                 self.next.style = discord.ButtonStyle.gray
 
+            self.count.label = f"Page: {self.currentPage + 1}"
+
         @discord.ui.button(label="|<", style=discord.ButtonStyle.blurple)
         async def first(self, interaction: discord.Interaction, button: discord.ui.Button):
             await interaction.response.defer(ephemeral=True)
@@ -1259,6 +1424,11 @@ class CommonUI(): # use this as a place to store commonly used discord ui object
             if self.currentPage != 0:
                 self.currentPage -= 1
                 await self.update_message()
+
+        @discord.ui.button(label=f"Page: ", style=discord.ButtonStyle.gray, disabled=True)
+        async def count(self, interaction: discord.Interaction, button: discord.ui.Button):
+            await interaction.response.defer(ephemeral=True)
+            pass # Do whatever your button needs to do here.
         
         @discord.ui.button(label=">", style=discord.ButtonStyle.gray)
         async def next(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -1272,6 +1442,39 @@ class CommonUI(): # use this as a place to store commonly used discord ui object
             await interaction.response.defer(ephemeral=True)
             self.currentPage = len(self.data)-1
             await self.update_message()
+
+    class GuildBankView(discord.ui.View):
+        def __init__(self, interaction, database, data: str = None, footer: str = "System Response", timeout: Optional[float] = 180):
+            super().__init__(timeout=timeout)
+            self.originalInteraction = interaction
+            self.messageFooter: str = footer
+            self.data = data
+            self.database = database
+
+        def createEmbed(self):
+            embedObject = discord.Embed(title = f"{self.data['extras']['guild_economy']['name']}", color = discord.Color.from_rgb(47, 49, 54), timestamp=datetime.now())
+            embedObject.set_footer(text=f"{self.messageFooter}")
+            embedObject.description = f"`test`"
+            return embedObject
+
+        async def update_message(self):
+            if type(self.originalInteraction) == discord.Message:
+                await self.originalInteraction.edit(content=None, embed=self.createEmbed(), view=self)
+            elif type(self.originalInteraction) == discord.Interaction:
+                await self.originalInteraction.edit_original_response(embed=self.createEmbed(), view=self)
+
+        @discord.ui.button(label="Check Balance", style=discord.ButtonStyle.blurple)
+        async def balance(self, interaction: discord.Interaction, button: discord.ui.Button):
+            await interaction.response.send_message("Balance", ephemeral=True)
+            await self.update_message()
+        
+        @discord.ui.button(label="Send Money", style=discord.ButtonStyle.gray)
+        async def send_money(self, interaction: discord.Interaction, button: discord.ui.Button):
+            await interaction.response.send_message("Sending", ephemeral=True)
+            await self.update_message()
+            userData = await self.database.retreiveUser(interaction.user)
+            _userData = userData[2]
+            print(_userData)
 
     # class autoroleView(discord.ui.View):
     #     def __init__(self):

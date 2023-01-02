@@ -32,9 +32,11 @@ class Moderation(commands.Cog):
 
     @app_commands.default_permissions(manage_messages=True)
     @app_commands.command(description="Delete the specified number of messages from this channel.")
-    async def clear(self, interaction: discord.Interaction, amount: app_commands.Range[int, 1, 100], user: Optional[discord.User], reason: Optional[str]):
+    async def clear(self, interaction: discord.Interaction, amount: app_commands.Range[int, 1, 100], user: Optional[discord.User], reason: Optional[str], force: Optional[bool]):
         await interaction.response.defer(ephemeral=True, thinking=True)
         def processmessage(message: discord.Message):
+            if force is not None and force:
+                return True
             if len(message.components) > 0 or len(message.embeds) > 0 or message.is_system() or message.pinned:
                 return False
             if user is not None:
@@ -44,7 +46,7 @@ class Moderation(commands.Cog):
         try:
             clearmessages = await interaction.channel.purge(limit=amount, check=processmessage, reason=reason, bulk=True, before=datetime.now())
         except Exception as e:
-            print(e)
+            await self.log.WARNING(f"{e}")
             
         if len(clearmessages) > 0:
             if user is not None:
@@ -84,6 +86,7 @@ class Moderation(commands.Cog):
     async def kick(self, interaction: discord.Interaction, user: discord.User, reason: Optional[str]):
         await interaction.guild.kick(user=user, reason=reason)
         await interaction.response.send_message(f"Kicked {user.mention} for the following reason: \n{reason}", ephemeral=True)
+        
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(description=f"WARNING: THIS CANNOT BE REVERSED. INTENDED TO BE USED WITH '/USE_TEMPLATE'!")
@@ -104,10 +107,11 @@ class Moderation(commands.Cog):
                         try:
                             await channel.delete(reason=f"Guild Owner Authorized Reset. - {self.config.CONFIG['bot']['name']}")
                         except Exception as e:
-                            print(e)
+                            await self.log.WARNING(f"{e}")
 
         else:
             print("F")
+        
         # if confirmation.value is None:
         #     await interaction.followup.send(f"Failed.")
         #     return
