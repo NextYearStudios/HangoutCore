@@ -26,6 +26,22 @@ class General(commands.Cog):
 
         super().__init__()
 
+    async def updateUserRank(self, user, amount: int):
+        userData = await self.database.retrieveUser(user)
+        _userData = None
+        if userData is not None:
+            _userData = userData[2]
+        if not _userData['bot']['blacklisted']:
+            _levelXP = 1500
+
+            _userData['experience'] += amount
+
+            if _userData['experience'] >= _levelXP * _userData['level']:
+                _userData['level'] += 1
+
+            await self.database.updateUser(user, _userData)
+        
+
     async def helpData(self, administrator: bool = False, developer: bool = False, developerGuild: bool = False):
         cogs = self.bot.cogs
         pageLimit = 5
@@ -142,8 +158,6 @@ class General(commands.Cog):
         else:
             await interaction.response.send_message(f"You're blacklisted from using this bot. If you believe this is an error please contact a bot staff member.", ephemeral=True)
 
-
-
     @commands.Cog.listener()
     async def on_app_command_completion(self, interaction: discord.Interaction, command):
         await self.database.updateCommandUse(interaction.user, command.module.split('.')[-1], command.name)
@@ -152,6 +166,38 @@ class General(commands.Cog):
     async def on_message(self, message: discord.Message):
         if message.content == "<@753399339669520406>":
             await message.reply(f"For help please use the /help command.")
+        else:
+            # Process user xp/cash
+            _matchesPrevious = False
+            async for item in message.channel.history(limit=3, before=message.created_at):
+                if item.content.lower() == message.content.lower():
+                    _matchesPrevious = True
+
+            if _matchesPrevious == False:
+                if not message.author.bot and not message.is_system():
+                    _filter = ['.','!','@','<','>',',','?','/','\\','|','[',']','{','}','(',')','\n']
+                    _words = message.content
+                    for filter in _filter:
+                        if filter == "\n":
+                            _words:str = _words.replace(filter, ' ')
+                        else:
+                            _words:str = _words.replace(filter, '')
+
+                    _words = _words.split(' ')
+                    _alphaWords = []
+                    for word in _words:
+                        if word.isalpha():
+                            _alphaWords.append(word)
+
+                    _alphaWords = set(_alphaWords)
+                    _wordCount = 0
+                    _charCount = 0
+                    for word in _alphaWords:
+                        _charCount += len(word)
+                        _wordCount += 1
+
+                    await self.updateUserRank(message.author, _wordCount*_charCount)
+
 
 async def setup(bot: HangoutCoreBot):
     await bot.add_cog(General(bot))
