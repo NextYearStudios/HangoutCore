@@ -55,6 +55,22 @@ class HangoutCoreBot(commands.Bot):  # Sub class bot so we can have more customi
         # BotSynced = False
         # ViewsAdded = False
 
+    async def is_user_blacklisted(self, user) -> bool:
+        _user = None
+        if type(user) == int:
+            _user = discord.Object(id=user)
+        elif type(user) == discord.Member or type(user) == discord.User:
+            _user = user
+            
+        if _user is not None:
+            userData = await self.database.retrieveUser(user)
+            _userData = None
+            if userData is not None:
+                _userData = userData[2]
+                return bool(_userData['bot']['blacklisted'])
+        else:
+            return True # Default to true if we can't retrieve user status
+
     async def syncBot(self):
         if not self.BotSynced:
             if self.debug_mode:
@@ -63,7 +79,7 @@ class HangoutCoreBot(commands.Bot):  # Sub class bot so we can have more customi
                 if int(devGuildID) != 0:
                     await self.log.DEBUG(f"Syncing to guild ID: {devGuildID}")
                     self.tree.copy_global_to(guild=devGuild)
-                    await self.tree.sync() # guild=devGuild
+                    await self.tree.sync(guild=devGuild) # guild=devGuild
                 else:
                     await self.log.ERROR(f"Unable to sync to developer guild. Please provide your Guild ID in your config file.")
             else:
@@ -99,15 +115,38 @@ class HangoutCoreBot(commands.Bot):  # Sub class bot so we can have more customi
 
         await self.log.INFO(f"Logged in as {self.user} (ID: {self.user.id}).")
 
+        guild_ids = await self.database.retrieveTableColumn('guilds', 'id')
+
     async def on_ready(self):
         # self.add_view(utils.bot.CustomViews.autoroleView())
         await self.wait_until_ready()
         
         await self.terminal.print_hr()
-        await self.terminal.print_center("Bot Is Online")
+        await self.terminal.print_center(f"Bot Is Ready and Logged in as {self.user} (ID: {self.user.id})")
         await self.terminal.print_hr()
 
-        await self.log.WARNING("Updating Guild Database")
+        # await self.log.WARNING("Updating Guild Database")
+        
+        stored_guild_ids = await self.database.retrieveTableColumn('guilds', 'id')
+        stored_user_ids = await self.database.retrieveTableColumn('users', 'id')
 
-        for guild in self.guilds:
-            await self.database.registerGuild(guild)
+        if stored_guild_ids is not None:
+            for guild in self.guilds:
+                if guild.id not in stored_guild_ids:
+                    await self.database.registerGuild(guild)
+
+                for member in guild.members:
+                    if not member.bot:
+                        if stored_user_ids is not None:
+                            if member.id not in stored_user_ids:
+                                await self.database.registerUser(member)
+                        else:
+                            await self.database.registerUser(member)
+
+        else:
+            for guild in self.guilds:
+                await self.database.registerGuild(guild)
+                for member in guild.members:
+                    await self.database.registerUser(member)
+        
+    

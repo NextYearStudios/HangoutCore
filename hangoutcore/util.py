@@ -707,11 +707,11 @@ class Database():
         }
         }
         self.userTemplate = {
-        "experience": 0,
-        "level": 0,
+        "rank": {
+            "guild": []
+        },
         "inventory": [],
         "economy": {
-            "balance": 0,
             "guild": []
         },
         "bot": {

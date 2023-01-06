@@ -27,8 +27,9 @@ class Moderation(commands.Cog):
     @app_commands.default_permissions(ban_members=True)
     @app_commands.command(description="Ban a member from the guild.")
     async def ban(self, interaction: discord.Interaction, user: discord.User, reason: Optional[str]):
-        await interaction.guild.ban(user=user, reason=reason)
-        await interaction.response.send_message(f"Banned {user.mention} for the following reason: \n{reason}", ephemeral=True)
+        if not await self.bot.is_user_blacklisted(interaction.user):
+            await interaction.guild.ban(user=user, reason=reason)
+            await interaction.response.send_message(f"Banned {user.mention} for the following reason: \n{reason}", ephemeral=True)
 
     @app_commands.default_permissions(manage_messages=True)
     @app_commands.command(description="Delete the specified number of messages from this channel.")
@@ -90,7 +91,7 @@ class Moderation(commands.Cog):
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(description=f"WARNING: THIS CANNOT BE REVERSED. INTENDED TO BE USED WITH '/USE_TEMPLATE'!")
-    async def guild_reset(self, interaction: discord.Interaction):
+    async def reset_guild(self, interaction: discord.Interaction):
         await interaction.response.send_message(f"Confirmation request has been sent to guild owner.", ephemeral=True)
         confirmation = CommonUI.ConfirmationView()
 
@@ -110,7 +111,17 @@ class Moderation(commands.Cog):
                             await self.log.WARNING(f"{e}")
 
         else:
-            print("F") # Canceled
+            print("F")
+        
+        # if confirmation.value is None:
+        #     await interaction.followup.send(f"Failed.")
+        #     return
+        # if confirmation.value:
+        #     for channel in interaction.guild:
+        #         print(f"Deleting Channel:{channel.name}:{channel.id}")
+        #     await interaction.followup.send(f"Success.")
+        # else:
+        #     await interaction.followup.send(f"Cancelled.")
 
     @app_commands.default_permissions(administrator=True)
     @app_commands.command()

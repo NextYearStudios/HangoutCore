@@ -26,20 +26,36 @@ class General(commands.Cog):
 
         super().__init__()
 
-    async def updateUserRank(self, user, amount: int):
-        userData = await self.database.retrieveUser(user)
-        _userData = None
-        if userData is not None:
-            _userData = userData[2]
-        if not _userData['bot']['blacklisted']:
-            _levelXP = 1500
+    async def updateUserRank(self, guild, user, amount: int):
+        if not await self.bot.is_user_blacklisted(user):
+            userData = await self.database.retrieveUser(user)
+            _userData = None
+            if userData is not None:
+                _userData = userData[2]
+                _rankEntry = None
+                
+                if len(_userData['rank']['guild']) > 0:
+                    for entry in _userData['rank']['guild']:
+                        if entry['id'] == guild.id:
+                            _rankEntry = entry
 
-            _userData['experience'] += amount
+                if _rankEntry is None:
+                    _levelXP = 1500 * 1 # Amount of experience required to level up
+                    _newLevel = 1
+                    while amount > _levelXP:
+                        _levelXP = 1500 * _newLevel # Update to new level
+                        _newLevel += 1
 
-            if _userData['experience'] >= _levelXP * _userData['level']:
-                _userData['level'] += 1
+                    _userData['rank']['guild'].append({"id": guild.id, "experience": amount, "level": _newLevel})
+                else:
+                    _rankEntry['experience'] += amount
+                    _levelXP = 1500 * _rankEntry['level'] # Amount of experience required to level up
 
-            await self.database.updateUser(user, _userData)
+                    while _rankEntry['experience'] > _levelXP:
+                        _levelXP = 1500 * _rankEntry['level'] # Update to new level
+                        _rankEntry['level'] += 1
+
+                await self.database.updateUser(user, _userData)
         
 
     async def helpData(self, administrator: bool = False, developer: bool = False, developerGuild: bool = False):
@@ -158,9 +174,41 @@ class General(commands.Cog):
         else:
             await interaction.response.send_message(f"You're blacklisted from using this bot. If you believe this is an error please contact a bot staff member.", ephemeral=True)
 
+
+    @app_commands.command(description = f"...")
+    async def stats(self, interaction: discord.Interaction, user: Optional[discord.User]):
+        await interaction.response.defer(thinking=True, ephemeral=True)
+        _user = interaction.user
+        if user is not None:
+            _user = user
+        if not await self.bot.is_user_blacklisted(_user):
+            userData = await self.database.retrieveUser(_user)
+            _userData = None
+            if userData is not None:
+                _userData = userData[2]
+
+                _embed = discord.Embed(title = f"{_user.name}'s Stats", color = discord.Color.from_rgb(47, 49, 54), timestamp=datetime.now())
+                _embed.set_footer(text=f"System Response")
+                # _embed.description(f"")
+                
+                for entry in _userData['rank']['guild']:
+                    if entry['id'] == interaction.guild.id:
+                        _embed.add_field(
+                            name = f"Level",
+                            value = f"{entry['level']}",
+                            inline = True)
+                        _embed.add_field(
+                            name = f"Experience",
+                            value = f"{entry['experience']}",
+                            inline = True)
+                await interaction.followup.send(embed=_embed, ephemeral=False)
+        else:
+            await interaction.followup.send(content="config message", ephemeral=True)
+
     @commands.Cog.listener()
     async def on_app_command_completion(self, interaction: discord.Interaction, command):
-        await self.database.updateCommandUse(interaction.user, command.module.split('.')[-1], command.name)
+        if not await self.bot.is_user_blacklisted(interaction.user):
+            await self.database.updateCommandUse(interaction.user, command.module.split('.')[-1], command.name)
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
@@ -175,29 +223,35 @@ class General(commands.Cog):
 
             if _matchesPrevious == False:
                 if not message.author.bot and not message.is_system():
-                    _filter = ['.','!','@','<','>',',','?','/','\\','|','[',']','{','}','(',')','\n']
-                    _words = message.content
-                    for filter in _filter:
-                        if filter == "\n":
-                            _words:str = _words.replace(filter, ' ')
-                        else:
-                            _words:str = _words.replace(filter, '')
+                    if not await self.bot.is_user_blacklisted(message.author):
+                        _filter = ['.','!','@','<','>',',','?','/','\\','|','[',']','{','}','(',')','\n']
+                        _words = message.content
+                        for filter in _filter:
+                            if filter == "\n":
+                                _words:str = _words.replace(filter, ' ')
+                            else:
+                                _words:str = _words.replace(filter, '')
 
-                    _words = _words.split(' ')
-                    _alphaWords = []
-                    for word in _words:
-                        if word.isalpha():
-                            _alphaWords.append(word)
+                        _words = _words.split(' ')
+                        _alphaWords = []
+                        for word in _words:
+                            if word.isalpha():
+                                _alphaWords.append(word)
 
-                    _alphaWords = set(_alphaWords)
-                    _wordCount = 0
-                    _charCount = 0
-                    for word in _alphaWords:
-                        _charCount += len(word)
-                        _wordCount += 1
+                        _alphaWords = set(_alphaWords)
+                        _wordCount = 0
+                        _charCount = 0
+                        for word in _alphaWords:
+                            _charCount += len(word)
+                            _wordCount += 1
 
-                    await self.updateUserRank(message.author, _wordCount*_charCount)
+                        await self.updateUserRank(message.guild, message.author, _wordCount*_charCount)
 
+
+    @commands.Cog.listener()
+    async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
+        # TODO: Add check for voice lobbies, Assistance Lobbies
+        pass
 
 async def setup(bot: HangoutCoreBot):
     await bot.add_cog(General(bot))
