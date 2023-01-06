@@ -4,7 +4,7 @@
         › Please do not modify any of the following content unless you know what you're doing. Modifying the following code and not updating the rest of the bot code to match can/will cause issues.
         › If you do decide to modify the following code please understand that HangoutCore's Dev team, Discord.py's Dev Team nor Python's Dev team are obligated to help you.
         › By Modifying the following code you acknowledge and agree to the text above.
-    Module Last Updated: December 26, 2022
+    Module Last Updated: January 6, 2023
     Module Last Updated by: Lino
     License: Refer to LICENSE.md
     Notes:
@@ -71,6 +71,32 @@ class HangoutCoreBot(commands.Bot):  # Sub class bot so we can have more customi
         else:
             return True # Default to true if we can't retrieve user status
 
+    async def is_user_staff(self, guild, user):
+        if guild is None or user is None:
+            return 0
+        else:
+            guildData = await self.database.retrieveGuild(interaction.guild)
+
+            if guildData is not None:
+                _guildData = guildData[2]
+                _trialModerator = _guildData['roles']['guild_trial_moderator']
+                _moderator = _guildData['roles']['guild_moderator']
+                _administrator = _guildData['roles']['guild_administrator']
+                _owner = _guildData['roles']['guild_owner']
+                if _owner != 0:
+                    # _role = guild.get_role(id=_owner)
+                    for role in user.roles:
+                        if role.id == _owner:
+                            return 4
+                        elif role.id == _administrator:
+                            return 3
+                        elif role.id == _moderator:
+                            return 2
+                        elif role.id == _trialModerator:
+                            return 1
+                    else:
+                        return 0
+                        
     async def syncBot(self):
         if not self.BotSynced:
             if self.debug_mode:

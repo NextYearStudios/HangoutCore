@@ -28,8 +28,16 @@ class Moderation(commands.Cog):
     @app_commands.command(description="Ban a member from the guild.")
     async def ban(self, interaction: discord.Interaction, user: discord.User, reason: Optional[str]):
         if not await self.bot.is_user_blacklisted(interaction.user):
-            await interaction.guild.ban(user=user, reason=reason)
-            await interaction.response.send_message(f"Banned {user.mention} for the following reason: \n{reason}", ephemeral=True)
+            guildData = await self.database.retrieveGuild(interaction.guild)
+
+            if guildData is not None:
+                if await self.bot.is_user_staff(interaction.guild, interaction.user) > 3:
+                    await interaction.guild.ban(user=user, reason=reason)
+                    await interaction.response.send_message(f"Banned {user.mention} for the following reason: \n{reason}", ephemeral=True)
+                else:
+                await interaction.followup.send(content=f"You do not have the necessary permissions for this action.")
+        else:
+            await interaction.followup.send(content=f"You're blacklisted from this bot.")
 
     @app_commands.default_permissions(manage_messages=True)
     @app_commands.command(description="Delete the specified number of messages from this channel.")
