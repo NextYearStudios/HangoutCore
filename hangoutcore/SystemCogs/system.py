@@ -398,7 +398,37 @@ class System(commands.Cog):
         # role = The role that is assigned upon completing the 'verification' process.
         await interaction.response.defer(thinking=True,ephemeral=True)
         if not await self.bot.is_user_blacklisted(interaction.user):
-            pass
+            guildData = await self.database.retrieveGuild(interaction.guild)
+
+            if guildData is not None:
+                _guildData = guildData[2]
+
+                if enable:
+                    _guildData['extras']['guild_verification']['enabled'] = enable
+
+                    if role is not None:
+                        _guildData['extras']['guild_verification']['role'] = role.id
+                    else:
+                        await interaction.guild.create_role(
+                            name = f"Verified",
+                            hoist = True,
+                            colour = discord.Color.green(),
+                            reason = f"Guild Verification System")
+
+                    if channel is not None:
+                        _guildData['extras']['guild_verification']['channel'] = channel.id
+                    else:
+                        # Create verification channel
+                        pass
+
+                    for _guildChannel in interaction.guild.channels:
+                        if _guildChannel.id != _guildData['extras']['guild_verification']['channel']:
+                            # Adjust channel permissions to limit unverified users.
+                            print(_guildChannel)
+                            pass
+
+            await interaction.followup.send(content=f"Updated")
+
         else:
             await interaction.followup.send(content=f"You're blacklisted from this bot.")
 
@@ -406,7 +436,7 @@ class System(commands.Cog):
 
     @setupGroup.command(description="Enable/Disable Guild Voice Lobbies. For More do `/help setup voice_lobby`")
     @app_commands.default_permissions(administrator=True)
-    async def voice_lobby(self, interaction: discord.Interaction, enable: bool, channel: Optional[discord.TextChannel]):
+    async def voice_lobby(self, interaction: discord.Interaction, enable: bool, channel: Optional[discord.VoiceChannel]):
         await interaction.response.defer(thinking=True,ephemeral=True)
         if not await self.bot.is_user_blacklisted(interaction.user):
             guildData = await self.database.retrieveGuild(interaction.guild)
@@ -422,13 +452,13 @@ class System(commands.Cog):
                     else:
                         # Create Category Voice Lobbies, with necessary permissions.
                         reason = f"{self.config.CONFIG['bot']['name']} System Module."
-                        _vcCategory = await interaction.guild.create_category_channel(name=f"Voice Lobbies", reason=reason)
+                        _vcCategory = await interaction.guild.create_category_channel(name=f"Private Voice Channels", reason=reason)
                         if _guildData['roles']['guild_muted'] != 0:
                             _role = interaction.guild.get_role(id=_guildData['roles']['guild_muted'])
                             if _role is not None:
                                 await _vcCategory.set_permissions(_role, reason=reason, send_messages=False, speak=False, request_to_speak=False)
 
-                        _vcLobby = await _vcCategory.create_voice_channel(name="Lobby", reason=reason)
+                        _vcLobby = await _vcCategory.create_voice_channel(name="Lobby - Join To Create VC.", reason=reason)
                         _guildData['extras']['guild_voice_lobby']['channel'] = _vcLobby.id
                         
                 else:

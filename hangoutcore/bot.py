@@ -96,7 +96,7 @@ class HangoutCoreBot(commands.Bot):  # Sub class bot so we can have more customi
                             return 1
                     else:
                         return 0
-                        
+
     async def syncBot(self):
         if not self.BotSynced:
             if self.debug_mode:
@@ -105,7 +105,7 @@ class HangoutCoreBot(commands.Bot):  # Sub class bot so we can have more customi
                 if int(devGuildID) != 0:
                     await self.log.DEBUG(f"Syncing to guild ID: {devGuildID}")
                     self.tree.copy_global_to(guild=devGuild)
-                    await self.tree.sync(guild=devGuild) # guild=devGuild
+                    await self.tree.sync() # guild=devGuild
                 else:
                     await self.log.ERROR(f"Unable to sync to developer guild. Please provide your Guild ID in your config file.")
             else:

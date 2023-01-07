@@ -60,7 +60,7 @@ class General(commands.Cog):
 
     async def helpData(self, administrator: bool = False, developer: bool = False, developerGuild: bool = False):
         cogs = self.bot.cogs
-        pageLimit = 5
+        pageLimit = 10
         data = []
         
         nsfwEmoji = "<:nsfw:1056285352723230751>"
@@ -249,9 +249,43 @@ class General(commands.Cog):
 
 
     @commands.Cog.listener()
-    async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
+    async def on_voice_state_update(self, member, before, after):
         # TODO: Add check for voice lobbies, Assistance Lobbies
-        pass
+        
+        if before.channel is not None and before.channel.guild is not None:
+            guildData = await self.database.retrieveGuild(before.channel.guild)
+
+            if guildData is not None:
+                _guildData = guildData[2]
+
+                if _guildData['extras']['guild_voice_lobby']['enabled'] and _guildData['extras']['guild_voice_lobby']['channel'] != 0:
+                    _pvcChannel = before.channel.guild.get_channel(_guildData['extras']['guild_voice_lobby']['channel'])
+                    _pvcCategory = _pvcChannel.category
+
+                    if _pvcCategory.id == before.channel.category.id:
+                        if _pvcChannel.id != before.channel.id:
+                            if len(before.channel.members) == 0:
+                                await before.channel.delete(reason="No Users in Private Chat")
+
+        if after.channel is not None and after.channel.guild is not None:
+            guildData = await self.database.retrieveGuild(after.channel.guild)
+
+            if guildData is not None:
+                _guildData = guildData[2]
+
+                if _guildData['extras']['guild_voice_lobby']['enabled'] and _guildData['extras']['guild_voice_lobby']['channel'] != 0:
+                    _pvcChannel = after.channel.guild.get_channel(_guildData['extras']['guild_voice_lobby']['channel'])
+                    _pvcCategory = _pvcChannel.category
+
+                    if _pvcChannel.id == after.channel.id:
+                        _memberPVC = await _pvcCategory.create_voice_channel(name = f"{member.name}'s VC")
+                        await member.move_to(_memberPVC, reason=f"Private Voice Channel Creation.")
+                        await _memberPVC.set_permissions(after.channel.guild.default_role, reason = "Private Voice Channel", connect=False)
+                        if _guildData['extras']['guild_verification']['enabled'] and _guildData['extras']['guild_verification']['role'] != 0:
+                            _baseRole = after.channel.guild.get_role(_guildData['extras']['guild_verification']['role'])
+                            await _memberPVC.set_permissions(_baseRole, reason = "Private Voice Channel", connect=False)
+                    # # Add permissions etc.
+            
 
 async def setup(bot: HangoutCoreBot):
     await bot.add_cog(General(bot))
