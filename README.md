@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-# HangoutCore V2.0
-###### Welcome to HangoutCore's Repository! Provided here is a little more than the basic code required to run a discord bot using [Discord.py](https://discordpy.readthedocs.io/en/master/index.html)! You'll find our bot to be easily configurable and ready for you to add your [cogs](https://discordpy.readthedocs.io/en/stable/ext/commands/cogs.html)!
-=======
 # HangoutCore Bot Framework
 ##### HangoutCore Version: [![HangoutCore](https://img.shields.io/pypi/v/hangoutcore?label=Version)](https://pypi.org/project/hangoutcore/) | using [![Discord.py](https://img.shields.io/pypi/v/Discord.py?label=Discord.py)](https://pypi.org/project/discord.py/) | License [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 ***
@@ -65,4 +61,3 @@ Once you run the command above you can simply run the bot like normal until you'
 ##### A special thank you to the following for contributing to this project.
 - [Alec J](https://github.com/alec-jensen)
 - [Lino H](https://github.com/Its-Lino)
->>>>>>> d6d60c6c1efc3623cd975c3e8879719339f8eee6
