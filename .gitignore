@@ -136,6 +136,7 @@ dmypy.json
 *.disabled
 *.properties
 
+**hangoutcore_venv/
 **logs/
 **utils/
 **hangoutcore/__pycache__
