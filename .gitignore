@@ -130,18 +130,19 @@ dmypy.json
 
 # Custom additions
 
-*.bat 
+**.bat 
 **config.json
 **database.sqlite
-*.disabled
-*.properties
-
+**.disabled
+**.properties
+**HangoutCoreV2.0.code-workspace
 **hangoutcore_venv/
 **logs/
 **utils/
 **hangoutcore/__pycache__
 **transcripts/
 **configs/
-*cogs/
+**cogs/
+**dev/
 
 .idea/
