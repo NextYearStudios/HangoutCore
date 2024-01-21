@@ -130,7 +130,9 @@ dmypy.json
 
 # Custom additions
 
+**.vscode
 **.bat 
+**.ps1
 **config.json
 **database.sqlite
 **.disabled
