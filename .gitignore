@@ -138,6 +138,7 @@ dmypy.json
 *.disabled
 *.properties
 *.code-workspace
+*.vscode/
 
 **logs/
 **hangoutcore/__pycache__
