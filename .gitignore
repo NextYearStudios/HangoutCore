@@ -109,6 +109,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+**hangoutcore_venv/
 
 # Spyder project settings
 .spyderproject
@@ -135,12 +136,13 @@ dmypy.json
 **database.sqlite
 *.disabled
 *.properties
+*.code-workspace
 
 **logs/
-**utils/
 **hangoutcore/__pycache__
 **transcripts/
 **configs/
 **cogs/
 
+**dev/
 .idea/

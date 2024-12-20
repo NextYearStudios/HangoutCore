@@ -5,6 +5,7 @@
         › If you do decide to modify the following code please understand that HangoutCore's Dev team, Discord.py's Dev Team nor Python's Dev team are obligated to help you.
         › By Modifying the following code you acknowledge and agree to the text above.
     Module Last Updated: December 7, 2022
+    Module Last Updated: January 21, 2024
     Module Last Updated by: Lino
     License: Refer to LICENSE.md
     Notes:
@@ -31,6 +32,8 @@ import requests
 from getpass import getpass
 from asyncio import sleep
 from colorama import *
+from colorama import init, Style, Back, Fore
+from dataclasses import dataclass
 from datetime import datetime
 from discord.ext import commands
 from jproperties import Properties
@@ -100,7 +103,7 @@ class Config():
     def __init__(self):
         self.WARNED = False
         self.CONFIG = None
-        self.CONFIG_VERSION = 6.0
+        self.CONFIG_VERSION = 6.1
         self.CONFIG_PATH = 'config.json'  # Path and name of config file.
         self.CONFIG_DIRECTORY_PATH = "configs"  # Name of directory where cogs will be stored.
         self.COG_DIRECTORY_PATH = "cogs"  # Name of directory where cogs will be stored.
@@ -150,7 +153,8 @@ class Config():
                     {
                         "name": "Contributer Name",  # Contributer name
                         "discord_id": 000000000,  # Contributer discord id
-                        "owner": True  # Set this to true if they're an owner. otherwise set it to false
+                        "owner": False,  # Set this to true if they're an owner. otherwise set it to false
+                        "developer": False
                     },
                     {
                         "name": "Contributer Name",
@@ -219,7 +223,7 @@ class Config():
         }
         self.terminal = Terminal() # Just incase we don't set, we need to have a backup
             
-    async def appConfigExists(self, DesiredName: str= None):
+    async def appConfigExists(self, DesiredName = None):
         ConfigName = "hangoutcore.properties"
         if DesiredName is not None:
             ConfigName = DesiredName
@@ -232,7 +236,7 @@ class Config():
         else:
             return False
             
-    async def botConfigExists(self, DesiredName: str= None):
+    async def botConfigExists(self, DesiredName = None):
         ConfigDirectory = self.CONFIG_DIRECTORY_PATH
         ConfigName = self.CONFIG_PATH
         if DesiredName is not None:
@@ -284,7 +288,7 @@ class Config():
         
     # The following functions are not really necessary
     # However they do reduce clutter in other scripts so eh, We'll leave them for now.
-    async def getBotActivity(self) -> discord.Activity():
+    async def getBotActivity(self) -> discord.Activity:
         """
         Retrieves Bot Activity specified in our loaded bot config. Returns activity type 'listening' if none is found.
         """
@@ -356,7 +360,7 @@ class Config():
             else:
                 return ['!']
 
-    async def init(self, appConfig: str = "hangoutcore.properties", botConfig: str = None):
+    async def init(self, appConfig: str = "hangoutcore.properties", botConfig = None):
         await self.terminal.Log().DEBUG(f"Attempting to locate properties file {appConfig}.")
         if await self.appConfigExists(appConfig):
             await self.terminal.Log().DEBUG(f"Found {appConfig}, Loading data.")
@@ -406,10 +410,10 @@ class Config():
                                 for key in self.CONFIG['bot'].keys():
                                     if key != "intents" and key != "messages":
                                         new_cfg['bot'][key] = self.CONFIG['bot'][key]
-                                # for key in self.CONFIG['database'].keys():
-                                #     new_cfg['database'][key] = self.CONFIG['database'][key]
-                                # for key in self.CONFIG['music'].keys():
-                                #     new_cfg['music'][key] = self.CONFIG['music'][key]
+                                for key in self.CONFIG['database'].keys():
+                                    new_cfg['database'][key] = self.CONFIG['database'][key]
+                                for key in self.CONFIG['music'].keys():
+                                    new_cfg['music'][key] = self.CONFIG['music'][key]
                                 with open(f"{fileDirectory}/{fileName}", "w") as botConfig:
                                     json.dump(new_cfg, botConfig, indent=4)
                                 self.CONFIG = new_cfg
@@ -495,6 +499,12 @@ class Config():
                    return default
                 else:
                     return botCogDirectory
+                
+            def requestBotDefaultCogs():
+                if click.confirm(f"Would you like to install the Default Cogs?", default=False):
+                   return True
+                else:
+                    return False
 
             botName = requestBotName()
             botDescription = input("Please enter your bot description, this can be modified in the config file.:\n")
@@ -505,6 +515,7 @@ class Config():
             botConfigDirectory = requestBotConfigDirectory()
             botLogDirectory = requestBotLogDirectory()
             botCogDirectory = requestBotCogDirectory()
+            botDefaultCogs = requestBotDefaultCogs()
 
             #Terminal().initiate(init_time, False, True)  # refresh terminal
             if click.confirm(
@@ -535,6 +546,9 @@ class Config():
                     os.mkdir(botCogDirectory)
                 else:
                     await self.terminal.Log().INFO(f"Cog directory already exists, skipping...")
+                if botDefaultCogs:
+                    for file in os.path.join(os.path.dirname(__file__), 'SystemCogs'):
+                        print(file)
                 if not os.path.exists(botLogDirectory):
                     await self.terminal.Log().INFO(f"Creating Log Directory: /{botLogDirectory}")
                     os.mkdir(botLogDirectory)
@@ -593,9 +607,145 @@ class Config():
 class Database():
     def __init__(self):
         self.loop = asyncio.get_event_loop()
-        self.config = None
-        self.terminal = None
+        self.config: Config = None
+        self.terminal: Terminal = None
         self.pool = None
+        self.guildTemplate = {
+        "roles": {
+            "guild_muted": 0,
+            "guild_trial_moderator": 0,
+            "guild_moderator": 0,
+            "guild_administrator": 0,
+            "guild_owner": 0
+        },
+        "channels": {
+            "guild_announcements": 0
+        },
+        "guild_rules": "",
+        "guild_blacklisted": False,
+        "extras": {
+            "guild_announcements": {
+            "member_join": {
+                "enabled": False,
+                "message": ""
+            },
+            "member_rejoin": {
+                "enabled": False,
+                "message": ""
+            },
+            "member_left": {
+                "enabled": False,
+                "message": ""
+            },
+            "member_banned": {
+                "enabled": False,
+                "message": ""
+            },
+            "member_kicked": {
+                "enabled": False,
+                "message": ""
+            }
+            },
+            "guild_applications": {
+            "enabled": False,
+            "channel": 0,
+            "roles": [
+                {
+                "role_name": "",
+                "role_id": 0
+                }
+            ]
+            },
+            "guild_autoroles": {
+            "enabled": False,
+            "roles": []
+            },
+            "guild_bot_announcements": {
+            "enabled": False,
+            "channel": 0
+            },
+            "guild_economy": {
+            "enabled": False,
+            "name": "",
+            "currency": "",
+            "channel": 0,
+            "message": 0,
+            "balance_start": 1000
+            },
+            "guild_level": {
+            "enabled": False,
+            "announce": False,
+            "channel": 0
+            },
+            "guild_selfroles": {
+            "enabled": False,
+            "channel": 0,
+            "message": 0,
+            "roles": []
+            },
+            "guild_stats": {
+            "enabled": False,
+            "am_channel": 0,
+            "t_channel": 0,
+            "b_channel": 0,
+            "display": {
+                "active_members": False,
+                "total_members": False,
+                "bots": False
+            }
+            },
+            "guild_staff_announcements": {
+            "enabled": False,
+            "channel": 0,
+            "variables": {
+                "user_ban": False,
+                "user_kick": False,
+                "user_mute": False,
+                "user_reported": False,
+                "user_warn": False
+            }
+            },
+            "guild_suggestions": {
+            "enabled": False,
+            "channel": 0,
+            "allow_vote": False
+            },
+            "guild_tickets": {
+            "enabled": False,
+            "channel": 0,
+            "role_staff": 0
+            },
+            "guild_verification": {
+            "enabled": False,
+            "channel": 0,
+            "message": 0,
+            "role": 0,
+            "verified_users": []
+            },
+            "guild_voice_lobby": {
+            "enabled": False,
+            "channel": 0
+            }
+        }
+        }
+        self.userTemplate = {
+        "rank": {
+            "guild": []
+        },
+        "inventory": [],
+        "economy": {
+            "guild": []
+        },
+        "disable_levelup_notifications": False,
+        "bot": {
+            "blacklisted": False,
+            "reason": "",
+            "reports": [],
+            "bans": [],
+            "kicks": [],
+            "command_stats": {}
+        }
+        }
 
     async def setConfig(self, config = None):
         if config is not None:
@@ -614,6 +764,409 @@ class Database():
         if self.config is not None and self.pool is not None:
             print(self.pool)
             
+            async with self.pool.get() as conn:
+                async with conn.cursor() as cursor:
+                    
+                    try:
+                        await cursor.execute('''\
+                            CREATE TABLE IF NOT EXISTS guilds 
+                            (id BIGINT PRIMARY KEY UNIQUE NOT NULL, name text, data JSON)''')
+                    except Exception as e:
+                        await self.terminal.Log().WARNING(f"{e}")
+
+                    try:
+                        await cursor.execute(f"""\
+                            SELECT * FROM guilds 
+                            WHERE id = (%s)
+                            """,(guild.id))
+                    except Exception as e:
+                        await self.terminal.Log().WARNING(f"{e}")
+                    result = await cursor.fetchone()
+                    if result is None:
+                        try:
+                            result = await cursor.execute(f"""\
+                                    INSERT INTO guilds
+                                    (id, name, data)
+                                    VALUES( %s, %s, %s)
+                                    """, (int(guild.id), guild.name, json.dumps(self.guildTemplate)))
+                        except Exception as e:
+                            await self.terminal.Log().WARNING(f"{e}")
+                        finally:
+                            await self.terminal.Log().INFO(f"Successfully created a database entry for guild: {guild.name}")
+                    await conn.commit()
+
+    async def retrieveTableColumn(self, table, column):
+        if self.config is not None and self.pool is not None:
+            async with self.pool.get() as conn:
+                async with conn.cursor() as cursor:
+                    try:
+                        await cursor.execute(f"SELECT {column} FROM {table}")
+                    except Exception as e:
+                        await self.terminal.Log().WARNING(f"{e}")
+                        return None
+                    result = await cursor.fetchall()
+                    data = []
+                    if result is not None:
+                        for entry in result:
+                            data.append(entry[0])
+                        return data
+                    else:
+                        return None
+
+    async def retrieveGuild(self, guild: discord.Guild):
+        if self.config is not None and self.pool is not None:
+            _data = None
+            async with self.pool.get() as conn:
+                async with conn.cursor() as cursor:
+                    try:
+                        await cursor.execute(f"""\
+                            SELECT * FROM guilds 
+                            WHERE id = (%s)
+                            """,(guild.id))
+                    except Exception as e:
+                        await self.terminal.Log().WARNING(f"{e}")
+                    result = await cursor.fetchone()
+                    if result is not None:
+                        _data = [int(result[0]), str(result[1]), json.loads(result[2])]
+
+            return _data
+                           
+    async def updateGuild(self, guild: discord.Guild, data: str):
+        if self.config is not None and self.pool is not None:
+            async with self.pool.get() as conn:
+                async with conn.cursor() as cursor:
+                    try:
+                        await cursor.execute(f"""\
+                            SELECT * FROM guilds 
+                            WHERE id = (%s)
+                            """,(guild.id))
+                    except Exception as e:
+                        await self.terminal.Log().WARNING(f"{e}")
+                    result = await cursor.fetchone()
+                    if result is None:
+                        try:
+                            result = await cursor.execute(f"""\
+                                    INSERT INTO guilds
+                                    (id, name, data)
+                                    VALUES( %s, %s, %s)
+                                    """, (int(guild.id), guild.name, json.dumps(data)))
+                        except Exception as e:
+                            await self.terminal.Log().WARNING(f"{e}")
+                        finally:
+                            await self.terminal.Log().INFO(f"Successfully created a database entry for guild: {guild.name}")
+                        
+                    else:
+                        try:
+                            result = await cursor.execute(f"""\
+                                    UPDATE guilds SET name = %s, data = %s
+                                    WHERE id = %s"""
+                                    , (guild.name, json.dumps(data), guild.id))
+                        except Exception as e:
+                            await self.terminal.Log().WARNING(f"{e}")
+                        finally:
+                            await self.terminal.Log().INFO(f"Successfully updated database entry for guild: {guild.name}")
+
+                    await conn.commit()
+
+    async def registerUser(self, user):
+        if self.config is not None and self.pool is not None:
+            async with self.pool.get() as conn:
+                async with conn.cursor() as cursor:
+                    
+                    try:
+                        await cursor.execute('''\
+                            CREATE TABLE IF NOT EXISTS users 
+                            (id BIGINT PRIMARY KEY UNIQUE NOT NULL, name text, data JSON)''')
+                    except Exception as e:
+                        await self.terminal.Log().WARNING(f"{e}")
+
+                    try:
+                        await cursor.execute(f"""\
+                            SELECT * FROM users 
+                            WHERE id = (%s)
+                            """,(user.id))
+                    except Exception as e:
+                        await self.terminal.Log().WARNING(f"{e}")
+                    result = await cursor.fetchone()
+                    if result is None:
+                        try:
+                            result = await cursor.execute(f"""\
+                                    INSERT INTO users
+                                    (id, name, data)
+                                    VALUES( %s, %s, %s)
+                                    """, (int(user.id), user.name, json.dumps(self.userTemplate)))
+                        except Exception as e:
+                            await self.terminal.Log().WARNING(f"{e}")
+                        finally:
+                            await self.terminal.Log().INFO(f"Successfully created a database entry for member: {user.name}")
+                    await conn.commit()
+
+    async def retrieveUser(self, user):
+        if self.config is not None and self.pool is not None:
+            _data = None
+            async with self.pool.get() as conn:
+                async with conn.cursor() as cursor:
+                    try:
+                        await cursor.execute(f"""\
+                            SELECT * FROM users 
+                            WHERE id = (%s)
+                            """,(user.id))
+                    except Exception as e:
+                        await self.terminal.Log().WARNING(f"{e}")
+                    result = await cursor.fetchone()
+                    if result is not None:
+                        _data = [int(result[0]), str(result[1]), json.loads(result[2])]
+
+            return _data
+                           
+    async def updateUser(self, user, data: str):
+        if self.config is not None and self.pool is not None:
+            async with self.pool.get() as conn:
+                async with conn.cursor() as cursor:
+                    try:
+                        await cursor.execute(f"""\
+                            SELECT * FROM users 
+                            WHERE id = (%s)
+                            """,(user.id))
+                    except Exception as e:
+                        await self.terminal.Log().WARNING(f"{e}")
+                    result = await cursor.fetchone()
+                    if result is None:
+                        try:
+                            result = await cursor.execute(f"""\
+                                    INSERT INTO users
+                                    (id, name, data)
+                                    VALUES( %s, %s, %s)
+                                    """, (int(user.id), user.name, json.dumps(data)))
+                        except Exception as e:
+                            await self.terminal.Log().WARNING(f"{e}")
+                        finally:
+                            await self.terminal.Log().INFO(f"Successfully created a database entry for user: {user.name}")
+                        
+                    else:
+                        try:
+                            result = await cursor.execute(f"""\
+                                    UPDATE users SET name = %s, data = %s
+                                    WHERE id = %s"""
+                                    , (user.name, json.dumps(data), user.id))
+                        except Exception as e:
+                            await self.terminal.Log().WARNING(f"{e}")
+                        finally:
+                            await self.terminal.Log().INFO(f"Successfully updated database entry for user: {user.name}")
+
+                    await conn.commit()
+
+    async def updateCommandUse(self, user, cog:str, command:str):
+        userData = await self.retrieveUser(user)
+        _userData = None
+
+        if userData is not None:
+            _userData = userData[2]
+        
+        if _userData is not None:
+            _cog = None
+            _command = None
+            try:
+                _cog = _userData['bot']['command_stats'][f'{cog}']
+                # _userData['bot']['command_stats'][f'{cog}'][f'{command}'] += 1
+            except Exception as e:
+                print(e)
+                # _userData['bot']['command_stats'][f'{cog}'][f'{command}'] = 1
+            if _cog is None:
+                _userData['bot']['command_stats'][f'{cog}'] = {}
+            try:
+                _command = _userData['bot']['command_stats'][f'{cog}'][f'{command}']
+            except Exception as e:
+                print(e)
+
+            if _command is None:
+                try:
+                    addition = {f"{command}": 1}
+                    _userData['bot']['command_stats'][f'{cog}'].update(addition)
+                except Exception as e:
+                    print(e)
+            else:
+                _userData['bot']['command_stats'][f'{cog}'][f'{command}'] += 1
+
+            await self.updateUser(user, _userData)
+
+    async def notifyGuild(self, guild: discord.Guild, author: discord.User, title: str, message: str, color = discord.Color.from_rgb(47, 49, 54)):
+            
+        _guildData = await self.retrieveGuild(guild)
+        if _guildData is not None:
+            _guildData = _guildData[2]
+            _staffAnnouncementChannelID = _guildData['extras']['guild_staff_announcements']['channel']
+            _embed = discord.Embed(
+                title = title, 
+                description = message, 
+                color = color, 
+                timestamp = datetime.now())
+            _embed.set_footer(text=f"System Response")
+            _embed.set_author(name=f"{author.name}", url=None, icon_url=f"{author.avatar.url}")
+            
+            if _staffAnnouncementChannelID != 0:
+                _staffAnnouncementChannel: discord.TextChannel = guild.get_channel(_staffAnnouncementChannelID)
+                await _staffAnnouncementChannel.send(embed=_embed)
+            else:
+                if guild.system_channel is not None:
+                    await guild.system_channel.send(f"**Attention Server Staff**: This Server Does Not Have A Staff Announcement Channel Set Up.\nPlease Use The ``/setup staff_announcements`` Command To Fix.", embed=_embed)
+            
+    async def updateUserkickStat(self, user, guild, reason):
+        await self.terminal.Log().INFO(f"Kick info update")
+        userData = await self.retrieveUser(user)
+        _userData = None
+
+        if userData is not None:
+            _userData = userData[2]
+        
+        if _userData is not None:
+            _guild = None
+
+            print(_userData['bot'])
+
+        #     try:
+        #         if len(_userData['bot']['kicks']) > 0:
+        #             for _guild_entry in _userData['bot']['kicks']:
+        #                 print(_guild_entry)
+
+        #     except Exception as e:
+        #         print(e)
+
+        #     if _guild is None:
+        #         _guild = [guild.id, [reason]]
+        #         print(type(_userData['bot']['kicks']))
+        #         # _userData['bot']['kicks'].append(_guild)
+
+        #     else:
+        #         print(_guild)
+                
+            print(_guild)
+            print(_userData['bot']['kicks'])
+
+        #     # try:
+        #     #     for _guild_list in _userData['bot']['kicks']:
+        #     #         if _guild_list[0] == guild.id:
+        #     #             _guild = _guild_list
+        #     #             continue
+        #     #     # _userData['bot']['command_stats'][f'{cog}'][f'{command}'] += 1
+        #     # except Exception as e:
+        #     #     print(e)
+        #     #     # _userData['bot']['command_stats'][f'{cog}'][f'{command}'] = 1
+        #     # if _guild is None:
+        #     #     _guild = [guild.id, [reason]]
+        #     #     _userData['bot']['kicks'].append(_guild)
+        #     # else:
+        #     #     print('test')
+        #     #     _guild[1].append(reason)
+        #     # # try:
+        #     # #     _command = _userData['bot']['command_stats'][f'{guild.name}'][f'{command}']
+        #     # # except Exception as e:
+        #     # #     print(e)
+        #     # print(_guild)
+        #     # # if _command is None:
+        #     # # try:
+        #     # #     addition = {f"user_kick: {reason}"}
+        #     # #     _userData['bot']['kicks'][f'{guild.name}'].update(addition)
+        #     # # except Exception as e:
+        #     # #     print(e)
+        #     # # else:
+        #     # #     _userData['bot']['command_stats'][f'{guild.name}'][f'{command}'] += 1
+
+        #     await self.terminal.Log().INFO(f"Kick info update")
+            # await self.updateUser(user, _userData)
+
+    async def getUserBlacklisted(self, user: discord.User) -> json:
+        if user is not None:
+            _userData = await self.retrieveUser(user)
+            if _userData is not None:
+                _userData = _userData[2]
+                _dataReturn = {"blacklisted": _userData['bot']['blacklisted'], "reason": _userData['bot']['reason']}
+                return _dataReturn
+        else:
+            _dataReturn = {"blacklisted": True, "reason": "Unable To Retrieve User Data."}
+            return _dataReturn
+    
+    async def getUserStaff(self, user: discord.User, guild: discord.Guild) -> json:
+        _guildData = await self.retrieveGuild(guild)
+        if _guildData is not None:
+            _guildData = _guildData[2]
+            
+            _guildOwnerRole = _guildData['roles']['guild_owner']
+            _guildAdminRole = _guildData['roles']['guild_administrator']
+            _guildModRole = _guildData['roles']['guild_moderator']
+            _guildTrialModRole = _guildData['roles']['guild_trial_moderator']
+            
+            if _guildOwnerRole != 0:
+                _guildOwnerRole = guild.get_role(_guildOwnerRole)
+                
+            if _guildAdminRole != 0:
+                _guildAdminRole = guild.get_role(_guildAdminRole)
+                
+            if _guildModRole != 0:
+                _guildModRole = guild.get_role(_guildModRole)
+                
+            if _guildTrialModRole != 0:
+                _guildTrialModRole = guild.get_role(_guildTrialModRole)
+                
+            staff_return = {"staff": False, "level": 0, "owner": False, "administrator": False, "moderator": False, "trial_moderator": False}    
+            
+            for _role in user.roles:
+                if type(_guildOwnerRole) == discord.Role:
+                    if _role.id == _guildOwnerRole.id:
+                        staff_return['owner'] = True
+                        staff_return['staff'] = True
+                        staff_return['level'] = 4
+                    
+                if type(_guildAdminRole) == discord.Role:
+                    if _role.id == _guildAdminRole.id:
+                        staff_return['administrator'] = True
+                        staff_return['staff'] = True
+                        staff_return['level'] = 3
+                    
+                if type(_guildModRole) == discord.Role:
+                    if _role.id == _guildModRole.id:
+                        staff_return['moderator'] = True
+                        staff_return['staff'] = True
+                        staff_return['level'] = 2
+                    
+                if type(_guildTrialModRole) == discord.Role:
+                    if _role.id == _guildTrialModRole.id:
+                        staff_return['trial_moderator'] = True
+                        staff_return['staff'] = True
+                        staff_return['level'] = 1
+                    
+            return staff_return
+                
+            
+            
+    
+    async def getUserBotStaff(self, user) -> json:
+        _bot_staff = self.config.CONFIG['bot']['contributers']
+        _user_id = None
+        if type(user) == int:
+            _user_id = user
+        elif type(user) == discord.Member or type(user) == discord.User:
+            _user_id = user.id
+            
+        if _user_id is not None:
+            if len(_bot_staff) == 0:
+                return False
+            elif len(_bot_staff) >= 1:
+                for _contributer in _bot_staff:
+                    await self.terminal.Log().DEBUG(f"Contributer: {_contributer}")
+                    if _user_id == _contributer['discord_id']:
+                        _user_owner = _contributer['owner']
+                        _user_dev =  _contributer['developer']
+                        return {"staff": True,"owner": _user_owner,"developer": _user_dev}
+                    else:
+                        return False
+        else:
+            return False # Default to false if we can't retrieve user status
+    
+    async def setUserBlacklist(self, user, time, reason):
+        pass
+    
+
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # ↓ Local ↓ : WIP
@@ -874,31 +1427,26 @@ class Terminal():
         def setLoggerName(self, loggerName):
             self.loggerName = loggerName
 
-        async def DEBUG(self, log: str = None):
-            if log is not None:
-                if self.logger.level == 10:
-                    print(f"[{Fore.BLUE}DEBUG{Fore.RESET}] {log}") # Only print if we need to
-                self.logger.debug(log)
+        async def DEBUG(self, log: str):
+            if self.logger.level == 10:
+                print(f"[{Fore.BLUE}DEBUG{Fore.RESET}] {log}") # Only print if we need to
+            self.logger.debug(log)
 
-        async def INFO(self, log: str = None):
-            if log is not None:
-                print(f"[{Fore.GREEN}INFO{Fore.RESET}] {log}")
-                self.logger.info(log)
+        async def INFO(self, log: str):
+            print(f"[{Fore.GREEN}INFO{Fore.RESET}] {log}")
+            self.logger.info(log)
 
-        async def WARNING(self, log: str = None):
-            if log is not None:
-                print(f"[{Fore.YELLOW}WARNING{Fore.RESET}] {log}")
-                self.logger.warning(log)
+        async def WARNING(self, log: str):
+            print(f"[{Fore.YELLOW}WARNING{Fore.RESET}] {log}")
+            self.logger.warning(log)
 
-        async def ERROR(self, log: str = None):
-            if log is not None:
-                print(f"[{Fore.RED}ERROR{Fore.RESET}] {log}")
-                self.logger.error(log)
+        async def ERROR(self, log: str):
+            print(f"[{Fore.RED}ERROR{Fore.RESET}] {log}")
+            self.logger.error(log)
 
-        async def CRITICAL(self, log: str = None):
-            if log is not None:
-                print(f"{Style.BRIGHT}{Back.RED}[CRITICAL] {log}{Style.RESET_ALL}{Back.RESET}")
-                self.logger.critical(log)
+        async def CRITICAL(self, log: str):
+            print(f"{Style.BRIGHT}{Back.RED}[CRITICAL] {log}{Style.RESET_ALL}{Back.RESET}")
+            self.logger.critical(log)
     
     async def obfuscateString(self, inputString:str, amount:int=4, obfuscateChar:str='#'):
         """
@@ -945,12 +1493,12 @@ class Terminal():
 
             def InsufficientPerms(self, NotifyGuild: bool, command: commands.Command, member: discord.Member):
                 ErrorMessage = f"""{member.name} attempted to execute command: {command.name} however they do not have sufficient permissions."""
-                self.terminal.Log().ERROR(ErrorMessage)
+                # Terminal().Log().ERROR(ErrorMessage)
                 return ErrorMessage
 
         async def NotifyGuildStaff(self, guild: discord.Guild, color=discord.Color.from_rgb(47, 49, 54),
                                    title: str = "Notification Title", message: str = "Notification Message"):
-            NotificationChannel = await database.RetrieveGuildNotificationChannel(guild=guild)
+            NotificationChannel = await Database().RetrieveGuildNotificationChannel(guild=guild)
             if NotificationChannel is not None:
                 GuildNotificationEmbed = discord.Embed(
                     title=f"{title}",
@@ -977,7 +1525,7 @@ class Terminal():
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 class CommonUI(): # use this as a place to store commonly used discord ui objects such as embeds, views, etc.
-    
+
     class ConfirmationView(discord.ui.View):
         def __init__(self):
             super().__init__()
@@ -1059,30 +1607,163 @@ class CommonUI(): # use this as a place to store commonly used discord ui object
                 self.next.style = discord.ButtonStyle.gray
 
         @discord.ui.button(label="|<", style=discord.ButtonStyle.blurple)
+            self.count.label = f"Page: {self.currentPage + 1}"
+
+        @discord.ui.button(label="|<", style=discord.ButtonStyle.blurple, custom_id='persistent_help:first')
         async def first(self, interaction: discord.Interaction, button: discord.ui.Button):
             await interaction.response.defer(ephemeral=True)
             self.currentPage = 0
             await self.update_message()
         
-        @discord.ui.button(label="<", style=discord.ButtonStyle.gray)
+        @discord.ui.button(label="<", style=discord.ButtonStyle.gray, custom_id='persistent_help:backward')
         async def previous(self, interaction: discord.Interaction, button: discord.ui.Button):
             await interaction.response.defer(ephemeral=True)
             if self.currentPage != 0:
                 self.currentPage -= 1
                 await self.update_message()
+
+        @discord.ui.button(label=f"Page: ", style=discord.ButtonStyle.gray, disabled=True, custom_id='persistent_help:page_num')
+        async def count(self, interaction: discord.Interaction, button: discord.ui.Button):
+            await interaction.response.defer(ephemeral=True)
+            pass # Do whatever your button needs to do here.
         
-        @discord.ui.button(label=">", style=discord.ButtonStyle.gray)
+        @discord.ui.button(label=">", style=discord.ButtonStyle.gray, custom_id='persistent_help:forward')
         async def next(self, interaction: discord.Interaction, button: discord.ui.Button):
             await interaction.response.defer(ephemeral=True)
             if self.currentPage != (len(self.data)-1):
                 self.currentPage += 1
                 await self.update_message()
         
-        @discord.ui.button(label=">|", style=discord.ButtonStyle.blurple)
+        @discord.ui.button(label=">|", style=discord.ButtonStyle.blurple, custom_id='persistent_help:last')
         async def last(self, interaction: discord.Interaction, button: discord.ui.Button):
             await interaction.response.defer(ephemeral=True)
             self.currentPage = len(self.data)-1
             await self.update_message()
+
+    class GuildBankView(discord.ui.View):
+        def __init__(self, bot):
+            super().__init__(timeout=None)
+            self.bot = bot
+
+        def createEmbed(self, guildData, data):
+            if guildData is not None:
+                _guildData = guildData[2]
+
+                embedObject = discord.Embed(
+                    title = f"{_guildData['extras']['guild_economy']['name']}", 
+                    color = discord.Color.from_rgb(47, 49, 54), 
+                    timestamp=datetime.now())
+                embedObject.set_footer(text=f"System Response")
+                embedObject.description = data
+            return embedObject
+
+        async def update_message(self, guild):
+            database = self.bot.database
+            guildData = await database.retrieveGuild(guild)
+            if guildData is not None:
+                _guildData = guildData[2]
+                _bankData = "```"
+                _bankListUnfiltered = {}
+                for member in guild.members:
+                    # if not member.bot:
+                    userData = await database.retrieveUser(member)
+                    if userData is not None:
+                        _userData = userData[2]
+                        _guildBalance = _guildData['extras']['guild_economy']['balance_start']
+                        if len(_userData['economy']['guild']) > 0:
+                            for entry in _userData['economy']['guild']:
+                                if entry['id'] == guild.id:
+                                    _guildBalance = entry['balance']
+
+                        _bankListUnfiltered.update({f'{member.name}': _guildBalance})
+                        # _bankData = _bankData + f"{member.name: <22} : {_guildData['extras']['guild_economy']['currency']}{_guildBalance: <9}\n"
+                
+                _bankListFiltered = sorted(_bankListUnfiltered.items(), key=lambda x:x[1])
+                sortdict = dict(_bankListFiltered)
+                print(sortdict)
+
+                # for k in sortdict:
+                #     _bankData = _bankData + f"{k: <22} : {_guildData['extras']['guild_economy']['currency']}{sortdict[k]: <9}\n"
+
+                _bankData = _bankData + "```"
+
+                _bank_channel_id = int(_guildData['extras']['guild_economy']['channel'])
+                _bank_message_id = int(_guildData['extras']['guild_economy']['message'])
+                _bank_channel = guild.get_channel(_bank_channel_id)
+                if _bank_channel is not None:
+
+                    _bank_message: discord.Message = await _bank_channel.fetch_message(_bank_message_id)
+                    if _bank_message is not None:
+                        await _bank_message.edit(embed = self.createEmbed(guildData, _bankData))
+
+        @discord.ui.button(label="Check Balance", style=discord.ButtonStyle.blurple, custom_id='persistent_verification:check_balance')
+        async def balance(self, interaction: discord.Interaction, button: discord.ui.Button):
+            await interaction.response.send_message("Balance", ephemeral=True)
+            await self.update_message(interaction.guild)
+        
+        @discord.ui.button(label="Send Money", style=discord.ButtonStyle.gray, custom_id='persistent_verification:send_money')
+        async def send_money(self, interaction: discord.Interaction, button: discord.ui.Button):
+            await interaction.response.send_message("Sending", ephemeral=True)
+            await self.update_message(interaction.guild)
+            userData = await self.bot.database.retrieveUser(interaction.user)
+            _userData = userData[2]
+            print(_userData)
+            
+    class GuildLevelUpView(discord.ui.View):
+        def __init__(self, bot):
+            super().__init__(timeout=None)
+            self.bot = bot
+
+        def createEmbed(self, _rankEntry, guild):
+            if _rankEntry is not None:
+                _levelXP = 1500 * _rankEntry['level']
+                
+                _embed = discord.Embed(
+                    title = f"You've Leveled Up!", 
+                    description=f"Congratulations, You're now level **{_rankEntry['level']}** in {guild.name}!\n\n```You're currently {_levelXP - _rankEntry['experience']}xp away from level {_rankEntry['level'] + 1}```", 
+                    color = discord.Color.from_rgb(47, 49, 54), 
+                    timestamp=datetime.now())
+                _embed.set_footer(text=f"System Response")
+                _embed.set_author(name=f"{guild.name}", url=None, icon_url=f"{guild.icon.url}")
+            return _embed
+
+        @discord.ui.button(label="Disable Level Up Notifications", style=discord.ButtonStyle.gray, custom_id='persistent_levelup:mute_levelup_notif')
+        async def mute_notif(self, interaction: discord.Interaction, button: discord.ui.Button):
+            await interaction.response.send_message("Muting... You will no longer recieve level up notifications. To **change** use `/setup level_up_notification`", ephemeral=True)
+            userData = await self.bot.database.retrieveUser(interaction.user)
+            _userData = userData[2]
+            _userData['disable_levelup_notifications'] = True
+            await self.bot.database.updateUser(interaction.user, _userData)
+
+    class VerificationView(discord.ui.View):
+        def __init__(self, bot):
+            super().__init__(timeout=None)
+            self.bot = bot
+
+        @discord.ui.button(label = "Begin Verification Process", style = discord.ButtonStyle.grey, custom_id='persistent_verification:verify')
+        async def beginVerificationButton(self, interaction: discord.Interaction, button: discord.ui.Button):
+            await interaction.response.defer(thinking = True, ephemeral = True)
+            if self.bot is not None:
+                database = self.bot.database
+                guildData = await database.retrieveGuild(interaction.guild)
+                if guildData is not None:
+                    _guildData = guildData[2]
+                    if _guildData['extras']['guild_verification']['role'] != 0:
+                        is_verified = interaction.user.get_role(_guildData['extras']['guild_verification']['role'])
+
+                        if is_verified is not None:
+                            await interaction.followup.send(f"You've Already been verified.", ephemeral=True)
+                        else:
+                            _verifiedRole = interaction.guild.get_role(_guildData['extras']['guild_verification']['role'])
+                            _data = {'id': interaction.user.id, 'date': datetime.now()}
+                            _guildData['extras']['guild_verification']['verified_users'].append(_data)
+                            print(_guildData['extras']['guild_verification'])
+                            if _verifiedRole is not None:
+                                await interaction.user.add_roles(_verifiedRole, reason = f"Verification System")
+
+                            await interaction.followup.send(f"Successfully Verified.", ephemeral=True)
+            else:
+                await interaction.followup.send(f"Failure Encountered", ephemeral=True)
 
     # class autoroleView(discord.ui.View):
     #     def __init__(self):
