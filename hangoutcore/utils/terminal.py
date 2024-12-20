@@ -54,6 +54,7 @@ class Terminal(object):
 		self.silent: bool = False
 		self.colorBG = "rgb(32,32,32)"
 		self.colorFG = ""
+		self.log = self.Log()
 
 		self.console = Console(
 			record = False,

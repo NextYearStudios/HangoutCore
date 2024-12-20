@@ -14,5 +14,5 @@
 
 # from . import config, database, local, terminal, ui
 
-from . import config, database, local, ui
+# from . import config, database, local, ui
 from .terminal import Terminal as terminal
