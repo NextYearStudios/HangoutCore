@@ -8,13 +8,14 @@
     Notes:
         None
 """
-import aiofiles
+
 import os
 import sys
-
 from datetime import datetime
-from jproperties import Properties
 from pathlib import Path
+
+import aiofiles
+from jproperties import Properties
 from rich.console import Group
 from rich.panel import Panel
 
@@ -29,20 +30,20 @@ if hangoutcore.terminal is not None:
 else:
     log = Terminal.Log("HangoutCore.Setup")
 
+
 def AppConfigExists() -> dict[bool, list]:
     """
     Scan current directory for 'hangoutcore.properties'. We will use this to store necessary information such as config locations.
     """
-    util.terminal.log.INFO(f"Scanning for 'hangoutcore.properties'.") # Notify the user that we will be scanning the directory. This is to make sure they're up to date with any action we perform on their system.
+    util.terminal.log.INFO(
+        f"Scanning for 'hangoutcore.properties'."
+    )  # Notify the user that we will be scanning the directory. This is to make sure they're up to date with any action we perform on their system.
     path = os.getcwd()
     pFiles = []
-    dict = {
-        "exists": False,
-        "files": []
-    }
+    dict = {"exists": False, "files": []}
     for root, dirs, files in os.walk(path):
         for file in files:
-            if file.endswith('.properties'):
+            if file.endswith(".properties"):
                 pFiles.append(file)
     if len(pFiles) > 0:
         dict["exists"] = True
@@ -52,22 +53,25 @@ def AppConfigExists() -> dict[bool, list]:
         dict["exists"] = False
         return dict
 
+
 async def __main__():
     """
     Run through the process of setting up the necessary files for HangoutCore to operate.
     """
-    sys.path.append(os.getcwd()) # This expands package finding to our working directory 
-    hangoutcore.INIT_TIME = '{0:%d%b%Y_%Hh:%Mm}'.format(datetime.now())
+    sys.path.append(
+        os.getcwd()
+    )  # This expands package finding to our working directory
+    hangoutcore.INIT_TIME = "{0:%d%b%Y_%Hh:%Mm}".format(datetime.now())
     console = terminal.console
-    
+
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     # Section Title: Setup log handling
-    
-    logDirectory = 'setup-logs'
-    
+
+    logDirectory = "setup-logs"
+
     # while not await local.dirExists(logDirectory, True):
     #     terminal.log.ERROR(f'Unable to locate or create setup log directory.')
-    
+
     # logName = str(fr"{logDirectory}/log_{hangoutcore.INIT_TIME}.log").replace(':', '') # We clear any spaces in our log name to avoid incompatabilities
     # logEncoding = "utf-8"
     # date_format = "%m/%d/%Y %I:%M:%S %p"
@@ -79,15 +83,15 @@ async def __main__():
 
     # formatter = logging.Formatter("""[%(asctime)s][%(name)s][%(levelname)s] %(message)s""", date_format)
     # handler.setFormatter(formatter)
-    
+
     # hangoutcore.loggerDiscord.addHandler(handler)
     # hangoutcore.loggerHangoutCore.addHandler(handler)
-    
+
     # hangoutcore.loggerDiscord.setLevel(20)
     # hangoutcore.loggerHangoutCore.setLevel(20)
-    
+
     # logFiles = os.listdir(logDirectory)
-    
+
     # # Sort log files by date and trim to max of 5
     # while len(logFiles) > 5:
     #     logFiles = os.listdir(logDirectory)
@@ -97,17 +101,17 @@ async def __main__():
     #         os.remove(oldest_file)
     #     else:
     #         break
-        
+
     # # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     # # Section Title: Main Functions for user input
-    
+
     # def requestBotName():
     #     _botName = terminal.input(f"Please Enter The Bot Name: ")
     #     while _botName == "" or _botName == None:
     #         terminal.log.WARNING("Bot Name cannot be blank, Please Enter again.")
     #         _botName = terminal.input(f"Please Enter The Bot Name: ")
     #     return _botName
-    
+
     # def requestBotDescription():
     #     _botDescription = terminal.input(f"Please Enter The Bot Description: (This can always be changed in the config later.)")
     #     return _botDescription
@@ -150,8 +154,8 @@ async def __main__():
     #                             ""
     #                         ),
     #                         # style = f"red on {terminal.colorBG}",
-    #                     ), 
-    #                     style=f"on {terminal.colorBG}", 
+    #                     ),
+    #                     style=f"on {terminal.colorBG}",
     #                     # justify="center"
     #                 )
     #             if terminal.confirm(f"Are you sure you'd like to use the bot listed above?"):
@@ -193,7 +197,7 @@ async def __main__():
     #         return _default
     #     else:
     #         return _CogDirectory
-        
+
     # def requestInstallDefaultCogs():
     #     if terminal.confirm(f"Would you like to install the Default Cogs?"):
     #         return True
@@ -201,10 +205,10 @@ async def __main__():
     #         return False
 
     # settingsConfirmed = False
-    
+
     # terminal.log.INFO(f"Beginning Setup Process.")
     # while not settingsConfirmed:
-        
+
     #     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     #     # Section Title: Setup terminal
     #     terminal.clear()
@@ -212,10 +216,10 @@ async def __main__():
     #     terminal.print_center(" ")
     #     terminal.print_logo()
     #     terminal.print_hr()
-        
+
     #     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     #     # Section Title: Initiate prompts for user input
-        
+
     #     botToken = requestBotToken()
     #     # botPrefix = requestBotPrefix() # No longer necessary, here incase needed
     #     botName = requestBotName()
@@ -226,7 +230,7 @@ async def __main__():
     #     botLogDirectory = requestBotLogDirectory()
     #     botCogDirectory = requestBotCogDirectory()
     #     installDefaultCogs = requestInstallDefaultCogs()
-        
+
     #     terminal.print(Panel(title = r"// Bot Settings \\",
     #                         subtitle =  '{0:%d%b%Y %Hh:%Mm}'.format(datetime.now()),
     #                         renderable = Group(
@@ -242,46 +246,46 @@ async def __main__():
     #                             f"Bot Token: [b]{terminal.obfuscateString(botToken, 6, '*')}[/b]",
     #                             ""
     #                         ),
-    #                     ), 
+    #                     ),
     #                     style=f"on {terminal.colorBG}")
     #     if terminal.confirm(f"Please verify the details above and confirm they are correct."):
-            
+
     #         # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     #         # Section Title: Create directories / copy files
-            
+
     #         terminal.print("")
     #         terminal.log.INFO(f"Creating a new properties file to store directory settings/locations.")
-            
+
     #         p = Properties()
     #         p["botConfig"] = botConfigName
     #         p["botConfigDirectory"] = botConfigDirectory
     #         p["botLogDirectory"] = botLogDirectory
     #         p["botCogDirectory"] = botCogDirectory
-            
+
     #         if not Path.exists(Path(os.path.dirname(__file__)).parent.joinpath("hangoutcore.properties").absolute()):
     #             terminal.log.INFO(f"Creating Directory: {Path(os.path.dirname(__file__)).parent.joinpath('hangoutcore.properties').absolute()}")
     #         else:
     #             terminal.log.WARNING(f"The following file already exists :'hangoutcore.properties'")
     #             if terminal.confirm(f"Would you like to override it and continue?"):
-                    
+
     #                 with open(f"hangoutcore.properties", "wb") as hangoutcore_config:
     #                     p.store(hangoutcore_config, encoding="utf-8")  # Store provided information in a properties file.
-            
+
     #         terminal.print("")
     #         terminal.log.INFO(f"Creating Directories:")
-            
+
     #         if not Path.exists(Path(os.path.dirname(__file__)).parent.joinpath(botConfigDirectory).absolute()):
     #             terminal.log.INFO(f"Creating Directory: {Path(os.path.dirname(__file__)).parent.joinpath(botConfigDirectory).absolute()}")
     #             Path.mkdir(botConfigDirectory, parents = True, exist_ok = True)
     #         else:
     #             terminal.log.WARNING(f"Directory '\{botConfigDirectory}' Already Exists, Skipping.")
-        
+
     #         if not Path.exists(Path(os.path.dirname(__file__)).parent.joinpath(botCogDirectory).absolute()):
     #             terminal.log.INFO(f"Creating Directory: {Path(os.path.dirname(__file__)).parent.joinpath(botCogDirectory).absolute()}")
     #             Path.mkdir(botCogDirectory, parents = True, exist_ok = True)
     #         else:
     #             terminal.log.WARNING(f"Directory '\{botCogDirectory}' Already Exists, Skipping.")
-                
+
     #         if not Path.exists(Path(os.path.dirname(__file__)).parent.joinpath(botLogDirectory).absolute()):
     #             terminal.log.INFO(f"Creating Directory: {Path(os.path.dirname(__file__)).parent.joinpath(botLogDirectory).absolute()}")
     #             Path.mkdir(botLogDirectory, parents = True, exist_ok = True)
@@ -295,7 +299,7 @@ async def __main__():
     #                 if systemCog.endswith(f".py"):
     #                     _cogPath = Path(os.path.dirname(__file__)).parent.joinpath(botCogDirectory).absolute()
     #                     _systemCogPath = Path(os.path.dirname(hangoutcore.utils.__file__)).parent.joinpath('SystemCogs').absolute()
-                        
+
     #                     if Path.exists(_cogPath.joinpath(systemCog)):
     #                         terminal.log.WARNING(f"The following file already exists '\{systemCog}'")
     #                         if terminal.confirm(f"Would you like to override it and continue?"):
@@ -303,36 +307,38 @@ async def __main__():
     #                     else:
     #                         terminal.log.WARNING(f"Copying the file '\{systemCog}' to '\{botCogDirectory}'")
     #                         shutil.copyfile(_systemCogPath.joinpath(systemCog), _cogPath.joinpath(systemCog))
-            
+
     #         # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     #         # Section Title: Create new bot config with provided info
     #         _configDirPath = Path(os.path.dirname(__file__)).parent.joinpath(botConfigDirectory).absolute()
     #         with open(_configDirPath.joinpath(botConfigName), 'w') as file:
     #             json.dump(local.botConfig.EXAMPLE_CONFIG, file, indent = 4)
-                
+
     #         _config = await local.botConfig.get(_configDirPath.joinpath(botConfigName))
-            
+
     #         _config['bot']['token'] = botToken
     #         _config['bot']['name'] = botName
     #         _config['bot']['version'] = botVersion
     #         _config['bot']['description'] = botDescription
-            
+
     #         await local.botConfig.save(_configDirPath.joinpath(botConfigName), _config)
-            
+
     #         break
     #     else:
     #         continue
+
 
 def __init__():
     try:
         asyncio.run(__main__())
     except KeyboardInterrupt:
-        print("") # Clear line just incase user closes while inputting
+        print("")  # Clear line just incase user closes while inputting
         util.terminal.log.CRITICAL(f"Please refrain from using CTRL+C to shutdown bot.")
         util.terminal.log.CRITICAL(f"Shutting Down...")
     else:
-        print("") # Clear line just incase user closes while inputting
+        print("")  # Clear line just incase user closes while inputting
         util.terminal.log.CRITICAL(f"Shutting Down...")
+
 
 if __name__ == "__main__":
     __init__()

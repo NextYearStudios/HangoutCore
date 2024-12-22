@@ -14,31 +14,33 @@
 """
 
 import asyncio
+import ctypes
+import json
+import logging
+import os
+import pathlib
+import shutil
+import sys
+import traceback
+from asyncio import sleep
+from dataclasses import dataclass
+from datetime import datetime
+from getpass import getpass
+from os import name, system
+from typing import Optional
+
 import aiofiles
 import aiomysql  # Async MYSQL
 import click
-import ctypes
 import discord
-import hangoutcore
-import json
-import logging
-import pathlib
 import pymysql.cursors
-import os, sys
-import shutil
-import traceback
 import requests
-
-from getpass import getpass
-from asyncio import sleep
 from colorama import *
-from colorama import init, Style, Back, Fore
-from dataclasses import dataclass
-from datetime import datetime
+from colorama import Back, Fore, Style, init
 from discord.ext import commands
 from jproperties import Properties
-from typing import Optional
-from os import system, name
+
+import hangoutcore
 
 init(strip=not sys.stdout.isatty()) # Strip color if stdout is redirected.
 

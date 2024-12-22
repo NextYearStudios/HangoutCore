@@ -1,16 +1,18 @@
-import discord
 import os
 import shutil
 import traceback
-from aiohttp import ClientSession
 from datetime import datetime
-from discord import app_commands
-from discord.ext import commands
 from pathlib import Path
 from typing import Optional
 
+import discord
+from aiohttp import ClientSession
+from discord import app_commands
+from discord.ext import commands
+
 import hangoutcore
-from hangoutcore.utils import terminal, loggerHangoutCore
+from hangoutcore.utils import loggerHangoutCore, terminal
+
 
 class HangoutCoreBot(commands.Bot):
     """Customized bot class for HangoutCore."""
@@ -23,7 +25,7 @@ class HangoutCoreBot(commands.Bot):
         db_pool,
         init_time,
         DeveloperGuild_ID,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(*args, **kwargs)
 
@@ -33,8 +35,12 @@ class HangoutCoreBot(commands.Bot):
         self.init_time = init_time
         self.DeveloperGuild_ID = DeveloperGuild_ID
 
-        self.terminal = terminal(f"{hangoutcore.terminal.module}.Bot", loggerHangoutCore)
-        self.log = self.terminal.Log(f"{hangoutcore.terminal.module}.Bot", loggerHangoutCore)
+        self.terminal = terminal(
+            f"{hangoutcore.terminal.module}.Bot", loggerHangoutCore
+        )
+        self.log = self.terminal.Log(
+            f"{hangoutcore.terminal.module}.Bot", loggerHangoutCore
+        )
 
         self.tree: app_commands.CommandTree = self.tree
         self.BotSynced = False
@@ -46,7 +52,9 @@ class HangoutCoreBot(commands.Bot):
 
         try:
             local_cogs = [f for f in os.listdir(cog_directory) if f.endswith(".py")]
-            system_cogs = [f for f in os.listdir(system_cog_directory) if f.endswith(".py")]
+            system_cogs = [
+                f for f in os.listdir(system_cog_directory) if f.endswith(".py")
+            ]
         except Exception as err:
             self.log.ERROR(f"Error reading cog directories: {err}")
             return
@@ -71,18 +79,20 @@ class HangoutCoreBot(commands.Bot):
                 await self.load_extension(cog_path)
                 self.log.INFO(f"Successfully loaded cog: {cog}")
             except Exception as err:
-                self.log.ERROR(f"Error loading cog '{cog}': {err}\n{traceback.format_exc()}")
+                self.log.ERROR(
+                    f"Error loading cog '{cog}': {err}\n{traceback.format_exc()}"
+                )
 
     async def is_user_bot_staff(self, interaction: discord.Interaction) -> bool:
         """Checks if a user has bot staff permissions."""
         self.log.DEBUG(f"Checking bot staff permissions for {interaction.user.id}")
-        contributors = hangoutcore.CONFIG_BOT['bot']['contributors']
+        contributors = hangoutcore.CONFIG_BOT["bot"]["contributors"]
 
         for contributor in contributors:
             if (
-                contributor['discord_id'] == interaction.user.id
-                and contributor['owner']
-                and contributor['developer']
+                contributor["discord_id"] == interaction.user.id
+                and contributor["owner"]
+                and contributor["developer"]
             ):
                 return True
 
@@ -93,22 +103,24 @@ class HangoutCoreBot(commands.Bot):
 
     def create_error_embed(self, error_key: str | int, **kwargs) -> discord.Embed:
         """Creates an error embed from a predefined error configuration."""
-        errors = hangoutcore.CONFIG_BOT['bot']['messages']['errors']
+        errors = hangoutcore.CONFIG_BOT["bot"]["messages"]["errors"]
 
         error_data = (
             errors.get(str(error_key))
             or errors.get(int(error_key))
-            or errors['error_bot']
+            or errors["error_bot"]
         )
 
-        description = error_data['error_message'].format(**kwargs)
+        description = error_data["error_message"].format(**kwargs)
         embed = discord.Embed(
-            title=error_data['error_title'],
+            title=error_data["error_title"],
             description=description,
             color=discord.Color.red(),
-            timestamp=datetime.now()
+            timestamp=datetime.now(),
         )
-        embed.add_field(name="Error Number", value=f"`{error_data['error_number']}`", inline=False)
+        embed.add_field(
+            name="Error Number", value=f"`{error_data['error_number']}`", inline=False
+        )
         return embed
 
     async def setup_hook(self) -> None:
@@ -140,8 +152,12 @@ class HangoutCoreCog(commands.Cog):
         self.bot = bot
         self.module = self.qualified_name
 
-        self.terminal = terminal(f"{hangoutcore.terminal.module}.{self.module}", loggerHangoutCore)
-        self.log = self.terminal.Log(f"{hangoutcore.terminal.module}.{self.module}", loggerHangoutCore)
+        self.terminal = terminal(
+            f"{hangoutcore.terminal.module}.{self.module}", loggerHangoutCore
+        )
+        self.log = self.terminal.Log(
+            f"{hangoutcore.terminal.module}.{self.module}", loggerHangoutCore
+        )
 
         # Optional metadata for cog behavior
         self.development = False

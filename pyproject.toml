@@ -1,3 +1,41 @@
 [build-system]
-requires = ["setuptools", "setuptools-scm"]
+requires = [
+    "setuptools>=42",
+    "wheel",
+    "setuptools-scm[toml]>=6.0"
+]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+write_to = "hangoutcore/_version.py"
+
+[project]
+name = "hangoutcore"
+version = "0.0.0"  # Placeholder for setuptools-scm
+description = "A reliable and easy-to-understand Discord bot framework."
+readme = "README.md"
+license = { text = "GPL-3.0" }
+authors = [
+    { name = "Lino" }
+]
+keywords = ["discord", "bot", "framework"]
+classifiers = [
+    "Programming Language :: Python :: 3.10",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: OS Independent",
+    "Topic :: Software Development :: Libraries :: Application Frameworks"
+]
+requires-python = ">=3.10"
+
+[tool.black]
+line-length = 88
+target-version = ["py312"]
+
+[tool.isort]
+profile = "black"
+
+[tool.pylint]
+max-line-length = 88
+
+[tool.flake8]
+max-line-length = 88
