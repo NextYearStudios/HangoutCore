@@ -42,4 +42,4 @@ max-line-length = 88
 
 [options.packages.find]
 include = ["hangoutcore", "hangoutcore.*"]
-exclude = ["hangoutcore.__pycache__", "hangoutcore_venv", "dev]
+exclude = ["hangoutcore.__pycache__", "hangoutcore_venv", "dev"]
