@@ -11,12 +11,20 @@ write_to = "hangoutcore/_version.py"
 
 [project]
 name = "hangoutcore"
-version = "0.0.0"  # Placeholder for setuptools-scm
+dynamic = ["version", "scripts"]
 description = "A reliable and easy-to-understand Discord bot framework."
 readme = "README.md"
 license = { text = "GPL-3.0" }
 authors = [
     { name = "Lino" }
+]
+dependencies = [
+    "aiomysql",
+    "discord.py[voice]",
+    "jproperties",
+    "requests",
+    "rich",
+    "PyNaCl"
 ]
 keywords = ["discord", "bot", "framework"]
 classifiers = [
