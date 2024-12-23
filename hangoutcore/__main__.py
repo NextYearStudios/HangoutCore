@@ -1,59 +1,40 @@
-import asyncio
-import logging
-import os
-import pathlib
-import sys
+import discord
 
-# sys.path.append(os.path.abspath(os.path.join(os.getcwd(), "../")))
-# print(sys.path)
-import hangoutcore
-from hangoutcore import utils
+import hangoutcore, hangoutcore.utils, hangoutcore.bot, hangoutcore.setup
 
-hangoutcore.terminal[os.getpid()] = utils.terminal(
-    "HC.Main", hangoutcore.logger["HangoutCore"]
-)
-terminal = hangoutcore.terminal[os.getpid()]
-log = terminal.log = terminal.Log("HC.Main", hangoutcore.logger["HangoutCore"])
-# hangoutcore.terminal = terminal
-# hangoutcore.log = log
+async def main():
+    async def process_args():
+        pass
 
+    async def format_terminal():
+        pass
 
-async def __main__():
-    _logFormatter = logging.Formatter(
-        """[%(name)s][%(levelname)s] %(message)s""", "%m/%d/%Y %I:%M:%S %p"
-    )
-    _fileHandler = logging.FileHandler(
-        filename=rf"{os.getcwd()}\\init.log",
-        mode="w",
-        encoding="utf-8",
-        delay=False,
-        errors=None,
-    )
-    _fileHandler.setFormatter(_logFormatter)
+    async def establish_logger():
+        pass
 
-    hangoutcore.logger["HangoutCore"].addHandler(_fileHandler)
-    hangoutcore.logger["HangoutCore"].setLevel(logging.NOTSET)
+    async def establish_db_conn():
+        pass
 
-    # print(os.getcwd())
-    log.DEBUG("[b]test[/b]")
-    log.DEBUG("Starting...")
-    log.DEBUG(f"HangoutCore Version: {hangoutcore.__version__}")
-    log.DEBUG(os.getpid())
-    log.DEBUG(os.getppid())
-    log.DEBUG(hangoutcore.terminal)
-    log.DEBUG(f"{os.getcwd()}\\init.log")
-    log.DEBUG(os.path.exists(f"{os.getcwd()}\\init.log"))
-    log.DEBUG(sys.argv)
+    async def start_bot():
+        pass
 
+    pass
 
-def __init__():
-    try:
-        log.INFO("Starting...")
-        asyncio.run(__main__())
-    except Exception as err:
-        log.ERROR(f"[b]{err}[/b]")
-        raise err
+def init():
+    debug = True
+    print(hangoutcore.__version__)
+    hangoutcore.utils.terminal.print("Test")
 
+    if debug:
+        print(hangoutcore.version)
+    else:
+        try:
+            pass
+        except KeyboardInterrupt:
+            pass
+        except Exception as err:
+            pass
+        pass
 
 if __name__ == "__main__":
-    __init__()
+    init()
