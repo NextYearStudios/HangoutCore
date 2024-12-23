@@ -15,32 +15,32 @@ try:
 except ImportError:
     __version__ = "0.0.0"
 
-__creator__ = discord.Object(id=272230336656834560)
+# __creator__ = discord.Object(id=272230336656834560)
 
-init_time: datetime = datetime.now(timezone.utc)
-bot = None
-db_pool = None
-debug: bool = False
-directory: dict[str, str] = {"cogs": "", "configs": "", "logs": ""}
-invalid_args: bool = False
-logger: dict[str, logging.Logger] = {
-    "Discord": logging.getLogger("discord"),
-    "HangoutCore": logging.getLogger("HangoutCore"),
-    "Root": logging.getLogger("root"),
-}
+# init_time: datetime = datetime.now(timezone.utc)
+# bot = None
+# db_pool = None
+# debug: bool = False
+# directory: dict[str, str] = {"cogs": "", "configs": "", "logs": ""}
+# invalid_args: bool = False
+# logger: dict[str, logging.Logger] = {
+#     "Discord": logging.getLogger("discord"),
+#     "HangoutCore": logging.getLogger("HangoutCore"),
+#     "Root": logging.getLogger("root"),
+# }
 
-silent: bool = False
-system_cogs: bool = False
-system_group: discord.app_commands.Group = None
-terminal: dict[str, utils.terminal] = {
-    os.getpid(): utils.terminal("Hangoutcore", logger["HangoutCore"]),
-}
+# silent: bool = False
+# system_cogs: bool = False
+# system_group: discord.app_commands.Group = None
+# terminal: dict[str, utils.terminal] = {
+#     os.getpid(): utils.terminal("Hangoutcore", logger["HangoutCore"]),
+# }
 
-terminal[os.getpid()].log = terminal[os.getpid()].Log(
-    "HangoutCore", logger["HangoutCore"]
-)
-token: int = -1
-fresh_install: bool = False
+# terminal[os.getpid()].log = terminal[os.getpid()].Log(
+#     "HangoutCore", logger["HangoutCore"]
+# )
+# token: int = -1
+# fresh_install: bool = False
 
 
 class Config:

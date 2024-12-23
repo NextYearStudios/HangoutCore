@@ -2,7 +2,7 @@ import os
 
 import discord
 
-import hangoutcore
+# import hangoutcore
 
 # import hangoutcore.bot
 # import hangoutcore.setup
@@ -30,9 +30,10 @@ async def main():
 
 def init():
     debug = True
-    
+
     if debug:
-        print(hangoutcore.__version__)
+        print("debug")
+        # print(hangoutcore.__version__)
     else:
         try:
             pass
