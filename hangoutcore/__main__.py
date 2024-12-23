@@ -6,7 +6,7 @@ import hangoutcore
 
 # import hangoutcore.bot
 # import hangoutcore.setup
-import hangoutcore.utils
+# import hangoutcore.utils
 
 
 async def main():
@@ -30,17 +30,9 @@ async def main():
 
 def init():
     debug = True
-    # hangoutcore.terminal[os.getpid()] = hangoutcore.utils.terminal(
-    #     "HC.Main", hangoutcore.logger["HangoutCore"]
-    # )
-    # terminal = hangoutcore.terminal[os.getpid()]
-    # log = terminal.log = terminal.Log("HC.Main", hangoutcore.logger["HangoutCore"])
-
-    print(hangoutcore.__version__)
-    # log.DEBUG("Test")
-
+    
     if debug:
-        print(hangoutcore.version)
+        print(hangoutcore.__version__)
     else:
         try:
             pass

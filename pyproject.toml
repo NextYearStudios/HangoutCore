@@ -35,6 +35,14 @@ classifiers = [
 ]
 requires-python = ">=3.10"
 
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "flake8",
+    "black",
+    "isort",
+]
+
 [tool.black]
 line-length = 88
 target-version = ["py312"]
@@ -50,4 +58,4 @@ max-line-length = 88
 
 [options.packages.find]
 include = ["hangoutcore", "hangoutcore.*"]
-exclude = ["hangoutcore.__pycache__", "hangoutcore_venv", "dev"]
+exclude = ["hangoutcore.__pycache__", "hangoutcore_venv", "dev", "config", "cogs", "tests", ".github", ".vscode"]
