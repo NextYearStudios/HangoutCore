@@ -15,7 +15,7 @@ try:
 except ImportError:
     __version__ = "0.0.0"
 
-__creator__ = discord.Object( id = 272230336656834560 )
+__creator__ = discord.Object(id=272230336656834560)
 
 init_time: datetime = datetime.now(timezone.utc)
 bot = None
@@ -36,9 +36,12 @@ terminal: dict[str, utils.terminal] = {
     os.getpid(): utils.terminal("Hangoutcore", logger["HangoutCore"]),
 }
 
-terminal[os.getpid()].log = terminal[os.getpid()].Log("HangoutCore", logger["HangoutCore"])
+terminal[os.getpid()].log = terminal[os.getpid()].Log(
+    "HangoutCore", logger["HangoutCore"]
+)
 token: int = -1
 fresh_install: bool = False
+
 
 class Config:
     def __init__(self):
@@ -54,5 +57,6 @@ class Config:
             self.outdated: bool = False
             self.name: str = None
             self.config: dict = {}
+
 
 config = Config()

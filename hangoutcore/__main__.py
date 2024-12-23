@@ -1,6 +1,10 @@
 import discord
 
-import hangoutcore, hangoutcore.utils, hangoutcore.bot, hangoutcore.setup
+import hangoutcore
+# import hangoutcore.bot
+import hangoutcore.setup
+import hangoutcore.utils
+
 
 async def main():
     async def process_args():
@@ -20,6 +24,7 @@ async def main():
 
     pass
 
+
 def init():
     debug = True
     print(hangoutcore.__version__)
@@ -35,6 +40,7 @@ def init():
         except Exception as err:
             pass
         pass
+
 
 if __name__ == "__main__":
     init()

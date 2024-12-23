@@ -166,3 +166,7 @@ class HangoutCoreCog(commands.Cog):
         self.guild_owner_only = False
         self.guild_admin_only = False
         self.guild_mod_only = False
+
+
+if __name__ == "__main__":
+    pass

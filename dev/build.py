@@ -74,6 +74,7 @@ def format_files():
     print("Sorting...")
     run_command(["isort", ".", "--skip", "hangoutcore_venv"])
 
+
 def build_package():
     """Build the package."""
     print("Building the package...")
