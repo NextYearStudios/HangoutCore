@@ -1,0 +1,27 @@
+[asyncio][DEBUG] Using proactor: IocpProactor
+[HangoutCore][DEBUG] Printed: Checking if app config exists...
+[HangoutCore][DEBUG] Printed: hangoutcore.properties: True
+[HangoutCore][DEBUG] Printed: Attempting to locate properties file 'hangoutcore.properties'.
+[HangoutCore][DEBUG] Printed: Successfully located 'hangoutcore.properties'.
+[HangoutCore][DEBUG] Printed: Checking if bot directories exist...
+[HangoutCore][DEBUG] Printed: cogs: True
+[HangoutCore][DEBUG] Printed: configs: True
+[HangoutCore][DEBUG] Printed: logs: True
+[HangoutCore][DEBUG] Printed: Checking if bot config exists...
+[HangoutCore][DEBUG] Printed: config.json: True
+[HangoutCore][DEBUG] Printed: Attempting to locate 'D:\.HangoutCore\DiscordBot\Python\HangoutCore_Test\configs\config.json'.
+[HangoutCore][DEBUG] Printed: config.json: Latest=6.5 | Local=6.4
+[HangoutCore][WARNING] Printed: Your bot config is out of date.
+[HangoutCore][DEBUG] Requested user confirmation with the following prompt: [[red]CONFIRMATION REQUIRED[/red]] Would you like to update?
+[HangoutCore][DEBUG] Recieved confirmation: False.
+[HangoutCore][DEBUG] Cleared the terminal.
+[HangoutCore][DEBUG] Printed: Program Title
+[urllib3.connectionpool][DEBUG] Starting new HTTPS connection (1): pypi.org:443
+[urllib3.connectionpool][DEBUG] https://pypi.org:443 "GET /pypi/discord/json HTTP/11" 200 4344
+[HangoutCore][DEBUG] Printed: discord: Latest=2.3.2 | Local=2.4.0
+[urllib3.connectionpool][DEBUG] Starting new HTTPS connection (1): pypi.org:443
+[urllib3.connectionpool][DEBUG] https://pypi.org:443 "GET /pypi/hangoutcore/json HTTP/11" 200 8033
+[HangoutCore][DEBUG] Printed: hangoutcore: Latest=2.91.5 | Local=4.0.5.dev0+g0ed6412.d20250115
+[HangoutCore][DEBUG] Printed: config.json: Latest=6.5 | Local=6.4
+[HangoutCore][DEBUG] Printed: <rich.panel.Panel object at 0x0000017CCFDBEF60>
+[HangoutCore][DEBUG] Printed: Establishing database connection...

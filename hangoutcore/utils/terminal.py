@@ -240,10 +240,10 @@ class Terminal(object):
                 if _response is not None:
                     if kwargs.get("password"):
                         self.logger.debug(
-                            f"Recieved input: (PROTECTED) {self.obfuscate(_response, 0, 0, '*')}."
+                            f"Recieved input: (PROTECTED) {self.obfuscate(_response, 0, 0, '*')}"
                         )
                     else:
-                        self.logger.debug(f"Recieved input: {_response}.")
+                        self.logger.debug(f"Recieved input: {_response}")
                     return _response
         else:
             self.logger.critical(
@@ -265,31 +265,34 @@ class Terminal(object):
             )
             sys.exit(1)
 
-    def obfuscate(
-        self, inputString: str, start: int = 0, end: int = 4, obfuscateChar: str = "#"
-    ):
+    def obfuscate(self, inputString: str, start: int = 0, end: int = 4, obfuscateChar: str = "#") -> str:
         """
-        Used for allowing our user to recognize a string/token while keeping the rest of it hidden from prying eyes such as a twitch stream, a screen recording or any other public environment.
+        Obfuscates a string/token to keep parts of it hidden from public view (like a Twitch stream or screen recording).
+
+        Args:
+            inputString (str): The input string to be obfuscated.
+            start (int): The number of characters to keep visible at the start.
+            end (int): The number of characters to keep visible at the end.
+            obfuscateChar (str): The character used for obfuscation.
+
+        Returns:
+            str: The obfuscated string.
         """
+        if (start + end) >= len(inputString):
+            return inputString
 
         outputString = ""
+
         for i in range(len(inputString)):
-
-            if (start + end) >= len(inputString):
-                outputString = inputString
-                break
-
-            if (i + 1) < start and i < len(inputString) - end:
+            if i < start:
                 outputString += inputString[i]
-                continue
-
-            if (i + 1) > start and i < len(inputString) - end:
+            elif i >= start and i < len(inputString) - end:
                 if inputString[i] == ".":
-                    outputString = outputString + inputString[i]
+                    outputString += inputString[i]
                 else:
-                    outputString = outputString + obfuscateChar
-            # elif i == len(inputString) - amount:
-            #     outputString = outputString + "-" + inputString[i]
+                    outputString += obfuscateChar
             else:
-                outputString = outputString + inputString[i]
+                outputString += inputString[i]
+
         return outputString
+

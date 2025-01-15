@@ -36,7 +36,7 @@ def sanitize_version(version):
     Simplify the version string by removing metadata.
     Example: '4.0.4.dev0+ge13f316.d20241222' -> '4.0.4.dev'
     """
-    match = re.match(r"(\d+\.\d+\.\d+)(\.dev\d+)?", version)
+    match = re.match(r"(\d+\.\d+\.\d+)(\.dev)?", version)
     if match:
         return f"{match.group(1)}{match.group(2) or ''}"
     return version
@@ -96,7 +96,7 @@ def main():
         format_files()
 
         # Create and push Git tag
-        # create_and_push_tag(version)
+        create_and_push_tag(version)
 
         print("\n🎉 Build and tag completed successfully!")
     except subprocess.CalledProcessError as e:

@@ -28,6 +28,7 @@ import os
 import shutil
 import sys
 import traceback
+from packaging import version
 from pathlib import Path
 from typing import Optional, Union
 
@@ -37,10 +38,37 @@ from discord.ext import commands
 from jproperties import Properties
 
 import hangoutcore
-import hangoutcore.SystemCogs
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Section Title: Functions
+
+async def is_package_latest(package_name: str) -> bool:
+    """
+    Check if the installed version of a package is the latest available on PyPI.
+    Returns False only if the local version is outdated.
+    """
+    log = hangoutcore.terminal[os.getpid()].log
+    _package = sys.modules.get(package_name)
+    if not _package:
+        log.ERROR(f"{package_name} is not installed.")
+        return False
+
+    response = requests.get(f'https://pypi.org/pypi/{package_name}/json')
+    latest_version = response.json()['info']['version']
+
+    package_version = getattr(_package, '__version__', None) or getattr(_package, 'version', None)
+
+    if package_version:
+        log.DEBUG(f'{package_name}: Latest={latest_version} | Local={package_version}')
+        
+        # Use packaging.version for proper semantic versioning comparison
+        if version.parse(package_version) < version.parse(latest_version):
+            return False
+        else:
+            return True
+    else:
+        log.ERROR(f"{package_name} version could not be determined.")
+        return False
 
 
 class appConfig(object):
@@ -57,7 +85,7 @@ class appConfig(object):
 
     @staticmethod
     async def get(config: str = "hangoutcore.properties"):
-        log = hangoutcore.log
+        log = hangoutcore.terminal[os.getpid()].log
         if not config.endswith(".properties"):
             config += ".properties"
 
@@ -82,13 +110,12 @@ class appConfig(object):
 
 
 class botConfig(object):
-    CONFIG_VERSION = 6.4
+    CONFIG_VERSION = 6.5
     EXAMPLE_CONFIG = {  # Changing this will only matter when the bot creates a new Config(). Actual config at CONFIG_PATH
         "bot": {
-            "prefixes": ["!"],
+            "prefixes": ["!"], # Legacy, still included to support devs who don't want to use slash commands.
             # Bot uses this array for prefixes. Add as many as you want, and keep in mind you can include spaces but be careful not to over complicate your prefixes.
-            "token": [""],
-            # If you intend on using any token other than the first in the list, change hangoutcore.py to match.
+            "token": [""], # Bot uses this array for tokens, If you don't need an array you can change it to a normal str, just don't forget to update the load function.
             "intents": {
                 "guilds": False,
                 "members": False,
@@ -242,6 +269,9 @@ class botConfig(object):
 
     @staticmethod
     async def exists(config: Path | str) -> bool:
+        if type(config) is str:
+            config = Path(config)
+
         if not str(config).endswith(".json"):
             config = config.joinpath(".json")
 
@@ -252,7 +282,7 @@ class botConfig(object):
 
     @staticmethod
     async def get(config: Path | str):
-        log = hangoutcore.log
+        log = hangoutcore.terminal[os.getpid()].log
         if not str(config).endswith(".json"):
             config = config.joinpath(".json")
 
@@ -271,6 +301,52 @@ class botConfig(object):
         else:
             failLocate()
 
+    @staticmethod
+    async def latest(config: dict, path: Path | str = None) -> bool:
+        """
+        Check if the provided config dictionary is up-to-date based on CONFIG_VERSION.
+        
+        Args:
+            config (dict): The configuration data as a dictionary.
+            path (Path | str, optional): The path to the configuration file (for logging/reference).
+            
+        Returns:
+            bool: True if the config is up-to-date or newer, False if outdated.
+        """
+        log = hangoutcore.terminal[os.getpid()].log
+
+        # If a path is provided, validate it as a Path object and ensure .json extension
+        if path:
+            if isinstance(path, str):
+                path = Path(path)
+            if not str(path).endswith(".json"):
+                path = path.with_suffix(".json")
+
+            # Ensure the file exists if a path is given
+            if not await botConfig.exists(path):
+                log.ERROR(f"Config file '{path}' does not exist.")
+                return False
+
+        # Fetch version from the _info section
+        config_version = config.get("_info", {}).get("version")
+
+        log.DEBUG(f'{hangoutcore.config.bot_config.name}: Latest={botConfig.CONFIG_VERSION} | Local={config_version}')
+        # Validate the version presence and format
+        if config_version is None:
+            log.WARNING(f"No version key found in config. Treating as outdated.")
+            return False
+
+        try:
+            # Compare versions using float for versioning flexibility
+            if float(config_version) >= botConfig.CONFIG_VERSION:
+                log.DEBUG(f"Config version is up-to-date: {config_version} >= {botConfig.CONFIG_VERSION}")
+                return True
+            else:
+                return False
+
+        except (ValueError, TypeError) as e:
+            log.ERROR(f"Invalid version format detected in config: {e}")
+            return False
 
 #     @staticmethod
 #     async def update(config: Optional[str | Path | None] = None):
@@ -315,31 +391,31 @@ class botConfig(object):
 
 #             hangoutcore.CONFIG_BOT = _newConfig
 
-#     @staticmethod
-#     async def save(config: Optional[str | Path | None] = None, data: Optional[dict | str] = None):
-#         '''
-#         This function attempts to update the provided bot config, If one is not provided it will update the active bot config.
-#         ``Warning: Not Implemented``
+    @staticmethod
+    async def save(config: Optional[str | Path | None] = None, data: Optional[dict | str] = None):
+        '''
+        This function attempts to update the provided bot config, If one is not provided it will update the active bot config.
+        ``Warning: Not Implemented``
 
-#         Parameters:
-#         ------------
-#         directory: :class:`str`, :class:`Path`, or :class:`None`
-#             The parent directory our config is located in.
-#         config: :class:`str`, or :class:`None`
-#             The name of our target config.
-#         '''
+        Parameters:
+        ------------
+        directory: :class:`str`, :class:`Path`, or :class:`None`
+            The parent directory our config is located in.
+        config: :class:`str`, or :class:`None`
+            The name of our target config.
+        '''
+        log = hangoutcore.terminal[os.getpid()].log
+        if config is None:
+            config = Path(hangoutcore.config.app_config.directory["config"]).joinpath(hangoutcore.config.bot_config.name).absolute()
 
-#         if config is None:
-#             config = Path(hangoutcore.DIRECTORY_CONFIGS).joinpath(hangoutcore.CONFIG_BOT_NAME).absolute()
+        if not str(config).endswith('.json'):
+            config = config.joinpath('.json')
 
-#         if not str(config).endswith('.json'):
-#             config = config.joinpath('.json')
+        if not Path.exists(config):
+            log.ERROR(f"Error: Unable to update bot config. Provided config name: {config} does not exist.")
 
-#         if not Path.exists(config):
-#             terminal.log.ERROR(f"Error: Unable to update bot config. Provided config name: {config} does not exist.")
-
-#         with open(config, 'w') as configFile:
-#             json.dump(data, configFile, indent = 4)
+        with open(config, 'w') as configFile:
+            json.dump(data, configFile, indent = 4)
 
 #     @staticmethod
 #     async def is_developer(user: Optional[discord.User | discord.Member]):
